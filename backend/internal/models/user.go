@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/taheri24/xpanel/backend/internal/database"
+	"go.uber.org/fx"
 )
 
 type User struct {
@@ -108,3 +109,8 @@ func (r *UserRepository) Delete(ctx context.Context, id int) error {
 	slog.Info("User deleted", "id", id, "rows_affected", rowsAffected)
 	return nil
 }
+
+// Module exports the models module for fx
+var Module = fx.Options(
+	fx.Provide(NewUserRepository),
+)

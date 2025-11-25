@@ -1,14 +1,273 @@
 # CLAUDE.md - Backend Development Guidelines
 
-This document outlines coding standards and best practices for the XPanel backend, emphasizing Test-Driven Development (TDD), Functional Programming principles, Logging, and Clean Code practices.
+This document outlines coding standards and best practices for the XPanel backend, emphasizing Dependency Injection with Uber FX, Test-Driven Development (TDD), Functional Programming principles, Logging, and Clean Code practices.
 
 ## Table of Contents
 
-1. [Test-Driven Development (TDD)](#test-driven-development-tdd)
-2. [Functional Programming](#functional-programming)
-3. [Logging](#logging)
-4. [Clean Code Principles](#clean-code-principles)
-5. [Go-Specific Best Practices](#go-specific-best-practices)
+1. [Dependency Injection with Uber FX](#dependency-injection-with-uber-fx)
+2. [Test-Driven Development (TDD)](#test-driven-development-tdd)
+3. [Functional Programming](#functional-programming)
+4. [Logging](#logging)
+5. [Clean Code Principles](#clean-code-principles)
+6. [Go-Specific Best Practices](#go-specific-best-practices)
+
+---
+
+## Dependency Injection with Uber FX
+
+### Overview
+
+This project uses [Uber FX](https://uber-go.github.io/fx/) for dependency injection and application lifecycle management. FX provides a structured approach to building applications with proper dependency management, initialization, and graceful shutdown.
+
+### Why FX?
+
+- **Explicit Dependencies**: All dependencies are clearly declared
+- **Lifecycle Management**: Automatic startup and shutdown coordination
+- **Testability**: Easy to mock and test components in isolation
+- **Type Safety**: Compile-time dependency validation
+- **No Global State**: Everything is passed through constructors
+
+### FX Module Structure
+
+Each package exports an FX module that provides its components:
+
+```go
+// pkg/config/config.go
+var Module = fx.Options(
+    fx.Provide(Load),
+)
+
+// internal/database/db.go
+var Module = fx.Options(
+    fx.Provide(NewDB),
+)
+
+// internal/models/user.go
+var Module = fx.Options(
+    fx.Provide(NewUserRepository),
+)
+
+// internal/handlers/user.go
+var UserModule = fx.Options(
+    fx.Provide(NewUserHandler),
+)
+```
+
+### Application Initialization
+
+The main function assembles all modules:
+
+```go
+func main() {
+    app := fx.New(
+        // Provide configuration
+        config.Module,
+
+        // Provide database
+        database.Module,
+
+        // Provide repositories
+        models.Module,
+
+        // Provide handlers
+        handlers.HealthModule,
+        handlers.UserModule,
+
+        // Provide router
+        router.Module,
+
+        // Provide HTTP server
+        server.Module,
+
+        // Invoke to ensure server starts
+        fx.Invoke(func(*http.Server) {}),
+    )
+
+    app.Run()
+}
+```
+
+### Lifecycle Hooks
+
+Use lifecycle hooks for initialization and cleanup:
+
+```go
+func NewDB(cfg *config.Config, lc fx.Lifecycle) (*DB, error) {
+    db, err := New(&cfg.Database)
+    if err != nil {
+        return nil, err
+    }
+
+    lc.Append(fx.Hook{
+        OnStop: func(ctx context.Context) error {
+            slog.Info("Closing database connection")
+            return db.Close()
+        },
+    })
+
+    return db, nil
+}
+```
+
+### Constructor Pattern
+
+Follow these patterns for constructors:
+
+```go
+// ✅ Good - accepts dependencies, returns concrete type
+func NewUserRepository(db *database.DB) *UserRepository {
+    return &UserRepository{db: db}
+}
+
+// ✅ Good - uses fx.In for multiple dependencies
+type RouterParams struct {
+    fx.In
+
+    Config        *config.Config
+    HealthHandler *handlers.HealthHandler
+    UserHandler   *handlers.UserHandler
+}
+
+func NewRouter(params RouterParams) *gin.Engine {
+    // Router setup
+}
+```
+
+### Dependency Groups
+
+Use fx.In and fx.Out for grouped dependencies:
+
+```go
+// Provide multiple implementations
+type Handler struct {
+    fx.Out
+
+    Health *HealthHandler
+    User   *UserHandler
+}
+
+// Consume grouped dependencies
+type RouterParams struct {
+    fx.In
+
+    Handlers []Handler `group:"handlers"`
+}
+```
+
+### Testing with FX
+
+FX makes testing easier by allowing you to replace components:
+
+```go
+func TestUserHandler(t *testing.T) {
+    app := fxtest.New(t,
+        fx.Provide(
+            // Provide mock dependencies
+            func() *database.DB { return mockDB },
+            func() *models.UserRepository { return mockRepo },
+            handlers.UserModule,
+        ),
+        fx.Invoke(func(h *handlers.UserHandler) {
+            // Test the handler
+        }),
+    )
+
+    app.RequireStart()
+    app.RequireStop()
+}
+```
+
+### Best Practices
+
+1. **Export Modules**: Always export a Module variable from each package
+2. **Use Lifecycle Hooks**: Register cleanup functions in OnStop
+3. **Avoid Global State**: Pass everything through constructors
+4. **Keep Constructors Simple**: Defer complex initialization to lifecycle hooks
+5. **Document Dependencies**: Use clear parameter names in constructors
+6. **Fail Fast**: Return errors from constructors for invalid configurations
+
+### Common Patterns
+
+#### Providing Configuration
+
+```go
+// Load returns config, which is automatically provided to other constructors
+func Load() (*Config, error) {
+    // Load and return config
+}
+```
+
+#### Providing Database Connection
+
+```go
+// NewDB creates database connection with lifecycle management
+func NewDB(cfg *config.Config, lc fx.Lifecycle) (*DB, error) {
+    db, err := New(&cfg.Database)
+    if err != nil {
+        return nil, err
+    }
+
+    lc.Append(fx.Hook{
+        OnStop: func(ctx context.Context) error {
+            return db.Close()
+        },
+    })
+
+    return db, nil
+}
+```
+
+#### Providing HTTP Server
+
+```go
+// NewHTTPServer creates server with automatic start/stop
+func NewHTTPServer(lc fx.Lifecycle, cfg *config.Config, router *gin.Engine) *http.Server {
+    srv := &http.Server{
+        Addr:    fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port),
+        Handler: router,
+    }
+
+    lc.Append(fx.Hook{
+        OnStart: func(ctx context.Context) error {
+            go srv.ListenAndServe()
+            return nil
+        },
+        OnStop: func(ctx context.Context) error {
+            return srv.Shutdown(ctx)
+        },
+    })
+
+    return srv
+}
+```
+
+### Troubleshooting
+
+#### Circular Dependencies
+
+If you encounter circular dependencies:
+
+```go
+// ❌ Bad - creates circular dependency
+// Package A imports B, B imports A
+
+// ✅ Good - extract interface to break cycle
+// Package A defines interface, B implements it
+```
+
+#### Missing Dependencies
+
+```go
+// Error: missing type: *SomeType
+// Solution: Add fx.Provide(NewSomeType) to your modules
+```
+
+#### Multiple Providers for Same Type
+
+```go
+// Error: already provided: *Config
+// Solution: Each type should have only one provider, or use fx.Annotate with names
+```
 
 ---
 
@@ -435,7 +694,7 @@ type PaymentService struct {
 
 #### Dependency Inversion Principle (DIP)
 
-Depend on abstractions, not concretions:
+Depend on abstractions, not concretions. With FX, dependencies are injected automatically:
 
 ```go
 // ✅ Good - depends on interface
@@ -452,6 +711,11 @@ func NewUserService(repo UserRepository, logger Logger, cache Cache) *UserServic
         cache:  cache,
     }
 }
+
+// FX module automatically wires dependencies
+var Module = fx.Options(
+    fx.Provide(NewUserService),
+)
 ```
 
 ### Naming Conventions
@@ -535,28 +799,34 @@ func handler(c *gin.Context) {
 
 ```
 backend/
-├── cmd/                    # Application entrypoints
-│   └── server/
-│       └── main.go
-├── internal/               # Private application code
-│   ├── domain/            # Business entities and interfaces
-│   │   ├── user.go
-│   │   └── order.go
-│   ├── repository/        # Data access implementations
-│   │   ├── user_repository.go
-│   │   └── user_repository_test.go
-│   ├── service/           # Business logic
-│   │   ├── user_service.go
-│   │   └── user_service_test.go
-│   ├── handler/           # HTTP handlers
-│   │   └── user_handler.go
-│   └── middleware/        # HTTP middleware
-│       └── auth.go
+├── main.go                # Application entry point with FX setup
+├── embed.go               # Embedded frontend assets
+├── internal/              # Private application code
+│   ├── database/          # Database connection with FX lifecycle
+│   ├── handlers/          # HTTP handlers (FX modules)
+│   │   ├── health.go
+│   │   └── user.go
+│   ├── middleware/        # HTTP middleware
+│   │   ├── cors.go
+│   │   └── logger.go
+│   ├── models/            # Data models and repositories (FX modules)
+│   │   └── user.go
+│   ├── router/            # Router setup (FX module)
+│   │   ├── router.go
+│   │   └── embed.go
+│   └── server/            # HTTP server (FX module)
+│       └── server.go
 ├── pkg/                   # Public libraries
-│   ├── logger/
-│   └── validator/
+│   └── config/            # Configuration (FX module)
+│       └── config.go
 └── migrations/            # Database migrations
 ```
+
+**Key Principles:**
+- Each package exports an FX `Module` with its providers
+- Dependencies flow from outer layers (main) to inner layers
+- Use FX lifecycle hooks for resource management
+- Keep packages focused and cohesive
 
 ### Function Length and Complexity
 

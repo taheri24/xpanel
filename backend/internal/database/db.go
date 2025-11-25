@@ -8,6 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/microsoft/go-mssqldb"
 	"github.com/taheri24/xpanel/backend/pkg/config"
+	"go.uber.org/fx"
 )
 
 type DB struct {
@@ -62,3 +63,25 @@ func (db *DB) Health() error {
 
 	return nil
 }
+
+// NewDB creates a new database connection for fx
+func NewDB(cfg *config.Config, lc fx.Lifecycle) (*DB, error) {
+	db, err := New(&cfg.Database)
+	if err != nil {
+		return nil, err
+	}
+
+	lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			slog.Info("Closing database connection")
+			return db.Close()
+		},
+	})
+
+	return db, nil
+}
+
+// Module exports the database module for fx
+var Module = fx.Options(
+	fx.Provide(NewDB),
+)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/taheri24/xpanel/backend/internal/database"
+	"go.uber.org/fx"
 )
 
 type HealthHandler struct {
@@ -36,3 +37,8 @@ func (h *HealthHandler) Ready(c *gin.Context) {
 		"status": "ready",
 	})
 }
+
+// HealthModule exports the health handler module for fx
+var HealthModule = fx.Options(
+	fx.Provide(NewHealthHandler),
+)
