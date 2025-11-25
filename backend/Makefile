@@ -1,4 +1,4 @@
-.PHONY: help run build test clean dev
+.PHONY: help run build build-frontend build-full test clean dev
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -9,8 +9,14 @@ help: ## Show this help message
 run: ## Run the application
 	go run cmd/api/main.go
 
-build: ## Build the application
+build: ## Build the backend only
 	go build -o bin/api cmd/api/main.go
+
+build-frontend: ## Build the frontend
+	@echo "Building frontend..."
+	cd ../frontend && npm run build
+
+build-full: build-frontend build ## Build frontend and backend (full application with embedded static files)
 
 dev: ## Run the application in development mode with hot reload
 	air
@@ -24,6 +30,7 @@ test-coverage: ## Run tests with coverage
 
 clean: ## Clean build artifacts
 	rm -rf bin/
+	rm -rf frontend/dist/
 	rm -f coverage.out coverage.html
 
 deps: ## Download dependencies
