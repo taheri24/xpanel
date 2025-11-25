@@ -1,0 +1,307 @@
+# xpanel Frontend
+
+Frontend application for xpanel built with React, TypeScript, and Vite.
+
+## Tech Stack
+
+- **Framework**: React 19
+- **Language**: TypeScript
+- **Build Tool**: Vite
+- **Router**: TanStack Router
+- **UI Library**: Material-UI (MUI)
+- **Testing**: Vitest + React Testing Library
+- **Component Development**: Storybook
+
+## Project Structure
+
+```
+frontend/
+├── src/
+│   ├── components/          # Reusable components
+│   │   └── Button/
+│   │       ├── Button.tsx
+│   │       ├── Button.stories.tsx
+│   │       ├── Button.test.tsx
+│   │       └── index.ts
+│   ├── pages/               # Page components
+│   │   ├── HomePage.tsx
+│   │   ├── UsersPage.tsx
+│   │   └── NotFoundPage.tsx
+│   ├── services/            # API services
+│   │   └── api.ts
+│   ├── theme/               # MUI theme configuration
+│   │   └── theme.ts
+│   ├── test/                # Test setup
+│   │   └── setup.ts
+│   ├── App.tsx              # Root component
+│   ├── main.tsx             # Entry point
+│   └── router.tsx           # Router configuration
+├── .storybook/              # Storybook configuration
+├── public/                  # Static assets
+├── .env.example             # Environment variables example
+├── package.json
+├── tsconfig.json
+└── vite.config.ts
+```
+
+## Prerequisites
+
+- Node.js 18+ or higher
+- npm or yarn
+
+## Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd xpanel/frontend
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your API endpoint
+   ```
+
+4. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+## Available Scripts
+
+### Development
+
+```bash
+npm run dev              # Start development server
+npm run build            # Build for production
+npm run preview          # Preview production build
+npm run lint             # Run ESLint
+```
+
+### Testing
+
+```bash
+npm run test             # Run tests in watch mode
+npm run test:ui          # Run tests with UI
+npm run test:coverage    # Run tests with coverage report
+```
+
+### Storybook
+
+```bash
+npm run storybook        # Start Storybook dev server
+npm run build-storybook  # Build Storybook for production
+```
+
+## Environment Variables
+
+| Variable            | Description                | Default                          |
+|---------------------|----------------------------|----------------------------------|
+| VITE_API_BASE_URL   | Backend API base URL       | http://localhost:8080/api/v1     |
+
+## Development Guidelines
+
+### Component Structure
+
+All components should follow this structure:
+
+```
+ComponentName/
+├── ComponentName.tsx          # Component implementation
+├── ComponentName.stories.tsx  # Storybook stories
+├── ComponentName.test.tsx     # Component tests
+└── index.ts                   # Barrel export
+```
+
+### React Functional Components
+
+All components **must** use the `React.FC` type:
+
+```typescript
+import React from 'react';
+
+interface MyComponentProps {
+  title: string;
+  onClick?: () => void;
+}
+
+const MyComponent: React.FC<MyComponentProps> = ({ title, onClick }) => {
+  return (
+    <div onClick={onClick}>
+      <h1>{title}</h1>
+    </div>
+  );
+};
+
+export default MyComponent;
+```
+
+### Writing Tests
+
+Use Vitest and React Testing Library for testing:
+
+```typescript
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import MyComponent from './MyComponent';
+
+describe('MyComponent', () => {
+  it('renders correctly', () => {
+    render(<MyComponent title="Test" />);
+    expect(screen.getByText('Test')).toBeInTheDocument();
+  });
+
+  it('handles click events', async () => {
+    const handleClick = vi.fn();
+    render(<MyComponent title="Test" onClick={handleClick} />);
+
+    await userEvent.click(screen.getByText('Test'));
+    expect(handleClick).toHaveBeenCalledTimes(1);
+  });
+});
+```
+
+### Writing Storybook Stories
+
+Create stories for each component:
+
+```typescript
+import type { Meta, StoryObj } from '@storybook/react';
+import MyComponent from './MyComponent';
+
+const meta: Meta<typeof MyComponent> = {
+  title: 'Components/MyComponent',
+  component: MyComponent,
+  parameters: {
+    layout: 'centered',
+  },
+  tags: ['autodocs'],
+};
+
+export default meta;
+type Story = StoryObj<typeof MyComponent>;
+
+export const Default: Story = {
+  args: {
+    title: 'Hello World',
+  },
+};
+```
+
+### API Service
+
+All API calls should go through the `services/api.ts` module:
+
+```typescript
+import { getUsers, createUser } from './services/api';
+
+// In your component
+const users = await getUsers();
+const newUser = await createUser({ username: 'john', email: 'john@example.com' });
+```
+
+### Routing
+
+Use TanStack Router for navigation:
+
+```typescript
+import { Link } from '@tanstack/react-router';
+
+// In your component
+<Link to="/users">Go to Users</Link>
+```
+
+## Material-UI (MUI) Usage
+
+### Theme
+
+The application uses a custom MUI theme defined in `src/theme/theme.ts`. All components automatically have access to the theme through the ThemeProvider.
+
+### Using MUI Components
+
+```typescript
+import React from 'react';
+import { Button, Box, Typography } from '@mui/material';
+
+const MyPage: React.FC = () => {
+  return (
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        My Page
+      </Typography>
+      <Button variant="contained" color="primary">
+        Click Me
+      </Button>
+    </Box>
+  );
+};
+
+export default MyPage;
+```
+
+## Building for Production
+
+```bash
+# Build the application
+npm run build
+
+# Preview the production build
+npm run preview
+```
+
+The build output will be in the `dist/` directory.
+
+## Testing
+
+### Running Tests
+
+```bash
+# Run all tests
+npm run test
+
+# Run tests with UI
+npm run test:ui
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+### Test Coverage
+
+Coverage reports are generated in the `coverage/` directory.
+
+## Storybook
+
+### Running Storybook
+
+```bash
+npm run storybook
+```
+
+Storybook will be available at `http://localhost:6006`
+
+### Building Storybook
+
+```bash
+npm run build-storybook
+```
+
+The build output will be in the `storybook-static/` directory.
+
+## Browser Support
+
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
+
+## License
+
+Copyright © 2025 xpanel. All rights reserved.
