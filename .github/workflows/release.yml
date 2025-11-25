@@ -76,6 +76,13 @@ jobs:
           npm ci
           npm run build
 
+      - name: Copy Frontend to Backend
+        run: |
+          cd backend
+          rm -rf frontend/dist
+          mkdir -p frontend
+          cp -r ../frontend/dist frontend/
+
       - name: Build Backend
         env:
           GOOS: ${{ matrix.os }}
@@ -88,7 +95,7 @@ jobs:
           if [ "${{ matrix.os }}" = "windows" ]; then
             output_name="${output_name}.exe"
           fi
-          go build -o "bin/${output_name}" -ldflags="-s -w" cmd/api/main.go
+          go build -o "bin/${output_name}" -ldflags="-s -w" main.go
 
       - name: Create archive
         run: |
@@ -96,7 +103,6 @@ jobs:
           archive_name="xpanel-${version}-${{ matrix.os }}-${{ matrix.arch }}"
 
           mkdir -p release/${archive_name}
-          cp -r frontend/dist release/${archive_name}/frontend
           cp backend/bin/* release/${archive_name}/
 
           cd release
