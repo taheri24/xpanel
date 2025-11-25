@@ -101,9 +101,24 @@ npm run build-storybook  # Build Storybook for production
 
 ## Environment Variables
 
-| Variable            | Description                | Default                          |
+### Development
+
+In development mode, API requests are proxied through Vite's dev server. The proxy configuration in `vite.config.ts` forwards:
+- `/api/v1/*` → `http://localhost:8080/api/v1/*`
+- `/health` → `http://localhost:8080/health`
+- `/ready` → `http://localhost:8080/ready`
+
+No environment variables are required for development.
+
+### Production
+
+For production builds, you can optionally configure the API base URL:
+
+| Variable            | Description                | Example                          |
 |---------------------|----------------------------|----------------------------------|
-| VITE_API_BASE_URL   | Backend API base URL       | http://localhost:8080/api/v1     |
+| VITE_API_BASE_URL   | Backend API base URL       | https://api.example.com          |
+
+If not set, the app will make requests to the same origin where it's hosted.
 
 ## Development Guidelines
 

@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
+const API_BASE_URL = '/api/v1';
 
 export interface User {
   id: number;
@@ -73,6 +73,6 @@ export async function deleteUser(id: number): Promise<void> {
 }
 
 export async function checkHealth(): Promise<{ status: string }> {
-  const response = await fetch(`${API_BASE_URL.replace('/api/v1', '')}/health`);
+  const response = await fetch('/health');
   return handleResponse<{ status: string }>(response);
 }
