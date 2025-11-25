@@ -17,7 +17,6 @@ import (
 	"github.com/taheri24/xpanel/backend/internal/middleware"
 	"github.com/taheri24/xpanel/backend/internal/models"
 	"github.com/taheri24/xpanel/backend/pkg/config"
-	frontendpkg "github.com/taheri24/xpanel/backend"
 )
 
 func main() {
@@ -126,7 +125,7 @@ func setupRouter(healthHandler *handlers.HealthHandler, userHandler *handlers.Us
 // setupStaticFiles configures the router to serve embedded frontend files
 func setupStaticFiles(router *gin.Engine) {
 	// Get the frontend dist directory from the embedded filesystem
-	distFS, err := fs.Sub(frontendpkg.FS, "frontend/dist")
+	distFS, err := fs.Sub(FS, "frontend/dist")
 	if err != nil {
 		slog.Warn("Failed to access embedded frontend files", "error", err)
 		return

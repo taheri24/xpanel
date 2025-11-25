@@ -7,14 +7,18 @@ help: ## Show this help message
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-15s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 run: ## Run the application
-	go run cmd/api/main.go
+	go run main.go
 
 build: ## Build the backend only
-	go build -o bin/api cmd/api/main.go
+	go build -o bin/api main.go
 
 build-frontend: ## Build the frontend
 	@echo "Building frontend..."
 	cd ../frontend && npm run build
+	@echo "Copying frontend dist to backend..."
+	rm -rf frontend/dist
+	mkdir -p frontend
+	cp -r ../frontend/dist frontend/
 
 build-full: build-frontend build ## Build frontend and backend (full application with embedded static files)
 
