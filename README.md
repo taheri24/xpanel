@@ -11,6 +11,7 @@ xpanel is a full-stack web application built with modern technologies and best p
 ### Backend
 - **Language**: Go 1.25
 - **Framework**: Gin Web Framework
+- **DI Framework**: Uber FX (Dependency Injection)
 - **ORM**: sqlx
 - **Database**: Microsoft SQL Server
 - **Logging**: log/slog (standard library)
@@ -75,7 +76,7 @@ cp .env.example .env
 # Edit .env with your database credentials
 
 # Run the application
-go run cmd/api/main.go
+go run main.go
 ```
 
 The backend will be available at `http://localhost:8080`
@@ -111,7 +112,7 @@ You can run both the backend and frontend simultaneously in different terminal w
 **Terminal 1 (Backend)**:
 ```bash
 cd backend
-go run cmd/api/main.go
+go run main.go
 ```
 
 **Terminal 2 (Frontend)**:
@@ -198,8 +199,8 @@ Storybook will be available at `http://localhost:6006`
 
 ```bash
 cd backend
-go build -o bin/api cmd/api/main.go
-./bin/api
+go build -o bin/xpanel main.go
+./bin/xpanel
 ```
 
 ### Frontend
@@ -251,9 +252,11 @@ slog.Error("error message", "error", err)
 
 ### Backend Architecture
 
-- **MVC Pattern**: Handlers (Controllers), Models (Repositories), Views (JSON responses)
+- **Dependency Injection**: Uses Uber FX for automatic dependency injection and lifecycle management
+- **Modular Design**: Each package exports FX modules with providers
 - **Layered Architecture**: Handlers → Repositories → Database
-- **Dependency Injection**: Dependencies passed through constructors
+- **Lifecycle Management**: Automatic startup/shutdown coordination via FX hooks
+- **Clean Architecture**: Clear separation of concerns with explicit dependencies
 
 ### Frontend Architecture
 

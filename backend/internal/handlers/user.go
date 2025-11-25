@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/taheri24/xpanel/backend/internal/models"
+	"go.uber.org/fx"
 )
 
 type UserHandler struct {
@@ -106,3 +107,8 @@ func (h *UserHandler) Delete(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }
+
+// UserModule exports the user handler module for fx
+var UserModule = fx.Options(
+	fx.Provide(NewUserHandler),
+)

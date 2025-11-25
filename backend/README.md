@@ -6,6 +6,7 @@ Backend service for xpanel built with Go and Gin framework.
 
 - **Language**: Go 1.25
 - **Framework**: Gin Web Framework
+- **DI Framework**: Uber FX (Dependency Injection)
 - **ORM**: sqlx
 - **Database**: Microsoft SQL Server
 - **Logging**: log/slog (standard library)
@@ -14,21 +15,31 @@ Backend service for xpanel built with Go and Gin framework.
 
 ```
 backend/
-├── cmd/
-│   └── api/
-│       └── main.go           # Application entry point
+├── main.go                   # Application entry point with FX setup
+├── embed.go                  # Embedded frontend assets
 ├── internal/
-│   ├── database/             # Database connection
-│   ├── handlers/             # HTTP handlers
+│   ├── database/             # Database connection (FX module)
+│   ├── handlers/             # HTTP handlers (FX modules)
 │   ├── middleware/           # HTTP middleware
-│   └── models/               # Data models and repositories
+│   ├── models/               # Data models and repositories (FX modules)
+│   ├── router/               # Router setup (FX module)
+│   └── server/               # HTTP server (FX module)
 ├── pkg/
-│   └── config/               # Configuration management
+│   └── config/               # Configuration management (FX module)
 ├── migrations/               # Database migrations
 ├── .env.example              # Environment variables example
-├── Makefile                  # Build and development commands
 └── go.mod                    # Go dependencies
 ```
+
+### Architecture Overview
+
+This backend uses **Uber FX** for dependency injection and lifecycle management:
+
+- **FX Modules**: Each package exports a `Module` that provides its components
+- **Automatic Wiring**: Dependencies are automatically injected by FX
+- **Lifecycle Hooks**: Resources (DB, server) managed with OnStart/OnStop hooks
+- **Type Safety**: Compile-time dependency validation
+- **Testability**: Easy to mock components for testing
 
 ## Prerequisites
 
@@ -67,7 +78,7 @@ backend/
 ### Using Go directly
 
 ```bash
-go run cmd/api/main.go
+go run main.go
 ```
 
 ### Using Makefile
@@ -110,11 +121,54 @@ make clean      # Clean build artifacts
 
 ## Development
 
-### Adding a New Endpoint
+### Adding a New Endpoint with FX
 
-1. Create a handler in `internal/handlers/`
-2. Create a repository (if needed) in `internal/models/`
-3. Register the route in `cmd/api/main.go`
+1. **Create a handler** in `internal/handlers/`:
+   ```go
+   type ProductHandler struct {
+       productRepo *models.ProductRepository
+   }
+
+   func NewProductHandler(productRepo *models.ProductRepository) *ProductHandler {
+       return &ProductHandler{productRepo: productRepo}
+   }
+
+   // Export FX module
+   var ProductModule = fx.Options(
+       fx.Provide(NewProductHandler),
+   )
+   ```
+
+2. **Create a repository** (if needed) in `internal/models/`:
+   ```go
+   type ProductRepository struct {
+       db *database.DB
+   }
+
+   func NewProductRepository(db *database.DB) *ProductRepository {
+       return &ProductRepository{db: db}
+   }
+
+   // Add to existing Module
+   var Module = fx.Options(
+       fx.Provide(
+           NewUserRepository,
+           NewProductRepository,
+       ),
+   )
+   ```
+
+3. **Register in main.go**:
+   ```go
+   app := fx.New(
+       // ... existing modules
+       handlers.ProductModule,
+       // ...
+   )
+   ```
+
+4. **Add routes in router**:
+   Update `internal/router/router.go` to include the new handler
 
 ### Logging
 
@@ -147,10 +201,10 @@ go test -v ./...
 
 ```bash
 # Build the binary
-go build -o bin/api cmd/api/main.go
+go build -o bin/xpanel main.go
 
 # Run the production binary
-./bin/api
+./bin/xpanel
 ```
 
 ## License

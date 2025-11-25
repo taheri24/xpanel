@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"go.uber.org/fx"
 )
 
 type Config struct {
@@ -73,3 +74,8 @@ func getEnv(key, defaultValue string) string {
 	}
 	return defaultValue
 }
+
+// Module exports the config module for fx
+var Module = fx.Options(
+	fx.Provide(Load),
+)
