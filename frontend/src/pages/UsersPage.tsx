@@ -14,7 +14,8 @@ import {
   Button,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { User, getUsers } from '../services/api';
+import { getUsers } from '../services/api';
+import type { User } from '../services/api';
 
 const UsersPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
