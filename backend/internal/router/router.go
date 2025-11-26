@@ -16,9 +16,10 @@ import (
 type RouterParams struct {
 	fx.In
 
-	Config        *config.Config
-	HealthHandler *handlers.HealthHandler
-	UserHandler   *handlers.UserHandler
+	Config          *config.Config
+	HealthHandler   *handlers.HealthHandler
+	UserHandler     *handlers.UserHandler
+	XFeatureHandler *handlers.XFeatureHandler
 }
 
 // NewRouter creates a new Gin router with all routes configured
@@ -49,6 +50,15 @@ func NewRouter(params RouterParams) *gin.Engine {
 			users.POST("", params.UserHandler.Create)
 			users.PUT("/:id", params.UserHandler.Update)
 			users.DELETE("/:id", params.UserHandler.Delete)
+		}
+
+		// XFeature routes
+		xfeatures := v1.Group("/xfeatures")
+		{
+			xfeatures.GET("", params.XFeatureHandler.ListFeatures)
+			xfeatures.GET("/:name", params.XFeatureHandler.GetFeature)
+			xfeatures.POST("/:name/queries/:queryId", params.XFeatureHandler.ExecuteQuery)
+			xfeatures.POST("/:name/actions/:actionId", params.XFeatureHandler.ExecuteAction)
 		}
 	}
 

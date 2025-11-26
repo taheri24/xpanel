@@ -29,6 +29,7 @@ func main() {
 		// Provide handlers
 		handlers.HealthModule,
 		handlers.UserModule,
+		handlers.XFeatureModule,
 
 		// Provide router
 		router.Module,
