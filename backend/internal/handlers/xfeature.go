@@ -165,6 +165,32 @@ func (h *XFeatureHandler) ExecuteAction(c *gin.Context) {
 	})
 }
 
+// GetFrontendElements retrieves all frontend elements (DataTables and Forms) for a feature
+func (h *XFeatureHandler) GetFrontendElements(c *gin.Context) {
+	featureName := c.Param("name")
+
+	xf := &xfeature.XFeature{
+		Logger: slog.Default(),
+	}
+
+	filePath := "specs/xfeature/" + featureName + ".xml"
+	if err := xf.LoadFromFile(filePath); err != nil {
+		slog.Warn("Failed to load feature definition", "feature", featureName, "error", err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Feature not found"})
+		return
+	}
+
+	// Build response with all frontend elements
+	response := gin.H{
+		"feature":   featureName,
+		"version":   xf.Version,
+		"dataTables": xf.Frontend.DataTables,
+		"forms":      xf.Frontend.Forms,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 // ListFeatures returns information about available features
 func (h *XFeatureHandler) ListFeatures(c *gin.Context) {
 	// This would typically scan the specs/xfeature directory

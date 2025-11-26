@@ -11,11 +11,15 @@ import type {
   ActionQuery,
   Form,
   DataTable,
+  FrontendElements,
+  XFeatureBeforeFrontendHandler,
+  XFeatureAfterFrontendHandler,
 } from '../types/xfeature';
 import {
   getXFeature,
   executeXFeatureQuery,
   executeXFeatureAction,
+  getXFeatureFrontendElements,
 } from '../services/api';
 
 // ============================================================================
@@ -176,6 +180,15 @@ interface XFeatureProviderProps {
    */
   onAfterAction?: XFeatureAfterActionHandler;
   /**
+   * Called before loading frontend elements
+   * Return a FrontendElements to short-circuit the API call (useful for mocking)
+   */
+  onBeforeFrontend?: XFeatureBeforeFrontendHandler;
+  /**
+   * Called after frontend elements load successfully
+   */
+  onAfterFrontend?: XFeatureAfterFrontendHandler;
+  /**
    * Called when an error occurs during any operation
    */
   onError?: XFeatureErrorHandler;
@@ -187,6 +200,8 @@ export function XFeatureProvider({
   onAfterQuery,
   onBeforeAction,
   onAfterAction,
+  onBeforeFrontend,
+  onAfterFrontend,
   onError,
 }: XFeatureProviderProps) {
   const [state, dispatch] = useReducer(xfeatureReducer, {
@@ -381,6 +396,55 @@ export function XFeatureProvider({
     [onBeforeAction, onAfterAction, onError]
   );
 
+  const executeFrontendElements = useCallback(
+    async (featureName: string): Promise<FrontendElements> => {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      try {
+        // Call onBeforeFrontend event - can return mocked response
+        let result: FrontendElements | undefined;
+        if (onBeforeFrontend) {
+          const mockResult = await onBeforeFrontend({
+            featureName,
+          });
+          if (mockResult) {
+            result = mockResult;
+          }
+        }
+
+        // If no mocked response, execute the actual API call
+        if (!result) {
+          result = await getXFeatureFrontendElements(featureName);
+        }
+
+        // Call onAfterFrontend event
+        if (onAfterFrontend) {
+          await onAfterFrontend({
+            featureName,
+            result,
+          });
+        }
+
+        dispatch({ type: 'SET_LOADING', payload: false });
+        return result;
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        dispatch({ type: 'SET_ERROR', payload: err });
+
+        // Call onError event
+        if (onError) {
+          await onError({
+            error: err,
+            context: 'feature',
+            featureName,
+          });
+        }
+
+        throw err;
+      }
+    },
+    [onBeforeFrontend, onAfterFrontend, onError]
+  );
+
   const value: XFeatureContextType = {
     features: state.features,
     loading: state.loading,
@@ -392,6 +456,7 @@ export function XFeatureProvider({
     getDataTable,
     executeQuery,
     executeAction: executeActionFn,
+    executeFrontendElements,
   };
 
   return (
@@ -494,4 +559,36 @@ export function useXFeatureAction(featureName: string, actionId: string) {
   );
 
   return { execute, loading, error, success, response };
+}
+
+export function useXFeatureFrontend(featureName: string, autoLoad = true) {
+  const { executeFrontendElements } = useXFeature();
+  const [frontendElements, setFrontendElements] = React.useState<FrontendElements | undefined>();
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<Error | undefined>();
+
+  const load = React.useCallback(
+    async () => {
+      setLoading(true);
+      setError(undefined);
+      try {
+        const result = await executeFrontendElements(featureName);
+        setFrontendElements(result);
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [featureName, executeFrontendElements]
+  );
+
+  React.useEffect(() => {
+    if (autoLoad) {
+      load();
+    }
+  }, [autoLoad, load]);
+
+  return { frontendElements, loading, error, load };
 }

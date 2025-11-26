@@ -111,6 +111,7 @@ import type {
   QueryResponse,
   ActionRequest,
   ActionResponse,
+  FrontendElements,
 } from '../types/xfeature';
 
 export async function getXFeatures(): Promise<string[]> {
@@ -143,4 +144,10 @@ export async function executeXFeatureAction(
       json: params,
     })
     .json<ActionResponse>();
+}
+
+export async function getXFeatureFrontendElements(
+  featureName: string
+): Promise<FrontendElements> {
+  return api.get(`xfeatures/${featureName}/frontend`).json<FrontendElements>();
 }

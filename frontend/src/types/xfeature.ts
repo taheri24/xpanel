@@ -205,6 +205,13 @@ export interface ActionResponse {
   data?: Record<string, unknown>;
 }
 
+export interface FrontendElements {
+  feature: string;
+  version: string;
+  dataTables: DataTable[];
+  forms: Form[];
+}
+
 // ============================================================================
 // COMPONENT PROPS TYPES
 // ============================================================================
@@ -244,6 +251,27 @@ export interface XFeatureMessageProps {
 }
 
 // ============================================================================
+// FRONTEND ELEMENTS EVENT TYPES
+// ============================================================================
+
+export interface XFeatureBeforeFrontendEvent {
+  featureName: string;
+}
+
+export interface XFeatureAfterFrontendEvent {
+  featureName: string;
+  result: FrontendElements;
+}
+
+export type XFeatureBeforeFrontendHandler = (
+  event: XFeatureBeforeFrontendEvent
+) => FrontendElements | undefined | Promise<FrontendElements | undefined>;
+
+export type XFeatureAfterFrontendHandler = (
+  event: XFeatureAfterFrontendEvent
+) => void | Promise<void>;
+
+// ============================================================================
 // RUNTIME STATE TYPES
 // ============================================================================
 
@@ -266,6 +294,7 @@ export interface XFeatureContextType {
     actionId: string,
     params: ActionRequest
   ) => Promise<ActionResponse>;
+  executeFrontendElements: (featureName: string) => Promise<FrontendElements>;
 }
 
 export interface FormState {

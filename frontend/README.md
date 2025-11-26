@@ -264,6 +264,169 @@ import { Link } from '@tanstack/react-router';
 <Link to="/users">Go to Users</Link>
 ```
 
+## XFeature System
+
+The XFeature system enables dynamic UI generation from feature definitions. Features are defined as XML and include backend queries/actions and frontend forms/tables.
+
+### API Endpoints
+
+#### Get Feature Definition
+```
+GET /api/v1/xfeatures/:name
+```
+
+Returns complete XFeature definition including backend queries/actions and frontend forms/tables.
+
+#### Get All Frontend Elements
+```
+GET /api/v1/xfeatures/:name/frontend
+```
+
+Returns only frontend elements (forms and data tables) for a feature. Useful for rendering complete UI without backend logic definitions.
+
+**Response:**
+```json
+{
+  "feature": "user-management",
+  "version": "1.0.0",
+  "dataTables": [
+    {
+      "id": "users-table",
+      "queryRef": "ListUsers",
+      "title": "Users",
+      "columns": [
+        {
+          "name": "id",
+          "label": "ID",
+          "type": "Number"
+        }
+      ]
+    }
+  ],
+  "forms": [
+    {
+      "id": "create-user",
+      "mode": "Create",
+      "title": "Create User",
+      "actionRef": "CreateUser",
+      "fields": []
+    }
+  ]
+}
+```
+
+### Using XFeature Components
+
+#### Setup Provider
+
+Wrap your app with XFeatureProvider:
+
+```typescript
+import { XFeatureProvider } from './contexts/XFeatureContext';
+import { createStorybookMockProvider } from './contexts/XFeatureContext.examples';
+
+function App() {
+  const mockConfig = createStorybookMockProvider();
+
+  return (
+    <XFeatureProvider {...mockConfig}>
+      <YourApp />
+    </XFeatureProvider>
+  );
+}
+```
+
+#### Render All Frontend Elements
+
+Use XFeatureFrontendRenderer to display all forms and tables for a feature:
+
+```typescript
+import { XFeatureFrontendRenderer } from './components/xfeature/XFeatureFrontendRenderer';
+
+function MyPage() {
+  return (
+    <XFeatureFrontendRenderer
+      featureName="user-management"
+      onFormSuccess={(formId) => console.log(`Form ${formId} submitted`)}
+      onRefresh={(tableId) => console.log(`Table ${tableId} refreshed`)}
+    />
+  );
+}
+```
+
+#### Use Custom Hooks
+
+Load and execute queries, actions, and frontend elements:
+
+```typescript
+import {
+  useXFeatureQuery,
+  useXFeatureAction,
+  useXFeatureFrontend,
+} from './contexts/XFeatureContext';
+
+function MyComponent() {
+  // Load data from a query
+  const { data, loading, refetch } = useXFeatureQuery(
+    'user-management',
+    'ListUsers',
+    {},
+    true // autoLoad
+  );
+
+  // Execute an action
+  const { execute, loading: actionLoading } = useXFeatureAction(
+    'user-management',
+    'CreateUser'
+  );
+
+  // Load all frontend elements
+  const { frontendElements, loading: elementsLoading } = useXFeatureFrontend(
+    'user-management'
+  );
+
+  return (
+    <div>
+      {/* Render your UI */}
+    </div>
+  );
+}
+```
+
+### Event Customization
+
+Add event handlers for mocking, logging, and custom business logic:
+
+```typescript
+import {
+  createMockQueryHandler,
+  createLoggingActionHandler,
+  createErrorLoggingHandler,
+} from './contexts/XFeatureContext.examples';
+
+function App() {
+  return (
+    <XFeatureProvider
+      onBeforeQuery={createMockQueryHandler({ id: 1, name: 'Test' })}
+      onAfterAction={createLoggingActionHandler()}
+      onError={createErrorLoggingHandler()}
+    >
+      <YourApp />
+    </XFeatureProvider>
+  );
+}
+```
+
+#### Available Event Handlers
+
+- **onBeforeQuery**: Called before executing a query (can return mocked response)
+- **onAfterQuery**: Called after query completes successfully
+- **onBeforeAction**: Called before executing an action (can return mocked response)
+- **onAfterAction**: Called after action completes successfully
+- **onBeforeFrontend**: Called before loading frontend elements (can return mocked elements)
+- **onAfterFrontend**: Called after frontend elements load successfully
+- **onError**: Called when any operation fails
+
 ## Material-UI (MUI) Usage
 
 ### Theme
