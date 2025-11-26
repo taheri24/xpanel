@@ -4,7 +4,8 @@
 package main
 
 import (
-	"net/http"
+	"io/fs"
+	"os"
 )
 
-var FS http.FileSystem = http.Dir("frontend/dist")
+var FS fs.FS = os.DirFS("frontend/dist")

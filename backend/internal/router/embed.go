@@ -1,8 +1,6 @@
 package router
 
-import (
-	"embed"
-)
+import "io/fs"
 
 // FS will be set from main package
-var FS embed.FS
+var FS fs.FS
