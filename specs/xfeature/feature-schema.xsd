@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  
+  <!-- Root Element -->
+  <xs:element name="Feature">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Backend"/>
+        <xs:element ref="Frontend"/>
+      </xs:sequence>
+      <xs:attribute name="Name" type="xs:string" use="required"/>
+      <xs:attribute name="Version" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- ============================= -->
+  <!-- BACKEND ELEMENTS              -->
+  <!-- ============================= -->
+  
+  <xs:element name="Backend">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="Query"/>
+        <xs:element ref="ActionQuery"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="Query">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="Id" type="xs:string" use="required"/>
+          <xs:attribute name="Type" use="required">
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="Select"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+          <xs:attribute name="Description" type="xs:string" use="optional"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="ActionQuery">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="Id" type="xs:string" use="required"/>
+          <xs:attribute name="Type" use="required">
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="Insert"/>
+                <xs:enumeration value="Update"/>
+                <xs:enumeration value="Delete"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+          <xs:attribute name="Description" type="xs:string" use="optional"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- ============================= -->
+  <!-- FRONTEND ELEMENTS             -->
+  <!-- ============================= -->
+  
+  <xs:element name="Frontend">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="Form"/>
+        <xs:element ref="DataTable"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="Form">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="Field"/>
+        <xs:element ref="Button"/>
+        <xs:element ref="Message"/>
+      </xs:choice>
+      <xs:attribute name="Id" type="xs:string" use="required"/>
+      <xs:attribute name="Mode" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="Create"/>
+            <xs:enumeration value="Edit"/>
+            <xs:enumeration value="View"/>
+            <xs:enumeration value="Delete"/>
+            <xs:enumeration value="Search"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="Dialog" type="xs:boolean" use="required"/>
+      <xs:attribute name="Title" type="xs:string" use="required"/>
+      <xs:attribute name="ActionRef" type="xs:string" use="optional"/>
+      <xs:attribute name="QueryRef" type="xs:string" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="Field">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Option" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attribute name="Name" type="xs:string" use="required"/>
+      <xs:attribute name="Label" type="xs:string" use="optional"/>
+      <xs:attribute name="Type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="Text"/>
+            <xs:enumeration value="Email"/>
+            <xs:enumeration value="Password"/>
+            <xs:enumeration value="Tel"/>
+            <xs:enumeration value="Number"/>
+            <xs:enumeration value="Date"/>
+            <xs:enumeration value="DateTime"/>
+            <xs:enumeration value="Time"/>
+            <xs:enumeration value="Textarea"/>
+            <xs:enumeration value="Select"/>
+            <xs:enumeration value="Checkbox"/>
+            <xs:enumeration value="Radio"/>
+            <xs:enumeration value="Hidden"/>
+            <xs:enumeration value="File"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="Required" type="xs:boolean" use="optional" default="false"/>
+      <xs:attribute name="Readonly" type="xs:boolean" use="optional" default="false"/>
+      <xs:attribute name="Placeholder" type="xs:string" use="optional"/>
+      <xs:attribute name="Validation" type="xs:string" use="optional"/>
+      <xs:attribute name="Format" type="xs:string" use="optional"/>
+      <xs:attribute name="DefaultValue" type="xs:string" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="Option">
+    <xs:complexType>
+      <xs:attribute name="Value" type="xs:string" use="required"/>
+      <xs:attribute name="Label" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="Button">
+    <xs:complexType>
+      <xs:attribute name="Type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="Submit"/>
+            <xs:enumeration value="Cancel"/>
+            <xs:enumeration value="Reset"/>
+            <xs:enumeration value="Close"/>
+            <xs:enumeration value="Confirm"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="Label" type="xs:string" use="required"/>
+      <xs:attribute name="Style" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="Primary"/>
+            <xs:enumeration value="Secondary"/>
+            <xs:enumeration value="Success"/>
+            <xs:enumeration value="Danger"/>
+            <xs:enumeration value="Warning"/>
+            <xs:enumeration value="Info"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="ActionRef" type="xs:string" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="Message">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="Type" use="required">
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="Info"/>
+                <xs:enumeration value="Success"/>
+                <xs:enumeration value="Warning"/>
+                <xs:enumeration value="Error"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="DataTable">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Column" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attribute name="Id" type="xs:string" use="required"/>
+      <xs:attribute name="QueryRef" type="xs:string" use="required"/>
+      <xs:attribute name="Title" type="xs:string" use="required"/>
+      <xs:attribute name="Pagination" type="xs:boolean" use="optional" default="true"/>
+      <xs:attribute name="PageSize" type="xs:positiveInteger" use="optional" default="20"/>
+      <xs:attribute name="Sortable" type="xs:boolean" use="optional" default="true"/>
+      <xs:attribute name="Filterable" type="xs:boolean" use="optional" default="false"/>
+      <xs:attribute name="Searchable" type="xs:boolean" use="optional" default="false"/>
+      <xs:attribute name="FormActions" type="xs:string" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="Column">
+    <xs:complexType>
+      <xs:attribute name="Name" type="xs:string" use="required"/>
+      <xs:attribute name="Label" type="xs:string" use="required"/>
+      <xs:attribute name="Type" use="optional" default="Text">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="Text"/>
+            <xs:enumeration value="Number"/>
+            <xs:enumeration value="Date"/>
+            <xs:enumeration value="DateTime"/>
+            <xs:enumeration value="Boolean"/>
+            <xs:enumeration value="Currency"/>
+            <xs:enumeration value="Percentage"/>
+            <xs:enumeration value="Link"/>
+            <xs:enumeration value="Badge"/>
+            <xs:enumeration value="Image"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="Sortable" type="xs:boolean" use="optional" default="true"/>
+      <xs:attribute name="Filterable" type="xs:boolean" use="optional" default="false"/>
+      <xs:attribute name="Width" type="xs:string" use="optional"/>
+      <xs:attribute name="Format" type="xs:string" use="optional"/>
+      <xs:attribute name="Align" use="optional" default="Left">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="Left"/>
+            <xs:enumeration value="Center"/>
+            <xs:enumeration value="Right"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+</xs:schema>
