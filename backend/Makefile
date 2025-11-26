@@ -41,12 +41,6 @@ deps: ## Download dependencies
 	go mod download
 	go mod tidy
 
-fmt: ## Format code
-	go fmt ./...
-
-lint: ## Run linter
-	golangci-lint run
-
 migrate-up: ## Run database migrations up
 	@echo "Database migrations not implemented yet"
 
