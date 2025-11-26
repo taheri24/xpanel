@@ -10,7 +10,7 @@ run: ## Run the application
 	go run main.go
 
 build: ## Build the backend only
-	go build -o bin/api main.go
+	go build -o bin/api .
 
 build-frontend: ## Build the frontend
 	@echo "Building frontend..."
