@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { XFeatureProvider, useXFeature, useXFeatureQuery, useXFeatureAction, useXFeatureDefinition, useXFeatureFrontend } from './XFeatureContext';
-import type { XFeature, QueryResponse, ActionResponse, FrontendElements } from '../types/xfeature';
-import { ReactNode, useState, useEffect } from 'react';
+import { XFeatureProvider, useXFeature, useXFeatureQuery, useXFeatureAction, useXFeatureFrontend } from './XFeatureContext';
+import type { XFeature, QueryResponse, FrontendElements } from '../types/xfeature';
+import { useState, useEffect } from 'react';
 
 const meta = {
   title: 'Contexts/XFeatureContext',
@@ -380,29 +380,6 @@ const ActionExecutionDemo = () => {
   );
 };
 
-// Component to test feature definition loading
-const FeatureDefinitionDemo = () => {
-  const { feature, loading, error } = useXFeatureDefinition('UserManagement');
-
-  return (
-    <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '4px', marginBottom: '16px' }}>
-      <h3>Feature Definition Demo</h3>
-      <p><strong>Loading:</strong> {loading ? 'Yes' : 'No'}</p>
-      {error && <p style={{ color: 'red' }}><strong>Error:</strong> {error.message}</p>}
-      {feature && (
-        <>
-          <p><strong>Feature Name:</strong> {feature.name}</p>
-          <p><strong>Version:</strong> {feature.version}</p>
-          <p><strong>Queries:</strong> {feature.backend.queries.length}</p>
-          <p><strong>Actions:</strong> {feature.backend.actionQueries.length}</p>
-          <p><strong>Forms:</strong> {feature.frontend.forms.length}</p>
-          <p><strong>Tables:</strong> {feature.frontend.dataTables.length}</p>
-        </>
-      )}
-    </div>
-  );
-};
-
 // Component to test frontend elements loading
 const FrontendElementsDemo = () => {
   const { frontendElements, loading, error, load } = useXFeatureFrontend('UserManagement', false);
@@ -436,6 +413,8 @@ const FrontendElementsDemo = () => {
  * Demonstrates the simplest way to use XFeatureProvider.
  */
 export const BasicProvider: Story = {
+  // @ts-expect-error - render function provides children
+  args: {},
   render: () => (
     <XFeatureProvider>
       <div style={{ padding: '20px' }}>
@@ -452,6 +431,8 @@ export const BasicProvider: Story = {
  * Shows how to capture and respond to errors during operations.
  */
 export const ProviderWithErrorHandling: Story = {
+  // @ts-expect-error - render function provides children
+  args: {},
   render: () => {
     const [errors, setErrors] = useState<string[]>([]);
 
@@ -491,6 +472,8 @@ export const ProviderWithErrorHandling: Story = {
  * Demonstrates intercepting queries and returning mock data.
  */
 export const ProviderWithQueryMocking: Story = {
+  // @ts-expect-error - render function provides children
+  args: {},
   render: () => {
     const [mockEnabled, setMockEnabled] = useState(true);
 
@@ -541,6 +524,8 @@ export const ProviderWithQueryMocking: Story = {
  * Demonstrates intercepting actions and returning mock responses.
  */
 export const ProviderWithActionMocking: Story = {
+  // @ts-expect-error - render function provides children
+  args: {},
   render: () => {
     const [mockEnabled, setMockEnabled] = useState(true);
 
@@ -597,6 +582,8 @@ export const ProviderWithActionMocking: Story = {
  * Demonstrates loading and caching of frontend element definitions.
  */
 export const ProviderWithFrontendLoading: Story = {
+  // @ts-expect-error - render function provides children
+  args: {},
   render: () => {
     return (
       <XFeatureProvider
@@ -629,6 +616,8 @@ export const ProviderWithFrontendLoading: Story = {
  * Demonstrates all event handlers working together with comprehensive logging.
  */
 export const CompleteEventHandling: Story = {
+  // @ts-expect-error - render function provides children
+  args: {},
   render: () => {
     const [events, setEvents] = useState<{ type: string; timestamp: string; details: string }[]>([]);
 
@@ -704,21 +693,23 @@ export const CompleteEventHandling: Story = {
  * Demonstrates handling various error conditions.
  */
 export const ErrorScenarios: Story = {
+  // @ts-expect-error - render function provides children
+  args: {},
   render: () => {
     const [errorType, setErrorType] = useState<'none' | 'query' | 'action' | 'feature'>('none');
     const [errors, setErrors] = useState<string[]>([]);
 
-    const simulateError = (type: string, message: string): undefined => {
+    const simulateError = (_type: string, message: string): undefined => {
       throw new Error(message);
     };
 
     return (
       <XFeatureProvider
-        onBeforeQuery={async (event) => {
+        onBeforeQuery={async (_event) => {
           if (errorType === 'query') {
             simulateError('Query Error', 'Failed to execute query: Database connection timeout');
           }
-          if (event.queryId === 'getUsersQuery') {
+          if ((_event).queryId === 'getUsersQuery') {
             return {
               data: mockUsersData,
               total: mockUsersData.length,
@@ -726,13 +717,13 @@ export const ErrorScenarios: Story = {
           }
           return undefined;
         }}
-        onBeforeAction={async (event) => {
+        onBeforeAction={async (_event) => {
           if (errorType === 'action') {
             simulateError('Action Error', 'Failed to create user: Validation error');
           }
           return undefined;
         }}
-        onBeforeFrontend={async (event) => {
+        onBeforeFrontend={async (_event) => {
           if (errorType === 'feature') {
             simulateError('Frontend Error', 'Failed to load frontend elements: Network error');
           }
@@ -797,6 +788,8 @@ export const ErrorScenarios: Story = {
  * Shows query execution with pagination, refetch, and error handling.
  */
 export const UseXFeatureQueryHookDemo: Story = {
+  // @ts-expect-error - render function provides children
+  args: {},
   render: () => {
     const [page, setPage] = useState(0);
     const pageSize = 3;
@@ -916,6 +909,8 @@ function QueryComponent({
  * Shows action execution with validation and response handling.
  */
 export const UseXFeatureActionHookDemo: Story = {
+  // @ts-expect-error - render function provides children
+  args: {},
   render: () => {
     const [createdUsers, setCreatedUsers] = useState<any[]>([]);
 
@@ -1049,6 +1044,8 @@ function ActionFormComponent({ onUserCreated }: { onUserCreated: (user: any) => 
  * Shows multiple hooks working together in a complex scenario.
  */
 export const AllHooksCombined: Story = {
+  // @ts-expect-error - render function provides children
+  args: {},
   render: () => {
     const [selectedUser, setSelectedUser] = useState<any>(null);
 
@@ -1064,7 +1061,7 @@ export const AllHooksCombined: Story = {
           }
           return undefined;
         }}
-        onBeforeFrontend={async (event) => mockFrontendElements}
+        onBeforeFrontend={async (_event) => mockFrontendElements}
         onBeforeAction={async (event) => {
           if (event.actionId === 'updateUserAction') {
             return { success: true, message: 'User updated', data: event.params };
@@ -1125,7 +1122,7 @@ function CombinedHooksLeftPanel({ onSelectUser }: { onSelectUser: (user: any) =>
 
 // Helper component for combined hooks right panel
 function CombinedHooksRightPanel({ selectedUser }: { selectedUser: any }) {
-  const { frontendElements, loading: frontendLoading } = useXFeatureFrontend('UserManagement', false);
+  const { frontendElements } = useXFeatureFrontend('UserManagement', false);
   const { execute, loading: actionLoading, success } = useXFeatureAction('UserManagement', 'updateUserAction');
 
   useEffect(() => {
