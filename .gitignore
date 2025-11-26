@@ -1,0 +1,26 @@
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Backend
+backend/bin/
+backend/.env
+
+# Frontend
+frontend/node_modules/
+frontend/package-lock.json
+frontend/yarn.lock
+frontend/dist/
+frontend/dist-ssr/
+frontend/coverage/
+frontend/.vitest/
+frontend/storybook-static/

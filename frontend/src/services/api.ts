@@ -100,3 +100,54 @@ export async function deleteUser(id: number): Promise<void> {
 export async function checkHealth(): Promise<{ status: string }> {
   return healthApi.get('/health').json<{ status: string }>();
 }
+
+// ============================================================================
+// XFEATURE API FUNCTIONS
+// ============================================================================
+
+import type {
+  XFeature,
+  QueryRequest,
+  QueryResponse,
+  ActionRequest,
+  ActionResponse,
+  FrontendElements,
+} from '../types/xfeature';
+
+export async function getXFeatures(): Promise<string[]> {
+  return api.get('xfeatures').json<string[]>();
+}
+
+export async function getXFeature(name: string): Promise<XFeature> {
+  return api.get(`xfeatures/${name}`).json<XFeature>();
+}
+
+export async function executeXFeatureQuery<T = Record<string, unknown>>(
+  featureName: string,
+  queryId: string,
+  params: QueryRequest
+): Promise<QueryResponse<T>> {
+  return api
+    .post(`xfeatures/${featureName}/queries/${queryId}`, {
+      json: params,
+    })
+    .json<QueryResponse<T>>();
+}
+
+export async function executeXFeatureAction(
+  featureName: string,
+  actionId: string,
+  params: ActionRequest
+): Promise<ActionResponse> {
+  return api
+    .post(`xfeatures/${featureName}/actions/${actionId}`, {
+      json: params,
+    })
+    .json<ActionResponse>();
+}
+
+export async function getXFeatureFrontendElements(
+  featureName: string
+): Promise<FrontendElements> {
+  return api.get(`xfeatures/${featureName}/frontend`).json<FrontendElements>();
+}

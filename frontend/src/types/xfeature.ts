@@ -1,0 +1,338 @@
+/**
+ * XFeature Type Definitions
+ * Comprehensive types for XFeature specification and runtime
+ */
+
+// ============================================================================
+// CORE XFEATURE TYPES
+// ============================================================================
+
+export interface XFeature {
+  name: string;
+  version: string;
+  backend: Backend;
+  frontend: Frontend;
+}
+
+// ============================================================================
+// BACKEND TYPES
+// ============================================================================
+
+export interface Backend {
+  queries: Query[];
+  actionQueries: ActionQuery[];
+}
+
+export interface Query {
+  id: string;
+  type: 'Select';
+  description?: string;
+  sql: string;
+  parameters?: Parameter[];
+}
+
+export interface ActionQuery {
+  id: string;
+  type: 'Insert' | 'Update' | 'Delete';
+  description?: string;
+  sql: string;
+  parameters?: Parameter[];
+}
+
+export interface Parameter {
+  name: string;
+  type?: string;
+  required?: boolean;
+  validation?: string;
+}
+
+// ============================================================================
+// FRONTEND TYPES
+// ============================================================================
+
+export interface Frontend {
+  dataTables: DataTable[];
+  forms: Form[];
+}
+
+// ============================================================================
+// DATATABLE TYPES
+// ============================================================================
+
+export interface DataTable {
+  id: string;
+  queryRef: string;
+  title?: string;
+  description?: string;
+  pagination?: boolean;
+  pageSize?: number;
+  sortable?: boolean;
+  filterable?: boolean;
+  searchable?: boolean;
+  columns: Column[];
+  formActions?: string; // Comma-separated form IDs
+}
+
+export interface Column {
+  name: string;
+  label: string;
+  type: ColumnType;
+  sortable?: boolean;
+  filterable?: boolean;
+  width?: string;
+  format?: string;
+  align?: 'left' | 'center' | 'right';
+  formActions?: string; // Comma-separated form IDs for row actions
+}
+
+export type ColumnType =
+  | 'Text'
+  | 'Number'
+  | 'Date'
+  | 'DateTime'
+  | 'Boolean'
+  | 'Currency'
+  | 'Percentage'
+  | 'Link'
+  | 'Badge'
+  | 'Image'
+  | 'Email'
+  | 'Phone'
+  | 'URL';
+
+// ============================================================================
+// FORM TYPES
+// ============================================================================
+
+export interface Form {
+  id: string;
+  mode: FormMode;
+  title?: string;
+  description?: string;
+  actionRef?: string;
+  queryRef?: string;
+  dialog?: boolean;
+  fields: Field[];
+  buttons: Button[];
+  messages?: Message[];
+}
+
+export type FormMode = 'Create' | 'Edit' | 'View' | 'Delete' | 'Search';
+
+export interface Field {
+  name: string;
+  label: string;
+  type: FieldType;
+  required?: boolean;
+  readonly?: boolean;
+  placeholder?: string;
+  validation?: string;
+  format?: string;
+  defaultValue?: string | number | boolean;
+  options?: Option[];
+  helperText?: string;
+  rows?: number; // For textarea
+  cols?: number; // For textarea
+}
+
+export type FieldType =
+  | 'Text'
+  | 'Email'
+  | 'Password'
+  | 'Number'
+  | 'Decimal'
+  | 'Date'
+  | 'DateTime'
+  | 'Time'
+  | 'Select'
+  | 'MultiSelect'
+  | 'Checkbox'
+  | 'Radio'
+  | 'Textarea'
+  | 'Currency'
+  | 'Phone'
+  | 'URL'
+  | 'File'
+  | 'Hidden';
+
+export interface Option {
+  value: string | number;
+  label: string;
+}
+
+export interface Button {
+  id?: string;
+  type: ButtonType;
+  label?: string;
+  style?: ButtonStyle;
+  disabled?: boolean;
+  onClick?: () => void;
+}
+
+export type ButtonType = 'Submit' | 'Cancel' | 'Reset' | 'Close' | 'Custom';
+export type ButtonStyle = 'Primary' | 'Secondary' | 'Danger' | 'Success' | 'Warning' | 'Info';
+
+export interface Message {
+  type: MessageType;
+  content: string;
+  visible?: boolean;
+}
+
+export type MessageType = 'Info' | 'Warning' | 'Error' | 'Success';
+
+// ============================================================================
+// API REQUEST/RESPONSE TYPES
+// ============================================================================
+
+export interface QueryRequest {
+  [key: string]: string | number | boolean | undefined;
+}
+
+export interface QueryResponse<T = Record<string, unknown>> {
+  data: T[];
+  total?: number;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface ActionRequest {
+  [key: string]: string | number | boolean | undefined;
+}
+
+export interface ActionResponse {
+  success: boolean;
+  message?: string;
+  data?: Record<string, unknown>;
+}
+
+export interface FrontendElements {
+  feature: string;
+  version: string;
+  dataTables: DataTable[];
+  forms: Form[];
+}
+
+// ============================================================================
+// COMPONENT PROPS TYPES
+// ============================================================================
+
+export interface XFeatureDataTableProps {
+  definition: DataTable;
+  featureName: string;
+  onRowAction?: (formId: string, rowData: Record<string, unknown>) => void;
+  onRefresh?: () => void;
+}
+
+export interface XFeatureFormProps {
+  definition: Form;
+  featureName: string;
+  initialData?: Record<string, unknown>;
+  onSuccess?: (data: ActionResponse) => void;
+  onCancel?: () => void;
+  onClose?: () => void;
+}
+
+export interface XFeatureFieldProps {
+  definition: Field;
+  value?: string | number | boolean;
+  onChange: (value: string | number | boolean) => void;
+  onBlur?: () => void;
+  errors?: string[];
+}
+
+export interface XFeatureButtonProps {
+  definition: Button;
+  onClick?: () => void;
+  loading?: boolean;
+}
+
+export interface XFeatureMessageProps {
+  definition: Message;
+}
+
+// ============================================================================
+// FRONTEND ELEMENTS EVENT TYPES
+// ============================================================================
+
+export interface XFeatureBeforeFrontendEvent {
+  featureName: string;
+}
+
+export interface XFeatureAfterFrontendEvent {
+  featureName: string;
+  result: FrontendElements;
+}
+
+export type XFeatureBeforeFrontendHandler = (
+  event: XFeatureBeforeFrontendEvent
+) => FrontendElements | undefined | Promise<FrontendElements | undefined>;
+
+export type XFeatureAfterFrontendHandler = (
+  event: XFeatureAfterFrontendEvent
+) => void | Promise<void>;
+
+// ============================================================================
+// RUNTIME STATE TYPES
+// ============================================================================
+
+export interface XFeatureContextType {
+  features: Map<string, XFeature>;
+  loading: boolean;
+  error?: Error;
+  getFeature: (name: string) => Promise<XFeature | undefined>;
+  getQuery: (featureName: string, queryId: string) => Query | undefined;
+  getAction: (featureName: string, actionId: string) => ActionQuery | undefined;
+  getForm: (featureName: string, formId: string) => Form | undefined;
+  getDataTable: (featureName: string, tableId: string) => DataTable | undefined;
+  executeQuery: <T = Record<string, unknown>>(
+    featureName: string,
+    queryId: string,
+    params: QueryRequest
+  ) => Promise<QueryResponse<T>>;
+  executeAction: (
+    featureName: string,
+    actionId: string,
+    params: ActionRequest
+  ) => Promise<ActionResponse>;
+  executeFrontendElements: (featureName: string) => Promise<FrontendElements>;
+}
+
+export interface FormState {
+  values: Record<string, string | number | boolean>;
+  errors: Record<string, string[]>;
+  touched: Record<string, boolean>;
+  isSubmitting: boolean;
+}
+
+export interface DataTableState {
+  data: Record<string, unknown>[];
+  loading: boolean;
+  error?: Error;
+  page: number;
+  pageSize: number;
+  total: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  searchQuery?: string;
+  filters?: Record<string, unknown>;
+}
+
+// ============================================================================
+// VALIDATION TYPES
+// ============================================================================
+
+export interface ValidationRule {
+  pattern?: RegExp;
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
+  required?: boolean;
+  custom?: (value: unknown) => boolean;
+  message?: string;
+}
+
+export interface ValidationResult {
+  valid: boolean;
+  errors: string[];
+}
