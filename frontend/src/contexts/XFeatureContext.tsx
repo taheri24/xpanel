@@ -19,6 +19,96 @@ import {
 } from '../services/api';
 
 // ============================================================================
+// EVENT CALLBACK TYPES
+// ============================================================================
+
+/**
+ * Event fired before executing a query
+ * Can be used to mock responses or intercept requests
+ */
+export interface XFeatureBeforeQueryEvent {
+  featureName: string;
+  queryId: string;
+  params: QueryRequest;
+}
+
+/**
+ * Event fired after successfully executing a query
+ */
+export interface XFeatureAfterQueryEvent<T = Record<string, unknown>> {
+  featureName: string;
+  queryId: string;
+  params: QueryRequest;
+  result: QueryResponse<T>;
+}
+
+/**
+ * Event fired before executing an action
+ * Can be used to mock responses or intercept requests
+ */
+export interface XFeatureBeforeActionEvent {
+  featureName: string;
+  actionId: string;
+  params: ActionRequest;
+}
+
+/**
+ * Event fired after successfully executing an action
+ */
+export interface XFeatureAfterActionEvent {
+  featureName: string;
+  actionId: string;
+  params: ActionRequest;
+  result: ActionResponse;
+}
+
+/**
+ * Event fired when an error occurs
+ */
+export interface XFeatureErrorEvent {
+  error: Error;
+  context: 'feature' | 'query' | 'action';
+  featureName?: string;
+  queryId?: string;
+  actionId?: string;
+}
+
+/**
+ * Event handler that can return a modified response to short-circuit the API call
+ */
+export type XFeatureBeforeQueryHandler = (
+  event: XFeatureBeforeQueryEvent
+) => QueryResponse<Record<string, unknown>> | undefined | Promise<QueryResponse<Record<string, unknown>> | undefined>;
+
+/**
+ * Event handler called after a query completes
+ */
+export type XFeatureAfterQueryHandler = (
+  event: XFeatureAfterQueryEvent
+) => void | Promise<void>;
+
+/**
+ * Event handler that can return a modified response to short-circuit the API call
+ */
+export type XFeatureBeforeActionHandler = (
+  event: XFeatureBeforeActionEvent
+) => ActionResponse | undefined | Promise<ActionResponse | undefined>;
+
+/**
+ * Event handler called after an action completes
+ */
+export type XFeatureAfterActionHandler = (
+  event: XFeatureAfterActionEvent
+) => void | Promise<void>;
+
+/**
+ * Event handler called when an error occurs
+ */
+export type XFeatureErrorHandler = (
+  event: XFeatureErrorEvent
+) => void | Promise<void>;
+
+// ============================================================================
 // CONTEXT STATE
 // ============================================================================
 
@@ -67,9 +157,38 @@ const XFeatureContext = createContext<XFeatureContextType | undefined>(undefined
 
 interface XFeatureProviderProps {
   children: ReactNode;
+  /**
+   * Called before executing a query
+   * Return a QueryResponse to short-circuit the API call (useful for mocking)
+   */
+  onBeforeQuery?: XFeatureBeforeQueryHandler;
+  /**
+   * Called after a query completes successfully
+   */
+  onAfterQuery?: XFeatureAfterQueryHandler;
+  /**
+   * Called before executing an action
+   * Return an ActionResponse to short-circuit the API call (useful for mocking)
+   */
+  onBeforeAction?: XFeatureBeforeActionHandler;
+  /**
+   * Called after an action completes successfully
+   */
+  onAfterAction?: XFeatureAfterActionHandler;
+  /**
+   * Called when an error occurs during any operation
+   */
+  onError?: XFeatureErrorHandler;
 }
 
-export function XFeatureProvider({ children }: XFeatureProviderProps) {
+export function XFeatureProvider({
+  children,
+  onBeforeQuery,
+  onAfterQuery,
+  onBeforeAction,
+  onAfterAction,
+  onError,
+}: XFeatureProviderProps) {
   const [state, dispatch] = useReducer(xfeatureReducer, {
     features: new Map(),
     loading: false,
@@ -91,10 +210,20 @@ export function XFeatureProvider({ children }: XFeatureProviderProps) {
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error));
         dispatch({ type: 'SET_ERROR', payload: err });
+
+        // Call onError event
+        if (onError) {
+          await onError({
+            error: err,
+            context: 'feature',
+            featureName: name,
+          });
+        }
+
         return undefined;
       }
     },
-    [state.features]
+    [state.features, onError]
   );
 
   const getQuery = useCallback(
@@ -141,16 +270,57 @@ export function XFeatureProvider({ children }: XFeatureProviderProps) {
     ): Promise<QueryResponse<T>> => {
       dispatch({ type: 'SET_LOADING', payload: true });
       try {
-        const result = await executeXFeatureQuery<T>(featureName, queryId, params);
+        // Call onBeforeQuery event - can return mocked response
+        let result: QueryResponse<T> | undefined;
+        if (onBeforeQuery) {
+          const mockResult = await onBeforeQuery({
+            featureName,
+            queryId,
+            params,
+          });
+          if (mockResult) {
+            // Type assertion needed since mock returns generic Record<string, unknown>
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            result = mockResult as any as QueryResponse<T>;
+          }
+        }
+
+        // If no mocked response, execute the actual query
+        if (!result) {
+          result = await executeXFeatureQuery<T>(featureName, queryId, params);
+        }
+
+        // Call onAfterQuery event
+        if (onAfterQuery) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await onAfterQuery({
+            featureName,
+            queryId,
+            params,
+            result: result as any,
+          });
+        }
+
         dispatch({ type: 'SET_LOADING', payload: false });
         return result;
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error));
         dispatch({ type: 'SET_ERROR', payload: err });
+
+        // Call onError event
+        if (onError) {
+          await onError({
+            error: err,
+            context: 'query',
+            featureName,
+            queryId,
+          });
+        }
+
         throw err;
       }
     },
-    []
+    [onBeforeQuery, onAfterQuery, onError]
   );
 
   const executeActionFn = useCallback(
@@ -161,16 +331,54 @@ export function XFeatureProvider({ children }: XFeatureProviderProps) {
     ): Promise<ActionResponse> => {
       dispatch({ type: 'SET_LOADING', payload: true });
       try {
-        const result = await executeXFeatureAction(featureName, actionId, params);
+        // Call onBeforeAction event - can return mocked response
+        let result: ActionResponse | undefined;
+        if (onBeforeAction) {
+          const mockResult = await onBeforeAction({
+            featureName,
+            actionId,
+            params,
+          });
+          if (mockResult) {
+            result = mockResult;
+          }
+        }
+
+        // If no mocked response, execute the actual action
+        if (!result) {
+          result = await executeXFeatureAction(featureName, actionId, params);
+        }
+
+        // Call onAfterAction event
+        if (onAfterAction) {
+          await onAfterAction({
+            featureName,
+            actionId,
+            params,
+            result,
+          });
+        }
+
         dispatch({ type: 'SET_LOADING', payload: false });
         return result;
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error));
         dispatch({ type: 'SET_ERROR', payload: err });
+
+        // Call onError event
+        if (onError) {
+          await onError({
+            error: err,
+            context: 'action',
+            featureName,
+            actionId,
+          });
+        }
+
         throw err;
       }
     },
-    []
+    [onBeforeAction, onAfterAction, onError]
   );
 
   const value: XFeatureContextType = {

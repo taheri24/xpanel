@@ -374,6 +374,137 @@ API functions in `services/api.ts`:
 - `executeXFeatureQuery(featureName, queryId, params)`: Execute SELECT query
 - `executeXFeatureAction(featureName, actionId, params)`: Execute INSERT/UPDATE/DELETE
 
+## Events & Customization
+
+The `XFeatureProvider` supports customizable event callbacks for intercepting API calls, mocking responses, and custom logging. This is useful for testing, Storybook, and debugging.
+
+### Event Types
+
+```typescript
+// Before executing a query (can return mocked response)
+onBeforeQuery?: (event: XFeatureBeforeQueryEvent) => Promise<QueryResponse | undefined>;
+
+// After a query completes successfully
+onAfterQuery?: (event: XFeatureAfterQueryEvent) => Promise<void>;
+
+// Before executing an action (can return mocked response)
+onBeforeAction?: (event: XFeatureBeforeActionEvent) => Promise<ActionResponse | undefined>;
+
+// After an action completes successfully
+onAfterAction?: (event: XFeatureAfterActionEvent) => Promise<void>;
+
+// When an error occurs
+onError?: (event: XFeatureErrorEvent) => Promise<void>;
+```
+
+### Mocking Example (for testing/Storybook)
+
+```tsx
+import { XFeatureProvider } from '@/contexts/XFeatureContext';
+import { XFeaturePageBuilder } from '@/components/xfeature';
+
+function App() {
+  const mockUsers = [
+    { id: 1, username: 'john_doe', email: 'john@example.com' },
+    { id: 2, username: 'jane_doe', email: 'jane@example.com' },
+  ];
+
+  return (
+    <XFeatureProvider
+      onBeforeQuery={async (event) => {
+        // Mock ListUsers query
+        if (event.queryId === 'ListUsers') {
+          return {
+            data: mockUsers,
+            total: mockUsers.length,
+          };
+        }
+        return undefined; // Use real API for other queries
+      }}
+      onBeforeAction={async (event) => {
+        // Mock CreateUser action
+        if (event.actionId === 'CreateUser') {
+          return {
+            success: true,
+            message: 'User created',
+            data: { id: 3, ...event.params },
+          };
+        }
+        return undefined; // Use real API for other actions
+      }}
+    >
+      <XFeaturePageBuilder featureName="user-management" />
+    </XFeatureProvider>
+  );
+}
+```
+
+### Logging Example
+
+```tsx
+<XFeatureProvider
+  onAfterQuery={async (event) => {
+    console.log(`Query ${event.queryId} returned ${event.result.data.length} rows`);
+  }}
+  onAfterAction={async (event) => {
+    console.log(`Action ${event.actionId} completed: ${event.result.message}`);
+  }}
+  onError={async (event) => {
+    console.error(`Error in ${event.context}:`, event.error.message);
+  }}
+>
+  <YourApp />
+</XFeatureProvider>
+```
+
+### Storybook Integration
+
+```tsx
+import type { Meta, StoryObj } from '@storybook/react';
+import { XFeatureProvider } from '@/contexts/XFeatureContext';
+import { XFeaturePageBuilder } from '@/components/xfeature';
+
+const meta = {
+  title: 'XFeature/UserManagement',
+  component: XFeaturePageBuilder,
+  decorators: [
+    (Story) => (
+      <XFeatureProvider
+        onBeforeQuery={async () => ({
+          data: [
+            { id: 1, username: 'john_doe', email: 'john@example.com', status: 'active' },
+          ],
+          total: 1,
+        })}
+      >
+        <Story />
+      </XFeatureProvider>
+    ),
+  ],
+} satisfies Meta<typeof XFeaturePageBuilder>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: { featureName: 'user-management' },
+};
+```
+
+### Helper Functions
+
+Helper functions are available in `contexts/XFeatureContext.examples.ts`:
+
+```typescript
+import {
+  createMockQueryHandler,
+  createMockActionHandler,
+  createLoggingQueryHandler,
+  createErrorLoggingHandler,
+  createStorybookMockProvider,
+} from '@/contexts/XFeatureContext.examples';
+```
+
 ## Best Practices
 
 1. **Always use XFeatureProvider** at the root of your app
