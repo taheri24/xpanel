@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Feature Name="UserManagement" Version="1.9" 
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="feature-schema.xsd">
+  
+  <!-- ============================= -->
+  <!-- BACKEND ELEMENTS              -->
+  <!-- ============================= -->
+  <Backend>
+    
+    <!-- SELECT QUERIES: Data retrieval operations -->
+    <Query Id="ListUsers" Type="Select" Description="Retrieve all active users with pagination">
+      <![CDATA[
+        SELECT 
+          user_id,
+          username,
+          email,
+          role,
+          status,
+          created_at,
+          last_login
+        FROM users
+        WHERE status = :status
+        ORDER BY created_at DESC
+        LIMIT :limit OFFSET :offset
+      ]]>
+    </Query>
+    
+    <Query Id="GetUserDetails" Type="Select" Description="Retrieve single user by ID">
+      <![CDATA[
+        SELECT 
+          user_id,
+          username,
+          email,
+          first_name,
+          last_name,
+          role,
+          status,
+          phone,
+          created_at
+        FROM users
+        WHERE user_id = :user_id
+      ]]>
+    </Query>
+    
+    <Query Id="SearchUsers" Type="Select" Description="Search users by keyword">
+      <![CDATA[
+        SELECT 
+          user_id,
+          username,
+          email,
+          role,
+          status
+        FROM users
+        WHERE (username LIKE :keyword OR email LIKE :keyword)
+          AND status = 'active'
+        ORDER BY username
+      ]]>
+    </Query>
+    
+    <Query Id="GetUserCount" Type="Select" Description="Count total active users">
+      <![CDATA[
+        SELECT COUNT(*) as total
+        FROM users
+        WHERE status = :status
+      ]]>
+    </Query>
+    
+    <!-- ACTION QUERIES: Data modification operations -->
+    <ActionQuery Id="CreateUser" Type="Insert" Description="Create a new user account">
+      <![CDATA[
+        INSERT INTO users (
+          username,
+          email,
+          password_hash,
+          first_name,
+          last_name,
+          role,
+          status,
+          phone,
+          created_at
+        ) VALUES (
+          :username,
+          :email,
+          :password_hash,
+          :first_name,
+          :last_name,
+          :role,
+          'active',
+          :phone,
+          NOW()
+        )
+      ]]>
+    </ActionQuery>
+    
+    <ActionQuery Id="UpdateUser" Type="Update" Description="Update existing user information">
+      <![CDATA[
+        UPDATE users
+        SET 
+          email = :email,
+          first_name = :first_name,
+          last_name = :last_name,
+          role = :role,
+          phone = :phone,
+          updated_at = NOW()
+        WHERE user_id = :user_id
+      ]]>
+    </ActionQuery>
+    
+    <ActionQuery Id="DeleteUser" Type="Delete" Description="Soft delete user by setting status to inactive">
+      <![CDATA[
+        UPDATE users
+        SET status = 'inactive', updated_at = NOW()
+        WHERE user_id = :user_id
+      ]]>
+    </ActionQuery>
+    
+    <ActionQuery Id="ActivateUser" Type="Update" Description="Reactivate an inactive user">
+      <![CDATA[
+        UPDATE users
+        SET status = 'active', updated_at = NOW()
+        WHERE user_id = :user_id
+      ]]>
+    </ActionQuery>
+    
+    <ActionQuery Id="ChangeUserRole" Type="Update" Description="Update user role">
+      <![CDATA[
+        UPDATE users
+        SET role = :role, updated_at = NOW()
+        WHERE user_id = :user_id
+      ]]>
+    </ActionQuery>
+    
+    <ActionQuery Id="BulkDeleteUsers" Type="Delete" Description="Deactivate multiple users at once">
+      <![CDATA[
+        UPDATE users
+        SET status = 'inactive', updated_at = NOW()
+        WHERE user_id IN (:user_ids)
+      ]]>
+    </ActionQuery>
+    
+    <ActionQuery Id="ResetUserPassword" Type="Update" Description="Reset user password">
+      <![CDATA[
+        UPDATE users
+        SET password_hash = :password_hash, updated_at = NOW()
+        WHERE user_id = :user_id
+      ]]>
+    </ActionQuery>
+    
+  </Backend>
+  
+  <!-- ============================= -->
+  <!-- FRONTEND ELEMENTS             -->
+  <!-- ============================= -->
+  <Frontend>
+    
+    <!-- DATA TABLES: Display data in tabular format -->
+    <DataTable Id="UsersTable" QueryRef="ListUsers" Title="Users List" 
+               Pagination="true" PageSize="20" Sortable="true" Searchable="true"
+               FormActions="ViewUserForm,EditUserForm,DeleteUserForm">
+      <Column Name="user_id" Label="ID" Type="Number" Width="80px" Align="Center"/>
+      <Column Name="username" Label="Username" Type="Text" Sortable="true"/>
+      <Column Name="email" Label="Email" Type="Text" Sortable="true"/>
+      <Column Name="role" Label="Role" Type="Badge" Sortable="true" Filterable="true"/>
+      <Column Name="status" Label="Status" Type="Badge" Sortable="true" Filterable="true"/>
+      <Column Name="created_at" Label="Created" Type="Date" Format="MM/DD/YYYY" Sortable="true"/>
+      <Column Name="last_login" Label="Last Login" Type="DateTime" Format="MM/DD/YYYY HH:mm" Sortable="true"/>
+    </DataTable>
+    
+    <!-- FORMS: Data input interfaces -->
+    <Form Id="CreateUserForm" Mode="Create" Dialog="true" ActionRef="CreateUser" Title="Create New User">
+      <Field Name="username" Label="Username" Type="Text" Required="true" 
+             Placeholder="Enter username" Validation="minLength:3,maxLength:50"/>
+      <Field Name="email" Label="Email Address" Type="Email" Required="true" 
+             Placeholder="user@example.com" Validation="email"/>
+      <Field Name="password" Label="Password" Type="Password" Required="true" 
+             Placeholder="Enter password" Validation="minLength:8"/>
+      <Field Name="first_name" Label="First Name" Type="Text" Required="true" 
+             Placeholder="John" Validation="maxLength:100"/>
+      <Field Name="last_name" Label="Last Name" Type="Text" Required="true" 
+             Placeholder="Doe" Validation="maxLength:100"/>
+      <Field Name="role" Label="Role" Type="Select" Required="true">
+        <Option Value="user" Label="User"/>
+        <Option Value="manager" Label="Manager"/>
+        <Option Value="admin" Label="Administrator"/>
+      </Field>
+      <Field Name="phone" Label="Phone Number" Type="Tel" Required="false" 
+             Placeholder="+1 (555) 123-4567" Validation="phone"/>
+      <Button Type="Submit" Label="Create User" Style="Primary"/>
+      <Button Type="Cancel" Label="Cancel" Style="Secondary"/>
+    </Form>
+    
+    <Form Id="EditUserForm" Mode="Edit" Dialog="true" ActionRef="UpdateUser" QueryRef="GetUserDetails" Title="Edit User">
+      <Field Name="user_id" Type="Hidden" Required="true"/>
+      <Field Name="email" Label="Email Address" Type="Email" Required="true" 
+             Placeholder="user@example.com" Validation="email"/>
+      <Field Name="first_name" Label="First Name" Type="Text" Required="true" 
+             Placeholder="John" Validation="maxLength:100"/>
+      <Field Name="last_name" Label="Last Name" Type="Text" Required="true" 
+             Placeholder="Doe" Validation="maxLength:100"/>
+      <Field Name="role" Label="Role" Type="Select" Required="true">
+        <Option Value="user" Label="User"/>
+        <Option Value="manager" Label="Manager"/>
+        <Option Value="admin" Label="Administrator"/>
+      </Field>
+      <Field Name="phone" Label="Phone Number" Type="Tel" Required="false" 
+             Placeholder="+1 (555) 123-4567" Validation="phone"/>
+      <Button Type="Submit" Label="Save Changes" Style="Primary"/>
+      <Button Type="Cancel" Label="Cancel" Style="Secondary"/>
+    </Form>
+    
+    <Form Id="ViewUserForm" Mode="View" Dialog="true" QueryRef="GetUserDetails" Title="User Details">
+      <Field Name="username" Label="Username" Type="Text" Readonly="true"/>
+      <Field Name="email" Label="Email Address" Type="Email" Readonly="true"/>
+      <Field Name="first_name" Label="First Name" Type="Text" Readonly="true"/>
+      <Field Name="last_name" Label="Last Name" Type="Text" Readonly="true"/>
+      <Field Name="role" Label="Role" Type="Text" Readonly="true"/>
+      <Field Name="status" Label="Status" Type="Text" Readonly="true"/>
+      <Field Name="phone" Label="Phone Number" Type="Tel" Readonly="true"/>
+      <Field Name="created_at" Label="Member Since" Type="Text" Readonly="true" Format="Date"/>
+      <Button Type="Close" Label="Close" Style="Secondary"/>
+    </Form>
+    
+    <Form Id="DeleteUserForm" Mode="Delete" Dialog="true" ActionRef="DeleteUser" Title="Delete User">
+      <Field Name="user_id" Type="Hidden" Required="true"/>
+      <Message Type="Warning">
+        Are you sure you want to delete this user? This action cannot be undone.
+      </Message>
+      <Button Type="Submit" Label="Delete" Style="Danger"/>
+      <Button Type="Cancel" Label="Cancel" Style="Secondary"/>
+    </Form>
+    
+    <Form Id="ChangeRoleForm" Mode="Edit" Dialog="true" ActionRef="ChangeUserRole" Title="Change User Role">
+      <Field Name="user_id" Type="Hidden" Required="true"/>
+      <Field Name="role" Label="New Role" Type="Select" Required="true">
+        <Option Value="user" Label="User"/>
+        <Option Value="manager" Label="Manager"/>
+        <Option Value="admin" Label="Administrator"/>
+      </Field>
+      <Button Type="Submit" Label="Change Role" Style="Primary"/>
+      <Button Type="Cancel" Label="Cancel" Style="Secondary"/>
+    </Form>
+    
+    <Form Id="ResetPasswordForm" Mode="Edit" Dialog="true" ActionRef="ResetUserPassword" Title="Reset Password">
+      <Field Name="user_id" Type="Hidden" Required="true"/>
+      <Field Name="password" Label="New Password" Type="Password" Required="true" 
+             Placeholder="Enter new password" Validation="minLength:8"/>
+      <Field Name="confirm_password" Label="Confirm Password" Type="Password" Required="true" 
+             Placeholder="Re-enter password" Validation="match:password"/>
+      <Button Type="Submit" Label="Reset Password" Style="Primary"/>
+      <Button Type="Cancel" Label="Cancel" Style="Secondary"/>
+    </Form>
+    
+    <Form Id="SearchUserForm" Mode="Search" Dialog="false" QueryRef="SearchUsers" Title="Search Users">
+      <Field Name="keyword" Label="Search" Type="Text" Required="true" 
+             Placeholder="Enter username or email" Validation="minLength:2"/>
+      <Button Type="Submit" Label="Search" Style="Primary"/>
+      <Button Type="Reset" Label="Clear" Style="Secondary"/>
+    </Form>
+    
+    <Form Id="BulkDeleteForm" Mode="Delete" Dialog="true" ActionRef="BulkDeleteUsers" Title="Delete Multiple Users">
+      <Field Name="user_ids" Type="Hidden" Required="true"/>
+      <Message Type="Warning">
+        Are you sure you want to delete the selected users? This action cannot be undone.
+      </Message>
+      <Button Type="Submit" Label="Delete Selected" Style="Danger"/>
+      <Button Type="Cancel" Label="Cancel" Style="Secondary"/>
+    </Form>
+    
+    <Form Id="ActivateUserForm" Mode="Edit" Dialog="true" ActionRef="ActivateUser" Title="Activate User">
+      <Field Name="user_id" Type="Hidden" Required="true"/>
+      <Message Type="Info">
+        Are you sure you want to activate this user?
+      </Message>
+      <Button Type="Submit" Label="Activate" Style="Success"/>
+      <Button Type="Cancel" Label="Cancel" Style="Secondary"/>
+    </Form>
+    
+  </Frontend>
+  
+</Feature>
