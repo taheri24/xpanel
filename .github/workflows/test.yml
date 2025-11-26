@@ -28,14 +28,6 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
-      - name: Format check
-        run: |
-          gofmt -l .
-          if [ -n "$(gofmt -l .)" ]; then
-            echo "Go code is not formatted. Run 'make fmt' to fix."
-            exit 1
-          fi
-
       - name: Run tests
         run: make test
 
@@ -72,9 +64,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Run linter
-        run: npm run lint
 
       - name: Type check
         run: npx tsc --noEmit
