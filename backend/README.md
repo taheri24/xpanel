@@ -106,6 +106,8 @@ make clean      # Clean build artifacts
 
 ## API Endpoints
 
+All API endpoints return JSON responses and support CORS for frontend requests. The frontend uses **ky.js** for making HTTP requests to these endpoints.
+
 ### Health Check
 
 - `GET /health` - Database health check
@@ -115,9 +117,29 @@ make clean      # Clean build artifacts
 
 - `GET /api/v1/users` - Get all users
 - `GET /api/v1/users/:id` - Get user by ID
-- `POST /api/v1/users` - Create a new user
-- `PUT /api/v1/users/:id` - Update a user
+- `POST /api/v1/users` - Create a new user with JSON body
+- `PUT /api/v1/users/:id` - Update a user with JSON body
 - `DELETE /api/v1/users/:id` - Delete a user
+
+### Frontend HTTP Client
+
+The frontend uses **ky.js** for making HTTP requests. All error responses should follow this JSON structure for proper error handling:
+
+```json
+{
+  "error": "Error message describing what went wrong"
+}
+```
+
+Example error response:
+```http
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+
+{
+  "error": "Username is required"
+}
+```
 
 ## Development
 

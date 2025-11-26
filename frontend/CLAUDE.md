@@ -503,46 +503,130 @@ export class ErrorBoundary extends Component<Props, State> {
 }
 ```
 
-### API Request Logging
+### API Service with ky.js
+
+The API service uses **ky.js** for HTTP requests, providing a lightweight and type-safe HTTP client:
 
 ```typescript
 // services/api.ts
-import { logger } from '@/utils/logger';
+import ky, { HTTPError } from 'ky';
 
-export const api = {
-  async request<T>(url: string, options?: RequestInit): Promise<T> {
-    const requestId = crypto.randomUUID();
+const API_BASE_URL = '/api/v1';
 
-    logger.debug('API request started', {
-      requestId,
-      url,
-      method: options?.method || 'GET',
-    });
+export class ApiError extends Error {
+  status: number;
 
-    try {
-      const response = await fetch(url, options);
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+    this.name = 'ApiError';
+  }
+}
 
-      logger.info('API request completed', {
-        requestId,
-        url,
-        status: response.status,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      logger.error('API request failed', {
-        requestId,
-        url,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw error;
-    }
+// Create a ky instance with base configuration
+const api = ky.create({
+  prefixUrl: API_BASE_URL,
+  hooks: {
+    beforeError: [
+      async (error) => {
+        if (error instanceof HTTPError) {
+          let errorMessage = `HTTP ${error.response.status}`;
+          try {
+            const errorData = await error.response.json() as { error?: string };
+            if (errorData.error) {
+              errorMessage = errorData.error;
+            }
+          } catch {
+            // If response body is not JSON, use status message
+          }
+          throw new ApiError(error.response.status, errorMessage);
+        }
+        return error;
+      },
+    ],
   },
-};
+});
+
+export async function getUsers(): Promise<User[]> {
+  return api.get('users').json<User[]>();
+}
+
+export async function createUser(userData: CreateUserRequest): Promise<User> {
+  return api.post('users', { json: userData }).json<User>();
+}
+
+export async function updateUser(id: number, userData: UpdateUserRequest): Promise<User> {
+  return api.put(`users/${id}`, { json: userData }).json<User>();
+}
+
+export async function deleteUser(id: number): Promise<void> {
+  await api.delete(`users/${id}`);
+}
+```
+
+#### ky.js Advantages
+
+- **Automatic JSON serialization**: No need to manually stringify/parse JSON
+- **Consistent error handling**: All HTTP errors are caught and converted to custom `ApiError`
+- **Type-safe**: Full TypeScript support with generic type parameters
+- **Hooks system**: Intercept requests/responses at any point
+- **Lightweight**: Only ~2KB gzipped, minimal impact on bundle size
+
+#### Adding Request Logging with ky.js
+
+```typescript
+const api = ky.create({
+  prefixUrl: API_BASE_URL,
+  hooks: {
+    beforeRequest: [
+      (request) => {
+        const requestId = crypto.randomUUID();
+        request.headers.set('X-Request-ID', requestId);
+        logger.debug('API request started', {
+          requestId,
+          url: request.url,
+          method: request.method,
+        });
+      },
+    ],
+    afterResponse: [
+      (request, options, response) => {
+        const requestId = request.headers.get('X-Request-ID');
+        logger.info('API request completed', {
+          requestId,
+          url: request.url,
+          status: response.status,
+        });
+      },
+    ],
+    beforeError: [
+      async (error) => {
+        if (error instanceof HTTPError) {
+          const requestId = error.request.headers.get('X-Request-ID');
+          logger.error('API request failed', {
+            requestId,
+            url: error.request.url,
+            status: error.response.status,
+            error: error.message,
+          });
+
+          // Re-throw as ApiError
+          let errorMessage = `HTTP ${error.response.status}`;
+          try {
+            const errorData = await error.response.json() as { error?: string };
+            if (errorData.error) {
+              errorMessage = errorData.error;
+            }
+          } catch {
+            // If response body is not JSON, use status message
+          }
+          throw new ApiError(error.response.status, errorMessage);
+        }
+        return error;
+      },
+    ],
+  },
+});
 ```
 
 ### Logging Best Practices

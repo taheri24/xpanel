@@ -22,6 +22,7 @@ xpanel is a full-stack web application built with modern technologies and best p
 - **Build Tool**: Vite
 - **Router**: TanStack Router
 - **UI Library**: Material-UI (MUI)
+- **HTTP Client**: ky.js
 - **Testing**: Vitest + React Testing Library
 - **Component Development**: Storybook
 
@@ -261,7 +262,8 @@ slog.Error("error message", "error", err)
 ### Frontend Architecture
 
 - **Component-Based**: Reusable React components
-- **Service Layer**: API calls abstracted in services
+- **Service Layer**: API calls abstracted in services using ky.js
+- **HTTP Client**: ky.js for lightweight, type-safe API requests
 - **Routing**: File-based routing with TanStack Router
 - **State Management**: React hooks for local state
 

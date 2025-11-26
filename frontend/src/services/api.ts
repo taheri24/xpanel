@@ -1,3 +1,5 @@
+import ky, { HTTPError } from 'ky';
+
 const API_BASE_URL = '/api/v1';
 
 export interface User {
@@ -18,7 +20,7 @@ export interface UpdateUserRequest {
   email: string;
 }
 
-class ApiError extends Error {
+export class ApiError extends Error {
   status: number;
 
   constructor(status: number, message: string) {
@@ -28,54 +30,73 @@ class ApiError extends Error {
   }
 }
 
-async function handleResponse<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'An error occurred' }));
-    throw new ApiError(response.status, errorData.error || `HTTP ${response.status}`);
-  }
-  return response.json();
-}
+// Create a ky instance with base configuration
+const api = ky.create({
+  prefixUrl: API_BASE_URL,
+  hooks: {
+    beforeError: [
+      async (error) => {
+        if (error instanceof HTTPError) {
+          let errorMessage = `HTTP ${error.response.status}`;
+          try {
+            const errorData = await error.response.json() as { error?: string };
+            if (errorData.error) {
+              errorMessage = errorData.error;
+            }
+          } catch {
+            // If response body is not JSON, use status message
+          }
+          throw new ApiError(error.response.status, errorMessage);
+        }
+        return error;
+      },
+    ],
+  },
+});
+
+// Create a separate instance for health checks (different base URL)
+const healthApi = ky.create({
+  hooks: {
+    beforeError: [
+      async (error) => {
+        if (error instanceof HTTPError) {
+          let errorMessage = `HTTP ${error.response.status}`;
+          try {
+            const errorData = await error.response.json() as { error?: string };
+            if (errorData.error) {
+              errorMessage = errorData.error;
+            }
+          } catch {
+            // If response body is not JSON, use status message
+          }
+          throw new ApiError(error.response.status, errorMessage);
+        }
+        return error;
+      },
+    ],
+  },
+});
 
 export async function getUsers(): Promise<User[]> {
-  const response = await fetch(`${API_BASE_URL}/users`);
-  return handleResponse<User[]>(response);
+  return api.get('users').json<User[]>();
 }
 
 export async function getUserById(id: number): Promise<User> {
-  const response = await fetch(`${API_BASE_URL}/users/${id}`);
-  return handleResponse<User>(response);
+  return api.get(`users/${id}`).json<User>();
 }
 
 export async function createUser(userData: CreateUserRequest): Promise<User> {
-  const response = await fetch(`${API_BASE_URL}/users`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(userData),
-  });
-  return handleResponse<User>(response);
+  return api.post('users', { json: userData }).json<User>();
 }
 
 export async function updateUser(id: number, userData: UpdateUserRequest): Promise<User> {
-  const response = await fetch(`${API_BASE_URL}/users/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(userData),
-  });
-  return handleResponse<User>(response);
+  return api.put(`users/${id}`, { json: userData }).json<User>();
 }
 
 export async function deleteUser(id: number): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/users/${id}`, {
-    method: 'DELETE',
-  });
-  await handleResponse<{ message: string }>(response);
+  await api.delete(`users/${id}`);
 }
 
 export async function checkHealth(): Promise<{ status: string }> {
-  const response = await fetch('/health');
-  return handleResponse<{ status: string }>(response);
+  return healthApi.get('/health').json<{ status: string }>();
 }

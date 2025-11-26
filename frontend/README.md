@@ -9,6 +9,7 @@ Frontend application for xpanel built with React, TypeScript, and Vite.
 - **Build Tool**: Vite
 - **Router**: TanStack Router
 - **UI Library**: Material-UI (MUI)
+- **HTTP Client**: ky.js
 - **Testing**: Vitest + React Testing Library
 - **Component Development**: Storybook
 
@@ -212,14 +213,44 @@ export const Default: Story = {
 
 ### API Service
 
-All API calls should go through the `services/api.ts` module:
+All API calls should go through the `services/api.ts` module, which uses **ky.js** for HTTP requests:
 
 ```typescript
-import { getUsers, createUser } from './services/api';
+import { getUsers, createUser, ApiError } from './services/api';
 
-// In your component
-const users = await getUsers();
-const newUser = await createUser({ username: 'john', email: 'john@example.com' });
+// In your component or hook
+try {
+  const users = await getUsers();
+  const newUser = await createUser({ username: 'john', email: 'john@example.com' });
+} catch (error) {
+  if (error instanceof ApiError) {
+    console.error(`API Error: ${error.status} - ${error.message}`);
+  }
+}
+```
+
+#### ky.js Benefits
+
+- **Automatic JSON handling**: Request and response bodies are automatically serialized/deserialized
+- **Consistent error handling**: All HTTP errors are caught and converted to `ApiError`
+- **Type-safe**: Full TypeScript support with generic type parameters
+- **Minimal overhead**: Lightweight HTTP client (~2KB gzipped)
+- **Better DX**: Cleaner API compared to native fetch
+
+#### Adding New API Endpoints
+
+When adding new endpoints, follow the pattern in `services/api.ts`:
+
+```typescript
+import { api } from './api';
+
+export async function newEndpoint(param: string): Promise<YourType> {
+  return api.get(`your-path/${param}`).json<YourType>();
+}
+
+export async function createResource(data: CreateRequest): Promise<YourType> {
+  return api.post('resource', { json: data }).json<YourType>();
+}
 ```
 
 ### Routing
