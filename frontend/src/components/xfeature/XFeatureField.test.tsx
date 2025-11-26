@@ -123,7 +123,8 @@ describe('XFeatureField', () => {
       />
     );
 
-    expect(screen.getByLabelText('Role')).toBeInTheDocument();
+    // MUI Select uses aria-labelledby, so we use getByRole instead
+    expect(screen.getByRole('combobox')).toBeInTheDocument();
   });
 
   it('renders textarea field', () => {
