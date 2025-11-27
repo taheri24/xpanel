@@ -37,18 +37,20 @@ type Frontend struct {
 
 // Query represents a SELECT operation
 type Query struct {
-	Id          string `xml:"Id,attr" json:"id"`
-	Type        string `xml:"Type,attr" json:"type"`
-	Description string `xml:"Description,attr" json:"description"`
-	SQL         string `xml:",chardata" json:"sql"`
+	Id          string   `xml:"Id,attr" json:"id"`
+	Type        string   `xml:"Type,attr" json:"type"`
+	Description string   `xml:"Description,attr" json:"description"`
+	SQL         string   `xml:",chardata" json:"sql"`
+	Parameters  []string `json:"parameters"`
 }
 
 // ActionQuery represents an INSERT/UPDATE/DELETE operation
 type ActionQuery struct {
-	Id          string `xml:"Id,attr" json:"id"`
-	Type        string `xml:"Type,attr" json:"type"`
-	Description string `xml:"Description,attr" json:"description"`
-	SQL         string `xml:",chardata" json:"sql"`
+	Id          string   `xml:"Id,attr" json:"id"`
+	Type        string   `xml:"Type,attr" json:"type"`
+	Description string   `xml:"Description,attr" json:"description"`
+	SQL         string   `xml:",chardata" json:"sql"`
+	Parameters  []string `json:"parameters"`
 }
 
 // DataTable represents a frontend data table
@@ -173,12 +175,14 @@ func (xf *XFeature) LoadFromFile(path string) error {
 		return fmt.Errorf("failed to unmarshal XML: %w", err)
 	}
 
-	// Normalize SQL content by trimming whitespace
+	// Normalize SQL content by trimming whitespace and extract parameters
 	for _, query := range xf.Backend.Queries {
 		query.SQL = strings.TrimSpace(query.SQL)
+		query.Parameters = ExtractParameters(query.SQL)
 	}
 	for _, action := range xf.Backend.ActionQueries {
 		action.SQL = strings.TrimSpace(action.SQL)
+		action.Parameters = ExtractParameters(action.SQL)
 	}
 
 	xf.Logger.Debug("Loaded XFeature from file", "path", path, "name", xf.Name, "version", xf.Version)

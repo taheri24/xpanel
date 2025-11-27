@@ -170,6 +170,32 @@ func (h *XFeatureHandler) ExecuteAction(c *gin.Context) {
 	})
 }
 
+// GetBackendInfo retrieves all backend queries and actions with their parameters for a feature
+func (h *XFeatureHandler) GetBackendInfo(c *gin.Context) {
+	featureName := c.Param("name")
+
+	xf := &xfeature.XFeature{
+		Logger: slog.Default(),
+	}
+
+	filePath := getFeatureFilePath(featureName)
+	if err := xf.LoadFromFile(filePath); err != nil {
+		slog.Warn("Failed to load feature definition", "feature", featureName, "error", err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Feature not found"})
+		return
+	}
+
+	// Build response with detailed backend information
+	response := gin.H{
+		"feature":  featureName,
+		"version":  xf.Version,
+		"queries":  xf.Backend.Queries,
+		"actions":  xf.Backend.ActionQueries,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 // GetFrontendElements retrieves all frontend elements (DataTables and Forms) for a feature
 func (h *XFeatureHandler) GetFrontendElements(c *gin.Context) {
 	featureName := c.Param("name")
