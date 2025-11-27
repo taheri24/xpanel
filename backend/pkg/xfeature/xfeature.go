@@ -15,11 +15,12 @@ import (
 
 // XFeature represents the entire XML feature definition
 type XFeature struct {
-	Name     string     `xml:"Name,attr"`
-	Version  string     `xml:"Version,attr"`
-	Backend  Backend    `xml:"Backend"`
-	Frontend Frontend   `xml:"Frontend"`
-	Logger   *slog.Logger
+	Name                 string              `xml:"Name,attr"`
+	Version              string              `xml:"Version,attr"`
+	Backend              Backend             `xml:"Backend"`
+	Frontend             Frontend            `xml:"Frontend"`
+	ParameterMappings    []*ParameterMapping `xml:"ParameterMapping"`
+	Logger               *slog.Logger
 }
 
 // Backend contains all backend queries and actions
@@ -121,6 +122,13 @@ type Button struct {
 type Message struct {
 	Type    string `xml:"Type,attr"`
 	Content string `xml:",chardata"`
+}
+
+// ParameterMapping represents a parameter mapping configuration
+type ParameterMapping struct {
+	Name     string `xml:"Name,attr"`
+	DataType string `xml:"DataType,attr"`
+	Label    string `xml:"Label,attr"`
 }
 
 // NewXFeature creates a new XFeature instance

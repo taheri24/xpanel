@@ -275,7 +275,15 @@
       <Button Type="Submit" Label="Activate" Style="Success"/>
       <Button Type="Cancel" Label="Cancel" Style="Secondary"/>
     </Form>
-    
+
   </Frontend>
-  
+
+  <!-- ============================= -->
+  <!-- PARAMETER MAPPINGS            -->
+  <!-- ============================= -->
+  <ParameterMapping Name="ParamName" DataType="Int" Label="نام"/>
+  <ParameterMapping Name="status" DataType="String" Label="وضعیت"/>
+  <ParameterMapping Name="limit" DataType="Int" Label="محدودیت"/>
+  <ParameterMapping Name="offset" DataType="Int" Label="جابجایی"/>
+
 </Feature>
