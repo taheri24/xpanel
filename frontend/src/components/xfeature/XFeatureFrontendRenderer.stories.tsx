@@ -53,10 +53,9 @@ export const LoadingState: Story = {
   decorators: [
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (Story: any) => (
-      <XFeatureProvider
+      <XFeatureProvider 
         onBeforeFrontend={async () => {
           // Simulate loading delay
-          await new Promise((resolve) => setTimeout(resolve, 2000));
           return mockFrontendElements;
         }}
       >

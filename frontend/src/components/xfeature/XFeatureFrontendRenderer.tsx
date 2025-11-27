@@ -122,24 +122,6 @@ export function XFeatureFrontendRenderer({
             Version: {frontendElements.version}
           </Typography>
         </div>
-
-        {/* Render Data Tables */}
-        {dataTables.length > 0 && (
-          <Stack spacing={3}>
-            <Typography variant="h5">Data</Typography>
-            {dataTables.map((table: DataTable) => (
-              <React.Fragment key={table.id}>
-                <XFeatureDataTable
-                  definition={table}
-                  featureName={featureName}
-                  onRowAction={handleFormAction}
-                  onRefresh={() => onRefresh?.(table.id)}
-                />
-              </React.Fragment>
-            ))}
-          </Stack>
-        )}
-
         {/* Render Forms */}
         {forms.length > 0 && (
           <Stack spacing={3}>
@@ -159,6 +141,23 @@ export function XFeatureFrontendRenderer({
             ))}
           </Stack>
         )}
+
+        {/* Render Data Tables */}
+        {dataTables.length > 0 && (
+          <Stack spacing={3}>
+            {dataTables.map((table: DataTable) => (
+              <React.Fragment key={table.id}>
+                <XFeatureDataTable
+                  definition={table}
+                  featureName={featureName}
+                  onRowAction={handleFormAction}
+                  onRefresh={() => onRefresh?.(table.id)}
+                />
+              </React.Fragment>
+            ))}
+          </Stack>
+        )}
+
 
         {/* No Elements */}
         {dataTables.length === 0 && forms.length === 0 && (

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Table,
   TableBody,
@@ -100,10 +100,7 @@ export function XFeatureDataTable({
   };
 
   // Refresh data
-  useEffect(() => {
-    refetch(queryParams);
-  }, [queryParams, refetch]);
-
+  
   const getFormActionIds = (): string[] => {
     if (!definition.formActions) return [];
     return definition.formActions.split(',').map((s) => s.trim());

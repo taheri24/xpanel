@@ -3,12 +3,14 @@
  * Demonstrates how to use event callbacks for mocking and Storybook integration
  */
 
+import type {   FrontendElements } from '../types/xfeature';
 import type {
   XFeatureBeforeQueryHandler,
   XFeatureAfterQueryHandler,
   XFeatureBeforeActionHandler,
   XFeatureAfterActionHandler,
   XFeatureErrorHandler,
+  XFeatureProviderProps,
 } from './XFeatureContext';
 
 // ============================================================================
@@ -152,6 +154,39 @@ export const createConditionalMockActionHandler = (
 // STORYBOOK EXAMPLE - Setup for stories
 // ============================================================================
 
+const mockFrontendElements: FrontendElements = {
+  feature: 'user-management',
+  version: '1.0.0',
+  dataTables: [
+    {
+      id: 'users-table',
+      queryRef: 'ListUsers',
+      title: 'Users',
+      columns: [
+        { name: 'id', label: 'ID', type: 'Number' },
+        { name: 'username', label: 'Username', type: 'Text' },
+        { name: 'email', label: 'Email', type: 'Email' },
+      ],
+    },
+  ],
+  forms: [
+    {
+      id: 'create-user',
+      mode: 'Create',
+      title: 'Create User',
+      actionRef: 'CreateUser',
+      fields: [
+        { name: 'username', label: 'Username', type: 'Text', required: true },
+        { name: 'email', label: 'Email', type: 'Email', required: true },
+      ],
+      buttons: [
+        { type: 'Submit', label: 'Create' },
+        { type: 'Cancel', label: 'Cancel' },
+      ],
+    },
+  ],
+};
+
 /**
  * Example: Storybook decorator that provides mocked data
  */
@@ -166,6 +201,7 @@ export const createStorybookMockProvider = () => {
   };
 
   return {
+    onBeforeFrontend:()=>mockFrontendElements ,
     onBeforeQuery: async (event: any) => {
       if (event.featureName === 'user-management' && event.queryId === 'ListUsers') {
         return {
@@ -191,7 +227,7 @@ export const createStorybookMockProvider = () => {
       }
       return undefined;
     },
-  };
+  } as Partial< XFeatureProviderProps>;
 };
 
 // ============================================================================

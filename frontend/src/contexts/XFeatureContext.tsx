@@ -159,7 +159,7 @@ const XFeatureContext = createContext<XFeatureContextType | undefined>(undefined
 // PROVIDER COMPONENT
 // ============================================================================
 
-interface XFeatureProviderProps {
+export interface XFeatureProviderProps {
   children: ReactNode;
   /**
    * Called before executing a query
@@ -210,13 +210,13 @@ export function XFeatureProvider({
     error: undefined,
   });
 
-  const getFeature = useCallback(
+const getFeature = useCallback(
     async (name: string): Promise<XFeature | undefined> => {
       // Return cached feature if available
       if (state.features.has(name)) {
         return state.features.get(name);
       }
-
+    
       dispatch({ type: 'SET_LOADING', payload: true });
       try {
         const feature = await getXFeature(name);
@@ -525,7 +525,7 @@ export function useXFeatureQuery<T = Record<string, unknown>>(
     if (autoLoad) {
       refetch();
     }
-  }, [autoLoad, refetch]);
+  }, [autoLoad]);
 
   return { data, loading, error, total, refetch };
 }
