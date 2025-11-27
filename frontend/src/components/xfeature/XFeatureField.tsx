@@ -25,12 +25,16 @@ export function XFeatureField({
   errors,
   featureName,
 }: XFeatureFieldProps) {
-  const { getMappingByName } = useXFeatureMappings(featureName);
+  // Only fetch mappings if featureName is provided
+  const { getMappingByName } = useXFeatureMappings(
+    featureName || 'default',
+    !!featureName // Only auto-load if featureName is provided
+  );
   const hasError = errors && errors.length > 0;
   const errorMessage = errors?.[0] || '';
 
-  // Get mapping for this field if available
-  const mapping = getMappingByName(definition.name);
+  // Get mapping for this field if available (only when featureName is provided)
+  const mapping = featureName ? getMappingByName(definition.name) : undefined;
 
   const renderTextInput = () => (
     <TextField

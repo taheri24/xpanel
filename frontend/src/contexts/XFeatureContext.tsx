@@ -22,7 +22,7 @@ import {
   executeXFeatureQuery,
   executeXFeatureAction,
   getXFeatureFrontendElements,
-  resolveXFeatureAllMappings,
+  resolveXFeatureMappings,
 } from '../services/api';
 
 // ============================================================================
@@ -637,14 +637,14 @@ export function useXFeatureFrontend(featureName: string, autoLoad = true) {
 }
 
 /**
- * Hook to fetch all mappings for a feature
- * @param featureName - Optional feature name (defaults to user-management-sample)
+ * Hook to fetch mappings for a specific feature
+ * @param featureName - Required feature name
  * @param autoLoad - Whether to automatically load mappings on mount
  * @param onBeforeMappings - Optional handler to mock mappings response
  * @param onAfterMappings - Optional handler called after mappings load
  */
 export function useXFeatureMappings(
-  featureName?: string,
+  featureName: string,
   autoLoad = true,
   onBeforeMappings?: XFeatureBeforeMappingsHandler,
   onAfterMappings?: XFeatureAfterMappingsHandler
@@ -670,7 +670,7 @@ export function useXFeatureMappings(
 
         // If no mocked response, fetch from API
         if (!result) {
-          result = await resolveXFeatureAllMappings(featureName);
+          result = await resolveXFeatureMappings(featureName);
         }
 
         setMappings(result.mappings || []);
