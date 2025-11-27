@@ -10,11 +10,11 @@ import (
 )
 
 type User struct {
-	ID        int       `db:"id" json:"id"`
-	Username  string    `db:"username" json:"username"`
-	Email     string    `db:"email" json:"email"`
-	CreatedAt time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
+	ID        int       `db:"id" json:"id" example:"1" description:"User ID"`
+	Username  string    `db:"username" json:"username" example:"john_doe" description:"Username"`
+	Email     string    `db:"email" json:"email" example:"john@example.com" description:"Email address"`
+	CreatedAt time.Time `db:"created_at" json:"created_at" description:"Creation timestamp"`
+	UpdatedAt time.Time `db:"updated_at" json:"updated_at" description:"Last update timestamp"`
 }
 
 type UserRepository struct {

@@ -23,7 +23,15 @@ func getFeatureFilePath(featureName string) string {
 	return "specs/xfeature/" + featureName + ".xml"
 }
 
-// GetFeature retrieves a feature definition by name
+// @Summary Get feature metadata
+// @Description Retrieve metadata for a specific feature including backend and frontend structure
+// @Tags xfeatures
+// @Accept  json
+// @Produce  json
+// @Param name path string true "Feature name"
+// @Success 200 {object} map[string]interface{} "Feature metadata"
+// @Failure 404 {object} map[string]interface{} "Feature not found"
+// @Router /api/v1/xfeatures/{name} [get]
 func (h *XFeatureHandler) GetFeature(c *gin.Context) {
 	featureName := c.Param("name")
 
@@ -55,7 +63,19 @@ func (h *XFeatureHandler) GetFeature(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// ExecuteQuery executes a SELECT query from a feature definition
+// @Summary Execute a feature query
+// @Description Execute a SELECT query from a feature definition with parameters
+// @Tags xfeatures
+// @Accept  json
+// @Produce  json
+// @Param name path string true "Feature name"
+// @Param queryId path string true "Query ID"
+// @Param params body map[string]interface{} false "Query parameters"
+// @Success 200 {object} map[string]interface{} "Query results"
+// @Failure 400 {object} map[string]interface{} "Invalid request body"
+// @Failure 404 {object} map[string]interface{} "Feature or query not found"
+// @Failure 500 {object} map[string]interface{} "Query execution failed"
+// @Router /api/v1/xfeatures/{name}/queries/{queryId} [post]
 func (h *XFeatureHandler) ExecuteQuery(c *gin.Context) {
 	featureName := c.Param("name")
 	queryID := c.Param("queryId")
@@ -109,7 +129,19 @@ func (h *XFeatureHandler) ExecuteQuery(c *gin.Context) {
 	})
 }
 
-// ExecuteAction executes an INSERT/UPDATE/DELETE action from a feature definition
+// @Summary Execute a feature action
+// @Description Execute an INSERT/UPDATE/DELETE action from a feature definition
+// @Tags xfeatures
+// @Accept  json
+// @Produce  json
+// @Param name path string true "Feature name"
+// @Param actionId path string true "Action ID"
+// @Param params body map[string]interface{} true "Action parameters"
+// @Success 200 {object} map[string]interface{} "Action execution result"
+// @Failure 400 {object} map[string]interface{} "Invalid request body"
+// @Failure 404 {object} map[string]interface{} "Feature or action not found"
+// @Failure 500 {object} map[string]interface{} "Action execution failed"
+// @Router /api/v1/xfeatures/{name}/actions/{actionId} [post]
 func (h *XFeatureHandler) ExecuteAction(c *gin.Context) {
 	featureName := c.Param("name")
 	actionID := c.Param("actionId")
@@ -170,7 +202,15 @@ func (h *XFeatureHandler) ExecuteAction(c *gin.Context) {
 	})
 }
 
-// GetBackendInfo retrieves all backend queries and actions with their parameters for a feature
+// @Summary Get backend information
+// @Description Retrieve all backend queries and actions with their parameters for a feature
+// @Tags xfeatures
+// @Accept  json
+// @Produce  json
+// @Param name path string true "Feature name"
+// @Success 200 {object} map[string]interface{} "Backend information"
+// @Failure 404 {object} map[string]interface{} "Feature not found"
+// @Router /api/v1/xfeatures/{name}/backend [get]
 func (h *XFeatureHandler) GetBackendInfo(c *gin.Context) {
 	featureName := c.Param("name")
 
@@ -196,7 +236,15 @@ func (h *XFeatureHandler) GetBackendInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// GetFrontendElements retrieves all frontend elements (DataTables and Forms) for a feature
+// @Summary Get frontend elements
+// @Description Retrieve all frontend elements (DataTables and Forms) for a feature
+// @Tags xfeatures
+// @Accept  json
+// @Produce  json
+// @Param name path string true "Feature name"
+// @Success 200 {object} map[string]interface{} "Frontend elements"
+// @Failure 404 {object} map[string]interface{} "Feature not found"
+// @Router /api/v1/xfeatures/{name}/frontend [get]
 func (h *XFeatureHandler) GetFrontendElements(c *gin.Context) {
 	featureName := c.Param("name")
 
@@ -222,7 +270,13 @@ func (h *XFeatureHandler) GetFrontendElements(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// ListFeatures returns information about available features
+// @Summary List available features
+// @Description Get information about available features
+// @Tags xfeatures
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} map[string]interface{} "Available features"
+// @Router /api/v1/xfeatures [get]
 func (h *XFeatureHandler) ListFeatures(c *gin.Context) {
 	// This would typically scan the specs/xfeature directory
 	// For now, return a placeholder response
@@ -234,7 +288,15 @@ func (h *XFeatureHandler) ListFeatures(c *gin.Context) {
 	})
 }
 
-// ResolveMappings resolves all Mappings by executing ListQuery and converting to Options
+// @Summary Resolve feature mappings
+// @Description Resolve all mappings by executing ListQuery and converting to options
+// @Tags xfeatures
+// @Accept  json
+// @Produce  json
+// @Param name path string true "Feature name"
+// @Success 200 {object} map[string]interface{} "Resolved mappings"
+// @Failure 404 {object} map[string]interface{} "Feature not found"
+// @Router /api/v1/xfeatures/{name}/mappings [get]
 func (h *XFeatureHandler) ResolveMappings(c *gin.Context) {
 	featureName := c.Param("name")
 
