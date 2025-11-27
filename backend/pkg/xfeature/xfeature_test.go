@@ -2,6 +2,7 @@ package xfeature
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 	"os"
 	"testing"
@@ -525,5 +526,301 @@ func TestConvertParametersForDriver(t *testing.T) {
 				t.Errorf("Expected '%s', got '%s'", tt.expected, result)
 			}
 		})
+	}
+}
+
+// TestExtractParameterMappingsFromSQL tests extracting ParameterMapping stubs from SQL
+func TestExtractParameterMappingsFromSQL(t *testing.T) {
+	tests := []struct {
+		name     string
+		sql      string
+		expected int
+	}{
+		{
+			name:     "Single parameter",
+			sql:      "SELECT * FROM users WHERE status = :status",
+			expected: 1,
+		},
+		{
+			name:     "Multiple parameters",
+			sql:      "SELECT * FROM users WHERE status = :status AND role = :role LIMIT :limit",
+			expected: 3,
+		},
+		{
+			name:     "No parameters",
+			sql:      "SELECT * FROM users",
+			expected: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mappings := ExtractParameterMappingsFromSQL(tt.sql)
+			if len(mappings) != tt.expected {
+				t.Errorf("Expected %d mappings, got %d", tt.expected, len(mappings))
+			}
+
+			// Verify that Name field is populated
+			for _, mapping := range mappings {
+				if mapping.Name == "" {
+					t.Error("Expected Name field to be populated")
+				}
+			}
+		})
+	}
+}
+
+// TestGetParameterMappingsForSQL tests finding ParameterMappings that match SQL parameters
+func TestGetParameterMappingsForSQL(t *testing.T) {
+	xf := NewXFeature(testLogger)
+	xf.ParameterMappings = []*ParameterMapping{
+		{Name: "status", DataType: "String", Label: "Status"},
+		{Name: "role", DataType: "String", Label: "Role"},
+		{Name: "limit", DataType: "Int", Label: "Limit"},
+	}
+
+	sql := "SELECT * FROM users WHERE status = :status AND role = :role LIMIT :limit"
+	mappings := xf.GetParameterMappingsForSQL(sql)
+
+	if len(mappings) != 3 {
+		t.Errorf("Expected 3 matching mappings, got %d", len(mappings))
+	}
+
+	// Verify all expected parameters were found
+	nameMap := make(map[string]bool)
+	for _, m := range mappings {
+		nameMap[m.Name] = true
+	}
+
+	expectedNames := []string{"status", "role", "limit"}
+	for _, name := range expectedNames {
+		if !nameMap[name] {
+			t.Errorf("Expected parameter '%s' not found in mappings", name)
+		}
+	}
+}
+
+// TestExecuteListQueryToOptions tests executing a ListQuery and converting to options
+func TestExecuteListQueryToOptions(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	// Insert test data
+	statuses := []string{"active", "inactive", "pending"}
+	for _, status := range statuses {
+		_, err := db.Exec("INSERT INTO users (username, email, status) VALUES (?, ?, ?)",
+			"user_"+status, "user_"+status+"@example.com", status)
+		if err != nil {
+			t.Fatalf("Failed to insert test data: %v", err)
+		}
+	}
+
+	xf := NewXFeature(testLogger)
+	listQuery := &ListQuery{
+		Id:          "GetStatuses",
+		Type:        "Select",
+		Description: "Get distinct statuses",
+		SQL:         "SELECT DISTINCT status FROM users ORDER BY status",
+	}
+
+	ctx := context.Background()
+	options, err := xf.ExecuteListQueryToOptions(ctx, db, listQuery)
+	if err != nil {
+		t.Fatalf("Failed to execute ListQuery: %v", err)
+	}
+
+	if len(options) != 3 {
+		t.Errorf("Expected 3 options, got %d", len(options))
+	}
+
+	// Verify options have Label and Value populated
+	for _, opt := range options {
+		if opt.Label == "" || opt.Value == "" {
+			t.Error("Expected Label and Value to be populated")
+		}
+	}
+}
+
+// TestExecuteListQueryToOptionsWithNilInputs tests error handling
+func TestExecuteListQueryToOptionsWithNilInputs(t *testing.T) {
+	xf := NewXFeature(testLogger)
+
+	ctx := context.Background()
+
+	// Test with nil ListQuery
+	_, err := xf.ExecuteListQueryToOptions(ctx, nil, nil)
+	if err == nil {
+		t.Error("Expected error for nil inputs")
+	}
+}
+
+// TestResolveParameterMappings tests resolving all ParameterMappings
+func TestResolveParameterMappings(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	// Insert test data
+	for _, status := range []string{"active", "inactive"} {
+		_, err := db.Exec("INSERT INTO users (username, email, status) VALUES (?, ?, ?)",
+			"user_"+status, "user_"+status+"@example.com", status)
+		if err != nil {
+			t.Fatalf("Failed to insert test data: %v", err)
+		}
+	}
+
+	xf := NewXFeature(testLogger)
+	xf.ParameterMappings = []*ParameterMapping{
+		{
+			Name:     "status",
+			DataType: "String",
+			Label:    "Status",
+			ListQuery: &ListQuery{
+				Id:   "GetStatuses",
+				Type: "Select",
+				SQL:  "SELECT DISTINCT status FROM users ORDER BY status",
+			},
+		},
+		{
+			Name:     "priority",
+			DataType: "String",
+			Label:    "Priority",
+			Options: &Options{
+				Items: []*ParameterOption{
+					{Label: "High", Value: "high"},
+					{Label: "Low", Value: "low"},
+				},
+			},
+		},
+		{
+			Name:     "limit",
+			DataType: "Int",
+			Label:    "Limit",
+		},
+	}
+
+	ctx := context.Background()
+	resolved := xf.ResolveParameterMappings(ctx, db)
+
+	if len(resolved) != 3 {
+		t.Errorf("Expected 3 resolved mappings, got %d", len(resolved))
+	}
+
+	// Check that ListQuery was resolved to Options
+	statusMapping := resolved[0]
+	if statusMapping.Name == "status" {
+		if statusMapping.ListQuery != nil {
+			t.Error("Expected ListQuery to be cleared after resolution")
+		}
+		if statusMapping.Options == nil {
+			t.Error("Expected Options to be populated from ListQuery")
+		}
+		if len(statusMapping.Options.Items) != 2 {
+			t.Errorf("Expected 2 options from query, got %d", len(statusMapping.Options.Items))
+		}
+	}
+
+	// Check that existing Options are preserved
+	priorityMapping := resolved[1]
+	if priorityMapping.Name == "priority" {
+		if priorityMapping.Options == nil {
+			t.Error("Expected Options to be preserved")
+		}
+		if len(priorityMapping.Options.Items) != 2 {
+			t.Errorf("Expected 2 existing options, got %d", len(priorityMapping.Options.Items))
+		}
+	}
+
+	// Check that plain mappings without ListQuery or Options are preserved
+	limitMapping := resolved[2]
+	if limitMapping.Name == "limit" {
+		if limitMapping.ListQuery != nil {
+			t.Error("Expected ListQuery to be nil")
+		}
+		if limitMapping.Options != nil {
+			t.Error("Expected Options to be nil")
+		}
+	}
+}
+
+// TestParameterMappingJSONMarshaling tests JSON serialization of ParameterMapping
+func TestParameterMappingJSONMarshaling(t *testing.T) {
+	pm := &ParameterMapping{
+		Name:     "status",
+		DataType: "String",
+		Label:    "Status",
+		Options: &Options{
+			Items: []*ParameterOption{
+				{Label: "Active", Value: "active"},
+				{Label: "Inactive", Value: "inactive"},
+			},
+		},
+	}
+
+	// Marshal to JSON
+	jsonData, err := json.Marshal(pm)
+	if err != nil {
+		t.Fatalf("Failed to marshal to JSON: %v", err)
+	}
+
+	// Unmarshal from JSON
+	var pmUnmarshaled ParameterMapping
+	err = json.Unmarshal(jsonData, &pmUnmarshaled)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal from JSON: %v", err)
+	}
+
+	// Verify data
+	if pmUnmarshaled.Name != "status" {
+		t.Errorf("Expected Name 'status', got '%s'", pmUnmarshaled.Name)
+	}
+	if pmUnmarshaled.DataType != "String" {
+		t.Errorf("Expected DataType 'String', got '%s'", pmUnmarshaled.DataType)
+	}
+	if len(pmUnmarshaled.Options.Items) != 2 {
+		t.Errorf("Expected 2 options, got %d", len(pmUnmarshaled.Options.Items))
+	}
+}
+
+// TestXFeatureJSONMarshaling tests JSON serialization of complete XFeature
+func TestXFeatureJSONMarshaling(t *testing.T) {
+	xf := NewXFeature(testLogger)
+	xf.Name = "TestFeature"
+	xf.Version = "1.0"
+	xf.ParameterMappings = []*ParameterMapping{
+		{
+			Name:     "status",
+			DataType: "String",
+			Label:    "Status",
+			Options: &Options{
+				Items: []*ParameterOption{
+					{Label: "Active", Value: "active"},
+				},
+			},
+		},
+	}
+
+	// Marshal to JSON
+	jsonData, err := json.Marshal(xf)
+	if err != nil {
+		t.Fatalf("Failed to marshal XFeature to JSON: %v", err)
+	}
+
+	// Verify JSON contains expected fields
+	var result map[string]interface{}
+	err = json.Unmarshal(jsonData, &result)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	if result["Name"] != "TestFeature" {
+		t.Error("Expected 'Name' field in JSON")
+	}
+	if result["ParameterMappings"] == nil {
+		t.Error("Expected 'ParameterMappings' field in JSON")
+	}
+	if paramMappings, ok := result["ParameterMappings"].([]interface{}); ok {
+		if len(paramMappings) != 1 {
+			t.Errorf("Expected 1 ParameterMapping in JSON, got %d", len(paramMappings))
+		}
 	}
 }
