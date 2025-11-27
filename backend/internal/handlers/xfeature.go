@@ -242,6 +242,47 @@ func (h *XFeatureHandler) ResolveParameterMappings(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// ResolveDefaultParameterMappings resolves ParameterMappings without requiring arguments
+// Uses query parameter 'feature' (defaults to 'user-management-sample' if not provided)
+func (h *XFeatureHandler) ResolveDefaultParameterMappings(c *gin.Context) {
+	// Get feature name from query parameter, default to 'user-management-sample'
+	featureName := c.DefaultQuery("feature", "user-management-sample")
+
+	xf := &xfeature.XFeature{
+		Logger: slog.Default(),
+	}
+
+	filePath := "specs/xfeature/" + featureName + ".xml"
+	if err := xf.LoadFromFile(filePath); err != nil {
+		slog.Warn("Failed to load feature definition", "feature", featureName, "error", err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Feature not found"})
+		return
+	}
+
+	// Check if there are any ParameterMappings defined
+	if len(xf.ParameterMappings) == 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"feature":             featureName,
+			"parameterMappings":   []*xfeature.ParameterMapping{},
+			"resolvedCount":       0,
+		})
+		return
+	}
+
+	// Resolve all ParameterMappings
+	resolvedMappings := xf.ResolveParameterMappings(c.Request.Context(), h.db.DB)
+
+	// Build response
+	response := gin.H{
+		"feature":             featureName,
+		"version":             xf.Version,
+		"parameterMappings":   resolvedMappings,
+		"resolvedCount":       len(resolvedMappings),
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 // XFeatureModule exports the xfeature handler module for fx
 var XFeatureModule = fx.Options(
 	fx.Provide(NewXFeatureHandler),
