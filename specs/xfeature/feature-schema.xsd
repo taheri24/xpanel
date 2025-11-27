@@ -7,7 +7,7 @@
       <xs:sequence>
         <xs:element ref="Backend"/>
         <xs:element ref="Frontend"/>
-        <xs:element ref="ParameterMapping" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element ref="Mapping" minOccurs="0" maxOccurs="unbounded"/>
       </xs:sequence>
       <xs:attribute name="Name" type="xs:string" use="required"/>
       <xs:attribute name="Version" type="xs:string" use="required"/>
@@ -249,7 +249,7 @@
     </xs:complexType>
   </xs:element>
 
-  <xs:element name="ParameterMapping">
+  <xs:element name="Mapping">
     <xs:complexType>
       <xs:sequence>
         <xs:element ref="ListQuery" minOccurs="0"/>

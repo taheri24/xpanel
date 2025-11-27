@@ -529,8 +529,8 @@ func TestConvertParametersForDriver(t *testing.T) {
 	}
 }
 
-// TestExtractParameterMappingsFromSQL tests extracting ParameterMapping stubs from SQL
-func TestExtractParameterMappingsFromSQL(t *testing.T) {
+// TestExtractMappingsFromSQL tests extracting Mapping stubs from SQL
+func TestExtractMappingsFromSQL(t *testing.T) {
 	tests := []struct {
 		name     string
 		sql      string
@@ -555,7 +555,7 @@ func TestExtractParameterMappingsFromSQL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mappings := ExtractParameterMappingsFromSQL(tt.sql)
+			mappings := ExtractMappingsFromSQL(tt.sql)
 			if len(mappings) != tt.expected {
 				t.Errorf("Expected %d mappings, got %d", tt.expected, len(mappings))
 			}
@@ -570,17 +570,17 @@ func TestExtractParameterMappingsFromSQL(t *testing.T) {
 	}
 }
 
-// TestGetParameterMappingsForSQL tests finding ParameterMappings that match SQL parameters
-func TestGetParameterMappingsForSQL(t *testing.T) {
+// TestGetMappingsForSQL tests finding Mappings that match SQL parameters
+func TestGetMappingsForSQL(t *testing.T) {
 	xf := NewXFeature(testLogger)
-	xf.ParameterMappings = []*ParameterMapping{
+	xf.Mappings = []*Mapping{
 		{Name: "status", DataType: "String", Label: "Status"},
 		{Name: "role", DataType: "String", Label: "Role"},
 		{Name: "limit", DataType: "Int", Label: "Limit"},
 	}
 
 	sql := "SELECT * FROM users WHERE status = :status AND role = :role LIMIT :limit"
-	mappings := xf.GetParameterMappingsForSQL(sql)
+	mappings := xf.GetMappingsForSQL(sql)
 
 	if len(mappings) != 3 {
 		t.Errorf("Expected 3 matching mappings, got %d", len(mappings))
@@ -654,8 +654,8 @@ func TestExecuteListQueryToOptionsWithNilInputs(t *testing.T) {
 	}
 }
 
-// TestResolveParameterMappings tests resolving all ParameterMappings
-func TestResolveParameterMappings(t *testing.T) {
+// TestResolveMappings tests resolving all Mappings
+func TestResolveMappings(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
 
@@ -669,7 +669,7 @@ func TestResolveParameterMappings(t *testing.T) {
 	}
 
 	xf := NewXFeature(testLogger)
-	xf.ParameterMappings = []*ParameterMapping{
+	xf.Mappings = []*Mapping{
 		{
 			Name:     "status",
 			DataType: "String",
@@ -685,7 +685,7 @@ func TestResolveParameterMappings(t *testing.T) {
 			DataType: "String",
 			Label:    "Priority",
 			Options: &Options{
-				Items: []*ParameterOption{
+				Items: []*MappingOption{
 					{Label: "High", Value: "high"},
 					{Label: "Low", Value: "low"},
 				},
@@ -699,7 +699,7 @@ func TestResolveParameterMappings(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	resolved := xf.ResolveParameterMappings(ctx, db)
+	resolved := xf.ResolveMappings(ctx, db)
 
 	if len(resolved) != 3 {
 		t.Errorf("Expected 3 resolved mappings, got %d", len(resolved))
@@ -742,14 +742,14 @@ func TestResolveParameterMappings(t *testing.T) {
 	}
 }
 
-// TestParameterMappingJSONMarshaling tests JSON serialization of ParameterMapping
-func TestParameterMappingJSONMarshaling(t *testing.T) {
-	pm := &ParameterMapping{
+// TestMappingJSONMarshaling tests JSON serialization of Mapping
+func TestMappingJSONMarshaling(t *testing.T) {
+	pm := &Mapping{
 		Name:     "status",
 		DataType: "String",
 		Label:    "Status",
 		Options: &Options{
-			Items: []*ParameterOption{
+			Items: []*MappingOption{
 				{Label: "Active", Value: "active"},
 				{Label: "Inactive", Value: "inactive"},
 			},
@@ -763,7 +763,7 @@ func TestParameterMappingJSONMarshaling(t *testing.T) {
 	}
 
 	// Unmarshal from JSON
-	var pmUnmarshaled ParameterMapping
+	var pmUnmarshaled Mapping
 	err = json.Unmarshal(jsonData, &pmUnmarshaled)
 	if err != nil {
 		t.Fatalf("Failed to unmarshal from JSON: %v", err)
@@ -786,13 +786,13 @@ func TestXFeatureJSONMarshaling(t *testing.T) {
 	xf := NewXFeature(testLogger)
 	xf.Name = "TestFeature"
 	xf.Version = "1.0"
-	xf.ParameterMappings = []*ParameterMapping{
+	xf.Mappings = []*Mapping{
 		{
 			Name:     "status",
 			DataType: "String",
 			Label:    "Status",
 			Options: &Options{
-				Items: []*ParameterOption{
+				Items: []*MappingOption{
 					{Label: "Active", Value: "active"},
 				},
 			},
@@ -815,12 +815,12 @@ func TestXFeatureJSONMarshaling(t *testing.T) {
 	if result["name"] != "TestFeature" {
 		t.Error("Expected 'name' field in JSON")
 	}
-	if result["parameterMappings"] == nil {
-		t.Error("Expected 'parameterMappings' field in JSON")
+	if result["mappings"] == nil {
+		t.Error("Expected 'mappings' field in JSON")
 	}
-	if paramMappings, ok := result["parameterMappings"].([]interface{}); ok {
-		if len(paramMappings) != 1 {
-			t.Errorf("Expected 1 ParameterMapping in JSON, got %d", len(paramMappings))
+	if mappings, ok := result["mappings"].([]interface{}); ok {
+		if len(mappings) != 1 {
+			t.Errorf("Expected 1 Mapping in JSON, got %d", len(mappings))
 		}
 	}
 }

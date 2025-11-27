@@ -208,8 +208,8 @@ func (h *XFeatureHandler) ListFeatures(c *gin.Context) {
 	})
 }
 
-// ResolveParameterMappings resolves all ParameterMappings by executing ListQuery and converting to Options
-func (h *XFeatureHandler) ResolveParameterMappings(c *gin.Context) {
+// ResolveMappings resolves all Mappings by executing ListQuery and converting to Options
+func (h *XFeatureHandler) ResolveMappings(c *gin.Context) {
 	featureName := c.Param("name")
 
 	xf := &xfeature.XFeature{
@@ -223,19 +223,19 @@ func (h *XFeatureHandler) ResolveParameterMappings(c *gin.Context) {
 		return
 	}
 
-	// Check if there are any ParameterMappings defined
-	if len(xf.ParameterMappings) == 0 {
+	// Check if there are any Mappings defined
+	if len(xf.Mappings) == 0 {
 		c.JSON(http.StatusOK, gin.H{
 			"feature":             featureName,
 			"version":             xf.Version,
-			"parameterMappings":   []*xfeature.ParameterMapping{},
+			"parameterMappings":   []*xfeature.Mapping{},
 			"resolvedCount":       0,
 		})
 		return
 	}
 
-	// Resolve all ParameterMappings
-	resolvedMappings := xf.ResolveParameterMappings(c.Request.Context(), h.db.DB)
+	// Resolve all Mappings
+	resolvedMappings := xf.ResolveMappings(c.Request.Context(), h.db.DB)
 
 	// Build response
 	response := gin.H{
@@ -248,9 +248,9 @@ func (h *XFeatureHandler) ResolveParameterMappings(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// ResolveDefaultParameterMappings resolves ParameterMappings without requiring arguments
+// ResolveDefaultMappings resolves Mappings without requiring arguments
 // Uses query parameter 'feature' (defaults to 'user-management-sample' if not provided)
-func (h *XFeatureHandler) ResolveDefaultParameterMappings(c *gin.Context) {
+func (h *XFeatureHandler) ResolveDefaultMappings(c *gin.Context) {
 	// Get feature name from query parameter, default to 'user-management-sample'
 	featureName := c.DefaultQuery("feature", "user-management-sample")
 
@@ -265,19 +265,19 @@ func (h *XFeatureHandler) ResolveDefaultParameterMappings(c *gin.Context) {
 		return
 	}
 
-	// Check if there are any ParameterMappings defined
-	if len(xf.ParameterMappings) == 0 {
+	// Check if there are any Mappings defined
+	if len(xf.Mappings) == 0 {
 		c.JSON(http.StatusOK, gin.H{
 			"feature":             featureName,
 			"version":             xf.Version,
-			"parameterMappings":   []*xfeature.ParameterMapping{},
+			"parameterMappings":   []*xfeature.Mapping{},
 			"resolvedCount":       0,
 		})
 		return
 	}
 
-	// Resolve all ParameterMappings
-	resolvedMappings := xf.ResolveParameterMappings(c.Request.Context(), h.db.DB)
+	// Resolve all Mappings
+	resolvedMappings := xf.ResolveMappings(c.Request.Context(), h.db.DB)
 
 	// Build response
 	response := gin.H{

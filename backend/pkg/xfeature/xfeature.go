@@ -19,7 +19,7 @@ type XFeature struct {
 	Version              string              `xml:"Version,attr" json:"version"`
 	Backend              Backend             `xml:"Backend" json:"backend"`
 	Frontend             Frontend            `xml:"Frontend" json:"frontend"`
-	ParameterMappings    []*ParameterMapping `xml:"ParameterMapping" json:"parameterMappings"`
+	Mappings             []*Mapping `xml:"Mapping" json:"mappings"`
 	Logger               *slog.Logger        `json:"-"`
 }
 
@@ -124,8 +124,8 @@ type Message struct {
 	Content string `xml:",chardata" json:"content"`
 }
 
-// ParameterMapping represents a parameter mapping configuration
-type ParameterMapping struct {
+// Mapping represents a parameter mapping configuration
+type Mapping struct {
 	Name      string     `xml:"Name,attr" json:"name"`
 	DataType  string     `xml:"DataType,attr" json:"dataType"`
 	Label     string     `xml:"Label,attr" json:"label"`
@@ -141,13 +141,13 @@ type ListQuery struct {
 	SQL         string `xml:",chardata" json:"sql"`
 }
 
-// Options represents a collection of parameter options
+// Options represents a collection of mapping options
 type Options struct {
-	Items []*ParameterOption `xml:"Option" json:"items"`
+	Items []*MappingOption `xml:"Option" json:"items"`
 }
 
-// ParameterOption represents an option for a parameter
-type ParameterOption struct {
+// MappingOption represents an option for a mapping
+type MappingOption struct {
 	Label string `xml:"Label,attr" json:"label"`
 	Value string `xml:"Value,attr" json:"value"`
 }
@@ -315,14 +315,14 @@ func ConvertParametersForDriver(sqlStr string, driverName string) string {
 	}
 }
 
-// ExtractParameterMappingsFromSQL extracts SQL parameters and returns them as ParameterMapping objects
-// It extracts parameter names from the SQL using regex and creates ParameterMapping stubs
-func ExtractParameterMappingsFromSQL(sqlStr string) []*ParameterMapping {
+// ExtractMappingsFromSQL extracts SQL parameters and returns them as Mapping objects
+// It extracts parameter names from the SQL using regex and creates Mapping stubs
+func ExtractMappingsFromSQL(sqlStr string) []*Mapping {
 	paramNames := ExtractParameters(sqlStr)
-	var mappings []*ParameterMapping
+	var mappings []*Mapping
 
 	for _, paramName := range paramNames {
-		mappings = append(mappings, &ParameterMapping{
+		mappings = append(mappings, &Mapping{
 			Name: paramName,
 		})
 	}
@@ -330,15 +330,15 @@ func ExtractParameterMappingsFromSQL(sqlStr string) []*ParameterMapping {
 	return mappings
 }
 
-// GetParameterMappingsForSQL extracts SQL parameters and returns matching ParameterMapping objects
-// It looks for ParameterMapping objects in the XFeature that correspond to SQL parameters
-func (xf *XFeature) GetParameterMappingsForSQL(sqlStr string) []*ParameterMapping {
+// GetMappingsForSQL extracts SQL parameters and returns matching Mapping objects
+// It looks for Mapping objects in the XFeature that correspond to SQL parameters
+func (xf *XFeature) GetMappingsForSQL(sqlStr string) []*Mapping {
 	paramNames := ExtractParameters(sqlStr)
-	var mappings []*ParameterMapping
+	var mappings []*Mapping
 
-	// Match extracted parameters with existing ParameterMappings
+	// Match extracted parameters with existing Mappings
 	for _, paramName := range paramNames {
-		for _, pm := range xf.ParameterMappings {
+		for _, pm := range xf.Mappings {
 			if pm.Name == paramName {
 				mappings = append(mappings, pm)
 				break
@@ -349,9 +349,9 @@ func (xf *XFeature) GetParameterMappingsForSQL(sqlStr string) []*ParameterMappin
 	return mappings
 }
 
-// ExecuteListQueryToOptions executes a ListQuery and converts the results to ParameterOptions
+// ExecuteListQueryToOptions executes a ListQuery and converts the results to MappingOptions
 // It takes the first column from the query result and uses it as both Label and Value
-func (xf *XFeature) ExecuteListQueryToOptions(ctx context.Context, db *sqlx.DB, listQuery *ListQuery) ([]*ParameterOption, error) {
+func (xf *XFeature) ExecuteListQueryToOptions(ctx context.Context, db *sqlx.DB, listQuery *ListQuery) ([]*MappingOption, error) {
 	if listQuery == nil || db == nil {
 		return nil, fmt.Errorf("listQuery and db cannot be nil")
 	}
@@ -369,7 +369,7 @@ func (xf *XFeature) ExecuteListQueryToOptions(ctx context.Context, db *sqlx.DB, 
 		return nil, fmt.Errorf("failed to execute ListQuery %s: %w", listQuery.Id, err)
 	}
 
-	var options []*ParameterOption
+	var options []*MappingOption
 	for _, result := range results {
 		// Get the first value from the result map
 		var value string
@@ -380,7 +380,7 @@ func (xf *XFeature) ExecuteListQueryToOptions(ctx context.Context, db *sqlx.DB, 
 			}
 		}
 		if value != "" {
-			options = append(options, &ParameterOption{
+			options = append(options, &MappingOption{
 				Label: value,
 				Value: value,
 			})
@@ -390,14 +390,14 @@ func (xf *XFeature) ExecuteListQueryToOptions(ctx context.Context, db *sqlx.DB, 
 	return options, nil
 }
 
-// ResolveParameterMappings resolves all ParameterMappings by executing ListQuery and converting to Options
-// It iterates through all ParameterMappings in the XFeature and executes any ListQuery to populate Options
-func (xf *XFeature) ResolveParameterMappings(ctx context.Context, db *sqlx.DB) []*ParameterMapping {
-	var mappings []*ParameterMapping
+// ResolveMappings resolves all Mappings by executing ListQuery and converting to Options
+// It iterates through all Mappings in the XFeature and executes any ListQuery to populate Options
+func (xf *XFeature) ResolveMappings(ctx context.Context, db *sqlx.DB) []*Mapping {
+	var mappings []*Mapping
 
-	for _, pm := range xf.ParameterMappings {
+	for _, pm := range xf.Mappings {
 		// Create a copy to avoid modifying the original
-		pmCopy := &ParameterMapping{
+		pmCopy := &Mapping{
 			Name:      pm.Name,
 			DataType:  pm.DataType,
 			Label:     pm.Label,
