@@ -15,141 +15,141 @@ import (
 
 // XFeature represents the entire XML feature definition
 type XFeature struct {
-	Name                 string              `xml:"Name,attr" json:"Name"`
-	Version              string              `xml:"Version,attr" json:"Version"`
-	Backend              Backend             `xml:"Backend" json:"Backend"`
-	Frontend             Frontend            `xml:"Frontend" json:"Frontend"`
-	ParameterMappings    []*ParameterMapping `xml:"ParameterMapping" json:"ParameterMappings"`
+	Name                 string              `xml:"Name,attr" json:"name"`
+	Version              string              `xml:"Version,attr" json:"version"`
+	Backend              Backend             `xml:"Backend" json:"backend"`
+	Frontend             Frontend            `xml:"Frontend" json:"frontend"`
+	ParameterMappings    []*ParameterMapping `xml:"ParameterMapping" json:"parameterMappings"`
 	Logger               *slog.Logger        `json:"-"`
 }
 
 // Backend contains all backend queries and actions
 type Backend struct {
-	Queries       []*Query       `xml:"Query" json:"Queries"`
-	ActionQueries []*ActionQuery `xml:"ActionQuery" json:"ActionQueries"`
+	Queries       []*Query       `xml:"Query" json:"queries"`
+	ActionQueries []*ActionQuery `xml:"ActionQuery" json:"actionQueries"`
 }
 
 // Frontend contains all frontend forms and tables
 type Frontend struct {
-	Forms      []*Form      `xml:"Form" json:"Forms"`
-	DataTables []*DataTable `xml:"DataTable" json:"DataTables"`
+	Forms      []*Form      `xml:"Form" json:"forms"`
+	DataTables []*DataTable `xml:"DataTable" json:"dataTables"`
 }
 
 // Query represents a SELECT operation
 type Query struct {
-	Id          string `xml:"Id,attr" json:"Id"`
-	Type        string `xml:"Type,attr" json:"Type"`
-	Description string `xml:"Description,attr" json:"Description"`
-	SQL         string `xml:",chardata" json:"SQL"`
+	Id          string `xml:"Id,attr" json:"id"`
+	Type        string `xml:"Type,attr" json:"type"`
+	Description string `xml:"Description,attr" json:"description"`
+	SQL         string `xml:",chardata" json:"sql"`
 }
 
 // ActionQuery represents an INSERT/UPDATE/DELETE operation
 type ActionQuery struct {
-	Id          string `xml:"Id,attr" json:"Id"`
-	Type        string `xml:"Type,attr" json:"Type"`
-	Description string `xml:"Description,attr" json:"Description"`
-	SQL         string `xml:",chardata" json:"SQL"`
+	Id          string `xml:"Id,attr" json:"id"`
+	Type        string `xml:"Type,attr" json:"type"`
+	Description string `xml:"Description,attr" json:"description"`
+	SQL         string `xml:",chardata" json:"sql"`
 }
 
 // DataTable represents a frontend data table
 type DataTable struct {
-	Id          string    `xml:"Id,attr" json:"Id"`
-	QueryRef    string    `xml:"QueryRef,attr" json:"QueryRef"`
-	Title       string    `xml:"Title,attr" json:"Title"`
-	Pagination  *bool     `xml:"Pagination,attr" json:"Pagination"`
-	PageSize    *int      `xml:"PageSize,attr" json:"PageSize"`
-	Sortable    *bool     `xml:"Sortable,attr" json:"Sortable"`
-	Filterable  *bool     `xml:"Filterable,attr" json:"Filterable"`
-	Searchable  *bool     `xml:"Searchable,attr" json:"Searchable"`
-	FormActions string    `xml:"FormActions,attr" json:"FormActions"`
-	Columns     []*Column `xml:"Column" json:"Columns"`
+	Id          string    `xml:"Id,attr" json:"id"`
+	QueryRef    string    `xml:"QueryRef,attr" json:"queryRef"`
+	Title       string    `xml:"Title,attr" json:"title"`
+	Pagination  *bool     `xml:"Pagination,attr" json:"pagination"`
+	PageSize    *int      `xml:"PageSize,attr" json:"pageSize"`
+	Sortable    *bool     `xml:"Sortable,attr" json:"sortable"`
+	Filterable  *bool     `xml:"Filterable,attr" json:"filterable"`
+	Searchable  *bool     `xml:"Searchable,attr" json:"searchable"`
+	FormActions string    `xml:"FormActions,attr" json:"formActions"`
+	Columns     []*Column `xml:"Column" json:"columns"`
 }
 
 // Column represents a table column definition
 type Column struct {
-	Name       string `xml:"Name,attr" json:"Name"`
-	Label      string `xml:"Label,attr" json:"Label"`
-	Type       string `xml:"Type,attr" json:"Type"`
-	Sortable   *bool  `xml:"Sortable,attr" json:"Sortable"`
-	Filterable *bool  `xml:"Filterable,attr" json:"Filterable"`
-	Width      string `xml:"Width,attr" json:"Width"`
-	Format     string `xml:"Format,attr" json:"Format"`
-	Align      string `xml:"Align,attr" json:"Align"`
+	Name       string `xml:"Name,attr" json:"name"`
+	Label      string `xml:"Label,attr" json:"label"`
+	Type       string `xml:"Type,attr" json:"type"`
+	Sortable   *bool  `xml:"Sortable,attr" json:"sortable"`
+	Filterable *bool  `xml:"Filterable,attr" json:"filterable"`
+	Width      string `xml:"Width,attr" json:"width"`
+	Format     string `xml:"Format,attr" json:"format"`
+	Align      string `xml:"Align,attr" json:"align"`
 }
 
 // Form represents a frontend form
 type Form struct {
-	Id        string     `xml:"Id,attr" json:"Id"`
-	Mode      string     `xml:"Mode,attr" json:"Mode"`
-	Dialog    bool       `xml:"Dialog,attr" json:"Dialog"`
-	Title     string     `xml:"Title,attr" json:"Title"`
-	ActionRef string     `xml:"ActionRef,attr" json:"ActionRef"`
-	QueryRef  string     `xml:"QueryRef,attr" json:"QueryRef"`
-	Fields    []*Field   `xml:"Field" json:"Fields"`
-	Buttons   []*Button  `xml:"Button" json:"Buttons"`
-	Messages  []*Message `xml:"Message" json:"Messages"`
+	Id        string     `xml:"Id,attr" json:"id"`
+	Mode      string     `xml:"Mode,attr" json:"mode"`
+	Dialog    bool       `xml:"Dialog,attr" json:"dialog"`
+	Title     string     `xml:"Title,attr" json:"title"`
+	ActionRef string     `xml:"ActionRef,attr" json:"actionRef"`
+	QueryRef  string     `xml:"QueryRef,attr" json:"queryRef"`
+	Fields    []*Field   `xml:"Field" json:"fields"`
+	Buttons   []*Button  `xml:"Button" json:"buttons"`
+	Messages  []*Message `xml:"Message" json:"messages"`
 }
 
 // Field represents a form field
 type Field struct {
-	Name         string    `xml:"Name,attr" json:"Name"`
-	Label        string    `xml:"Label,attr" json:"Label"`
-	Type         string    `xml:"Type,attr" json:"Type"`
-	Required     *bool     `xml:"Required,attr" json:"Required"`
-	Readonly     *bool     `xml:"Readonly,attr" json:"Readonly"`
-	Placeholder  string    `xml:"Placeholder,attr" json:"Placeholder"`
-	Validation   string    `xml:"Validation,attr" json:"Validation"`
-	Format       string    `xml:"Format,attr" json:"Format"`
-	DefaultValue string    `xml:"DefaultValue,attr" json:"DefaultValue"`
-	Options      []*Option `xml:"Option" json:"Options"`
+	Name         string    `xml:"Name,attr" json:"name"`
+	Label        string    `xml:"Label,attr" json:"label"`
+	Type         string    `xml:"Type,attr" json:"type"`
+	Required     *bool     `xml:"Required,attr" json:"required"`
+	Readonly     *bool     `xml:"Readonly,attr" json:"readonly"`
+	Placeholder  string    `xml:"Placeholder,attr" json:"placeholder"`
+	Validation   string    `xml:"Validation,attr" json:"validation"`
+	Format       string    `xml:"Format,attr" json:"format"`
+	DefaultValue string    `xml:"DefaultValue,attr" json:"defaultValue"`
+	Options      []*Option `xml:"Option" json:"options"`
 }
 
 // Option represents a select field option
 type Option struct {
-	Value string `xml:"Value,attr" json:"Value"`
-	Label string `xml:"Label,attr" json:"Label"`
+	Value string `xml:"Value,attr" json:"value"`
+	Label string `xml:"Label,attr" json:"label"`
 }
 
 // Button represents a form button
 type Button struct {
-	Type      string `xml:"Type,attr" json:"Type"`
-	Label     string `xml:"Label,attr" json:"Label"`
-	Style     string `xml:"Style,attr" json:"Style"`
-	ActionRef string `xml:"ActionRef,attr" json:"ActionRef"`
+	Type      string `xml:"Type,attr" json:"type"`
+	Label     string `xml:"Label,attr" json:"label"`
+	Style     string `xml:"Style,attr" json:"style"`
+	ActionRef string `xml:"ActionRef,attr" json:"actionRef"`
 }
 
 // Message represents a form message
 type Message struct {
-	Type    string `xml:"Type,attr" json:"Type"`
-	Content string `xml:",chardata" json:"Content"`
+	Type    string `xml:"Type,attr" json:"type"`
+	Content string `xml:",chardata" json:"content"`
 }
 
 // ParameterMapping represents a parameter mapping configuration
 type ParameterMapping struct {
-	Name      string     `xml:"Name,attr" json:"Name"`
-	DataType  string     `xml:"DataType,attr" json:"DataType"`
-	Label     string     `xml:"Label,attr" json:"Label"`
-	ListQuery *ListQuery `xml:"ListQuery" json:"ListQuery,omitempty"`
-	Options   *Options   `xml:"Options" json:"Options,omitempty"`
+	Name      string     `xml:"Name,attr" json:"name"`
+	DataType  string     `xml:"DataType,attr" json:"dataType"`
+	Label     string     `xml:"Label,attr" json:"label"`
+	ListQuery *ListQuery `xml:"ListQuery" json:"listQuery,omitempty"`
+	Options   *Options   `xml:"Options" json:"options,omitempty"`
 }
 
 // ListQuery represents a query for populating parameter values
 type ListQuery struct {
-	Id          string `xml:"Id,attr" json:"Id"`
-	Type        string `xml:"Type,attr" json:"Type"`
-	Description string `xml:"Description,attr" json:"Description"`
-	SQL         string `xml:",chardata" json:"SQL"`
+	Id          string `xml:"Id,attr" json:"id"`
+	Type        string `xml:"Type,attr" json:"type"`
+	Description string `xml:"Description,attr" json:"description"`
+	SQL         string `xml:",chardata" json:"sql"`
 }
 
 // Options represents a collection of parameter options
 type Options struct {
-	Items []*ParameterOption `xml:"Option" json:"Items"`
+	Items []*ParameterOption `xml:"Option" json:"items"`
 }
 
 // ParameterOption represents an option for a parameter
 type ParameterOption struct {
-	Label string `xml:"Label,attr" json:"Label"`
-	Value string `xml:"Value,attr" json:"Value"`
+	Label string `xml:"Label,attr" json:"label"`
+	Value string `xml:"Value,attr" json:"value"`
 }
 
 // NewXFeature creates a new XFeature instance
