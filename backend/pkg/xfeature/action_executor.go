@@ -29,7 +29,7 @@ func NewActionExecutor(logger *slog.Logger) *ActionExecutor {
 func (ae *ActionExecutor) Execute(
 	ctx context.Context,
 	db *sqlx.DB,
-	action *ActionQuery,
+	action *Query,
 	params map[string]interface{},
 ) (sql.Result, error) {
 	startTime := time.Now()

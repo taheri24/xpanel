@@ -87,12 +87,8 @@ func TestLoadFromFile(t *testing.T) {
 		t.Errorf("Expected Version '1.0', got '%s'", xf.Version)
 	}
 
-	if len(xf.Backend.Queries) != 1 {
-		t.Errorf("Expected 1 query, got %d", len(xf.Backend.Queries))
-	}
-
-	if len(xf.Backend.ActionQueries) != 1 {
-		t.Errorf("Expected 1 action query, got %d", len(xf.Backend.ActionQueries))
+	if len(xf.Backend.Queries) != 2 {
+		t.Errorf("Expected 2 queries total, got %d", len(xf.Backend.Queries))
 	}
 }
 
@@ -123,7 +119,7 @@ func TestGetQuery(t *testing.T) {
 // TestGetActionQuery tests finding an action query by ID
 func TestGetActionQuery(t *testing.T) {
 	xf := NewXFeature(testLogger)
-	xf.Backend.ActionQueries = []*ActionQuery{
+	xf.Backend.Queries = []*Query{
 		{Id: "CreateUser", Type: "Insert", SQL: "INSERT INTO users ..."},
 		{Id: "UpdateUser", Type: "Update", SQL: "UPDATE users ..."},
 	}
@@ -262,7 +258,7 @@ func TestExecuteAction(t *testing.T) {
 	defer db.Close()
 
 	xf := NewXFeature(testLogger)
-	xf.Backend.ActionQueries = []*ActionQuery{
+	xf.Backend.Queries = []*Query{
 		{
 			Id:   "CreateUser",
 			Type: "Insert",
@@ -317,7 +313,7 @@ func TestExecuteActionUpdate(t *testing.T) {
 	}
 
 	xf := NewXFeature(testLogger)
-	xf.Backend.ActionQueries = []*ActionQuery{
+	xf.Backend.Queries = []*Query{
 		{
 			Id:   "UpdateUser",
 			Type: "Update",
@@ -371,7 +367,7 @@ func TestExecuteActionDelete(t *testing.T) {
 	}
 
 	xf := NewXFeature(testLogger)
-	xf.Backend.ActionQueries = []*ActionQuery{
+	xf.Backend.Queries = []*Query{
 		{
 			Id:   "DeleteUser",
 			Type: "Delete",
@@ -414,7 +410,7 @@ func TestExecuteActionMissingParameter(t *testing.T) {
 	defer db.Close()
 
 	xf := NewXFeature(testLogger)
-	xf.Backend.ActionQueries = []*ActionQuery{
+	xf.Backend.Queries = []*Query{
 		{
 			Id:   "CreateUser",
 			Type: "Insert",
@@ -449,7 +445,7 @@ func TestGetAllQueries(t *testing.T) {
 // TestGetAllActionQueries tests retrieving all action queries
 func TestGetAllActionQueries(t *testing.T) {
 	xf := NewXFeature(testLogger)
-	xf.Backend.ActionQueries = []*ActionQuery{
+	xf.Backend.Queries = []*Query{
 		{Id: "Action1", Type: "Insert"},
 		{Id: "Action2", Type: "Update"},
 		{Id: "Action3", Type: "Delete"},
