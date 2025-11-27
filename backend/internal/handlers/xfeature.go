@@ -226,10 +226,10 @@ func (h *XFeatureHandler) ResolveMappings(c *gin.Context) {
 	// Check if there are any Mappings defined
 	if len(xf.Mappings) == 0 {
 		c.JSON(http.StatusOK, gin.H{
-			"feature":             featureName,
-			"version":             xf.Version,
-			"parameterMappings":   []*xfeature.Mapping{},
-			"resolvedCount":       0,
+			"feature":       featureName,
+			"version":       xf.Version,
+			"mappings":      []*xfeature.Mapping{},
+			"resolvedCount": 0,
 		})
 		return
 	}
@@ -239,10 +239,10 @@ func (h *XFeatureHandler) ResolveMappings(c *gin.Context) {
 
 	// Build response
 	response := gin.H{
-		"feature":             featureName,
-		"version":             xf.Version,
-		"parameterMappings":   resolvedMappings,
-		"resolvedCount":       len(resolvedMappings),
+		"feature":       featureName,
+		"version":       xf.Version,
+		"mappings":      resolvedMappings,
+		"resolvedCount": len(resolvedMappings),
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -268,10 +268,10 @@ func (h *XFeatureHandler) ResolveDefaultMappings(c *gin.Context) {
 	// Check if there are any Mappings defined
 	if len(xf.Mappings) == 0 {
 		c.JSON(http.StatusOK, gin.H{
-			"feature":             featureName,
-			"version":             xf.Version,
-			"parameterMappings":   []*xfeature.Mapping{},
-			"resolvedCount":       0,
+			"feature":       featureName,
+			"version":       xf.Version,
+			"mappings":      []*xfeature.Mapping{},
+			"resolvedCount": 0,
 		})
 		return
 	}
@@ -281,10 +281,10 @@ func (h *XFeatureHandler) ResolveDefaultMappings(c *gin.Context) {
 
 	// Build response
 	response := gin.H{
-		"feature":             featureName,
-		"version":             xf.Version,
-		"parameterMappings":   resolvedMappings,
-		"resolvedCount":       len(resolvedMappings),
+		"feature":       featureName,
+		"version":       xf.Version,
+		"mappings":      resolvedMappings,
+		"resolvedCount": len(resolvedMappings),
 	}
 
 	c.JSON(http.StatusOK, response)
