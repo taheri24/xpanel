@@ -227,6 +227,7 @@ func (h *XFeatureHandler) ResolveParameterMappings(c *gin.Context) {
 	if len(xf.ParameterMappings) == 0 {
 		c.JSON(http.StatusOK, gin.H{
 			"feature":             featureName,
+			"version":             xf.Version,
 			"parameterMappings":   []*xfeature.ParameterMapping{},
 			"resolvedCount":       0,
 		})
@@ -268,6 +269,7 @@ func (h *XFeatureHandler) ResolveDefaultParameterMappings(c *gin.Context) {
 	if len(xf.ParameterMappings) == 0 {
 		c.JSON(http.StatusOK, gin.H{
 			"feature":             featureName,
+			"version":             xf.Version,
 			"parameterMappings":   []*xfeature.ParameterMapping{},
 			"resolvedCount":       0,
 		})
