@@ -203,6 +203,112 @@ func (h *XFeatureHandler) ListFeatures(c *gin.Context) {
 	})
 }
 
+// ResolveParameterMappings resolves all ParameterMappings by executing ListQuery and converting to Options
+func (h *XFeatureHandler) ResolveParameterMappings(c *gin.Context) {
+	featureName := c.Param("name")
+
+	xf := &xfeature.XFeature{
+		Logger: slog.Default(),
+	}
+
+	filePath := "specs/xfeature/" + featureName + ".xml"
+	if err := xf.LoadFromFile(filePath); err != nil {
+		slog.Warn("Failed to load feature definition", "feature", featureName, "error", err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Feature not found"})
+		return
+	}
+
+	// Check if there are any ParameterMappings defined
+	if len(xf.ParameterMappings) == 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"feature":             featureName,
+			"parameterMappings":   []*xfeature.ParameterMapping{},
+			"resolvedCount":       0,
+		})
+		return
+	}
+
+	// Resolve all ParameterMappings
+	resolvedMappings := xf.ResolveParameterMappings(c.Request.Context(), h.db.DB)
+
+	// Build response
+	response := gin.H{
+		"feature":             featureName,
+		"version":             xf.Version,
+		"parameterMappings":   resolvedMappings,
+		"resolvedCount":       len(resolvedMappings),
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// GetParameterMappingsForSQL returns ParameterMappings that match SQL parameters
+func (h *XFeatureHandler) GetParameterMappingsForSQL(c *gin.Context) {
+	featureName := c.Param("name")
+
+	xf := &xfeature.XFeature{
+		Logger: slog.Default(),
+	}
+
+	filePath := "specs/xfeature/" + featureName + ".xml"
+	if err := xf.LoadFromFile(filePath); err != nil {
+		slog.Warn("Failed to load feature definition", "feature", featureName, "error", err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Feature not found"})
+		return
+	}
+
+	// Get SQL from request body
+	var requestBody struct {
+		SQL string `json:"sql" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&requestBody); err != nil {
+		slog.Warn("Invalid request body", "error", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "SQL parameter is required in request body"})
+		return
+	}
+
+	// Get matching ParameterMappings for the SQL
+	mappings := xf.GetParameterMappingsForSQL(requestBody.SQL)
+
+	// Build response
+	response := gin.H{
+		"feature":             featureName,
+		"version":             xf.Version,
+		"sql":                 requestBody.SQL,
+		"parameterMappings":   mappings,
+		"matchedCount":        len(mappings),
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// ExtractParametersFromSQL extracts parameter names from SQL string
+func (h *XFeatureHandler) ExtractParametersFromSQL(c *gin.Context) {
+	// Get SQL from request body
+	var requestBody struct {
+		SQL string `json:"sql" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&requestBody); err != nil {
+		slog.Warn("Invalid request body", "error", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "SQL parameter is required in request body"})
+		return
+	}
+
+	// Extract parameters from SQL
+	parameterMappings := xfeature.ExtractParameterMappingsFromSQL(requestBody.SQL)
+
+	// Build response
+	response := gin.H{
+		"sql":                 requestBody.SQL,
+		"parameterMappings":   parameterMappings,
+		"extractedCount":      len(parameterMappings),
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 // XFeatureModule exports the xfeature handler module for fx
 var XFeatureModule = fx.Options(
 	fx.Provide(NewXFeatureHandler),
