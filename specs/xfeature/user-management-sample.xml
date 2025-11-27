@@ -282,7 +282,33 @@
   <!-- PARAMETER MAPPINGS            -->
   <!-- ============================= -->
   <ParameterMapping Name="ParamName" DataType="Int" Label="نام"/>
-  <ParameterMapping Name="status" DataType="String" Label="وضعیت"/>
+
+  <ParameterMapping Name="priority" DataType="String" Label="اولویت">
+    <Options>
+      <Option Label="خیلی مهم" Value="5"/>
+      <Option Label="مهم" Value="3"/>
+      <Option Label="عادی" Value="1"/>
+    </Options>
+  </ParameterMapping>
+
+  <ParameterMapping Name="status" DataType="String" Label="وضعیت">
+    <ListQuery Id="GetStatusValues" Type="Select" Description="Retrieve available status values">
+      <![CDATA[
+        SELECT DISTINCT status
+        FROM users
+        ORDER BY status
+      ]]>
+    </ListQuery>
+  </ParameterMapping>
+
+  <ParameterMapping Name="role" DataType="String" Label="نقش">
+    <Options>
+      <Option Label="کاربر" Value="user"/>
+      <Option Label="مدیر" Value="manager"/>
+      <Option Label="ادمین" Value="admin"/>
+    </Options>
+  </ParameterMapping>
+
   <ParameterMapping Name="limit" DataType="Int" Label="محدودیت"/>
   <ParameterMapping Name="offset" DataType="Int" Label="جابجایی"/>
 

@@ -251,9 +251,39 @@
 
   <xs:element name="ParameterMapping">
     <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ListQuery" minOccurs="0"/>
+        <xs:element ref="Options" minOccurs="0"/>
+      </xs:sequence>
       <xs:attribute name="Name" type="xs:string" use="required"/>
       <xs:attribute name="DataType" type="xs:string" use="required"/>
       <xs:attribute name="Label" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="ListQuery">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="Id" type="xs:string" use="required"/>
+          <xs:attribute name="Type" use="required">
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="Select"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+          <xs:attribute name="Description" type="xs:string" use="optional"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="Options">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Option" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
     </xs:complexType>
   </xs:element>
 

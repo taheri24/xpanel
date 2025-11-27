@@ -126,9 +126,30 @@ type Message struct {
 
 // ParameterMapping represents a parameter mapping configuration
 type ParameterMapping struct {
-	Name     string `xml:"Name,attr"`
-	DataType string `xml:"DataType,attr"`
-	Label    string `xml:"Label,attr"`
+	Name      string     `xml:"Name,attr"`
+	DataType  string     `xml:"DataType,attr"`
+	Label     string     `xml:"Label,attr"`
+	ListQuery *ListQuery `xml:"ListQuery"`
+	Options   *Options   `xml:"Options"`
+}
+
+// ListQuery represents a query for populating parameter values
+type ListQuery struct {
+	Id          string `xml:"Id,attr"`
+	Type        string `xml:"Type,attr"`
+	Description string `xml:"Description,attr"`
+	SQL         string `xml:",chardata"`
+}
+
+// Options represents a collection of parameter options
+type Options struct {
+	Items []*ParameterOption `xml:"Option"`
+}
+
+// ParameterOption represents an option for a parameter
+type ParameterOption struct {
+	Label string `xml:"Label,attr"`
+	Value string `xml:"Value,attr"`
 }
 
 // NewXFeature creates a new XFeature instance
