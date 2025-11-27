@@ -12,6 +12,7 @@ export interface XFeature {
   version: string;
   backend: Backend;
   frontend: Frontend;
+  parameterMappings?: ParameterMapping[];
 }
 
 // ============================================================================
@@ -29,6 +30,41 @@ export interface Query {
   description?: string;
   sql: string;
   parameters?: Parameter[];
+}
+
+// ============================================================================
+// PARAMETER MAPPING TYPES
+// ============================================================================
+
+export interface ParameterMapping {
+  name: string;
+  dataType: string;
+  label: string;
+  listQuery?: ListQuery;
+  options?: Options;
+}
+
+export interface ListQuery {
+  id: string;
+  type: 'Select';
+  description?: string;
+  sql: string;
+}
+
+export interface Options {
+  items: ParameterOption[];
+}
+
+export interface ParameterOption {
+  label: string;
+  value: string;
+}
+
+export interface ParameterMappingsResponse {
+  feature: string;
+  version: string;
+  parameterMappings: ParameterMapping[];
+  resolvedCount: number;
 }
 
 export interface ActionQuery {

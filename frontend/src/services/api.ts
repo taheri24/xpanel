@@ -112,6 +112,7 @@ import type {
   ActionRequest,
   ActionResponse,
   FrontendElements,
+  ParameterMappingsResponse,
 } from '../types/xfeature';
 
 export async function getXFeatures(): Promise<string[]> {
@@ -150,4 +151,21 @@ export async function getXFeatureFrontendElements(
   featureName: string
 ): Promise<FrontendElements> {
   return api.get(`xfeatures/${featureName}/frontend`).json<FrontendElements>();
+}
+
+export async function resolveXFeatureParameterMappings(
+  featureName: string
+): Promise<ParameterMappingsResponse> {
+  return api.get(`xfeatures/${featureName}/parameters`).json<ParameterMappingsResponse>();
+}
+
+export async function resolveXFeatureAllParameterMappings(
+  featureName?: string
+): Promise<ParameterMappingsResponse> {
+  if (featureName) {
+    return api.get('xfeatures/all-parameters', {
+      searchParams: { feature: featureName },
+    }).json<ParameterMappingsResponse>();
+  }
+  return api.get('xfeatures/all-parameters').json<ParameterMappingsResponse>();
 }
