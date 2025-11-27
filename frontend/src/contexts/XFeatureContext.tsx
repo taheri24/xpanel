@@ -14,12 +14,15 @@ import type {
   FrontendElements,
   XFeatureBeforeFrontendHandler,
   XFeatureAfterFrontendHandler,
+  MappingsResponse,
+  Mapping,
 } from '../types/xfeature';
 import {
   getXFeature,
   executeXFeatureQuery,
   executeXFeatureAction,
   getXFeatureFrontendElements,
+  resolveXFeatureAllMappings,
 } from '../services/api';
 
 // ============================================================================
@@ -591,4 +594,56 @@ export function useXFeatureFrontend(featureName: string, autoLoad = true) {
   }, [autoLoad, load]);
 
   return { frontendElements, loading, error, load };
+}
+
+/**
+ * Hook to fetch all mappings for a feature
+ * @param featureName - Optional feature name (defaults to user-management-sample)
+ * @param autoLoad - Whether to automatically load mappings on mount
+ */
+export function useXFeatureMappings(featureName?: string, autoLoad = true) {
+  const [mappings, setMappings] = React.useState<Mapping[]>([]);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<Error | undefined>();
+  const [mappingsMap, setMappingsMap] = React.useState<Map<string, Mapping>>(new Map());
+
+  const load = React.useCallback(
+    async () => {
+      setLoading(true);
+      setError(undefined);
+      try {
+        const result: MappingsResponse = await resolveXFeatureAllMappings(featureName);
+        setMappings(result.mappings || []);
+
+        // Create a map for easy lookup by name
+        const map = new Map<string, Mapping>();
+        (result.mappings || []).forEach((mapping) => {
+          map.set(mapping.name, mapping);
+        });
+        setMappingsMap(map);
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [featureName]
+  );
+
+  React.useEffect(() => {
+    if (autoLoad) {
+      load();
+    }
+  }, [autoLoad, load]);
+
+  // Helper function to get mapping by name
+  const getMappingByName = React.useCallback(
+    (name: string): Mapping | undefined => {
+      return mappingsMap.get(name);
+    },
+    [mappingsMap]
+  );
+
+  return { mappings, mappingsMap, loading, error, load, getMappingByName };
 }

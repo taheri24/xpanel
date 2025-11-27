@@ -274,6 +274,7 @@ export interface XFeatureFieldProps {
   onChange: (value: string | number | boolean) => void;
   onBlur?: () => void;
   errors?: string[];
+  featureName?: string;
 }
 
 export interface XFeatureButtonProps {

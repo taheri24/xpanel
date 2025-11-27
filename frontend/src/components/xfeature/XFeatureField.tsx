@@ -11,6 +11,7 @@ import {
   FormHelperText,
 } from '@mui/material';
 import type { XFeatureFieldProps } from '../../types/xfeature';
+import { useXFeatureMappings } from '../../contexts/XFeatureContext';
 
 /**
  * XFeatureField Component
@@ -22,9 +23,14 @@ export function XFeatureField({
   onChange,
   onBlur,
   errors,
+  featureName,
 }: XFeatureFieldProps) {
+  const { getMappingByName } = useXFeatureMappings(featureName);
   const hasError = errors && errors.length > 0;
   const errorMessage = errors?.[0] || '';
+
+  // Get mapping for this field if available
+  const mapping = getMappingByName(definition.name);
 
   const renderTextInput = () => (
     <TextField
@@ -44,31 +50,36 @@ export function XFeatureField({
     />
   );
 
-  const renderSelect = () => (
-    <FormControl fullWidth disabled={definition.readonly} error={hasError}>
-      <InputLabel>{definition.label}</InputLabel>
-      <Select
-        name={definition.name}
-        value={(value as string) || ''}
-        label={definition.label}
-        onChange={(e) => onChange(e.target.value)}
-        onBlur={onBlur}
-        required={definition.required}
-      >
-        {!definition.required && (
-          <MenuItem value="">
-            <em>Select an option</em>
-          </MenuItem>
-        )}
-        {definition.options?.map((option) => (
-          <MenuItem key={option.value} value={option.value}>
-            {option.label}
-          </MenuItem>
-        ))}
-      </Select>
-      {hasError && <FormHelperText>{errorMessage}</FormHelperText>}
-    </FormControl>
-  );
+  const renderSelect = () => {
+    // Use mapping options if available, otherwise use field options
+    const options = mapping?.options?.items || definition.options;
+
+    return (
+      <FormControl fullWidth disabled={definition.readonly} error={hasError}>
+        <InputLabel>{mapping?.label || definition.label}</InputLabel>
+        <Select
+          name={definition.name}
+          value={(value as string) || ''}
+          label={mapping?.label || definition.label}
+          onChange={(e) => onChange(e.target.value)}
+          onBlur={onBlur}
+          required={definition.required}
+        >
+          {!definition.required && (
+            <MenuItem value="">
+              <em>Select an option</em>
+            </MenuItem>
+          )}
+          {options?.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </Select>
+        {hasError && <FormHelperText>{errorMessage}</FormHelperText>}
+      </FormControl>
+    );
+  };
 
   const renderCheckbox = () => (
     <FormControlLabel

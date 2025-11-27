@@ -186,6 +186,7 @@ export function XFeatureForm({
               onChange={(value) => handleFieldChange(field.name, value)}
               onBlur={() => handleFieldBlur(field.name)}
               errors={fieldErrors}
+              featureName={featureName}
             />
           );
         })}

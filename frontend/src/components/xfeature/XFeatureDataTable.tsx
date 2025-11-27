@@ -16,10 +16,16 @@ import {
   Button,
   Menu,
   MenuItem,
+  TextField,
+  Select,
+  FormControl,
+  InputLabel,
+  MenuItem as SelectMenuItem,
+  Typography,
 } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import type { XFeatureDataTableProps, QueryRequest } from '../../types/xfeature';
-import { useXFeatureQuery, useXFeature } from '../../contexts/XFeatureContext';
+import { useXFeatureQuery, useXFeature, useXFeatureMappings } from '../../contexts/XFeatureContext';
 import { formatCellValue } from '../../utils/format';
 
 /**
@@ -32,18 +38,23 @@ export function XFeatureDataTable({
   onRowAction,
 }: XFeatureDataTableProps) {
   const { getForm } = useXFeature();
+  const { mappingsMap, getMappingByName } = useXFeatureMappings(featureName);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(definition.pageSize || 10);
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedRow, setSelectedRow] = useState<Record<string, unknown> | null>(null);
+  const [queryParamsInput, setQueryParamsInput] = useState<Record<string, string>>({
+    status: 'active', // Default value for status
+  });
 
   // Build query parameters
   const queryParams: QueryRequest = {
     limit: rowsPerPage,
     offset: page * rowsPerPage,
     ...(sortBy && { sortBy, sortOrder }),
+    ...queryParamsInput,
   };
 
   // Fetch data
@@ -111,6 +122,17 @@ export function XFeatureDataTable({
     return colFormActions.split(',').map((s) => s.trim());
   };
 
+  // Handle query parameter changes
+  const handleQueryParamChange = useCallback((paramName: string, value: string) => {
+    setQueryParamsInput((prev) => ({
+      ...prev,
+      [paramName]: value,
+    }));
+  }, []);
+
+  // Common query parameters to display in header
+  const commonQueryParams = ['status', 'role', 'priority', 'limit', 'offset'];
+
   return (
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
       {/* Header with title and actions */}
@@ -127,6 +149,54 @@ export function XFeatureDataTable({
           </Button>
         </Stack>
       </Box>
+
+      {/* Query Parameters Section */}
+      {mappingsMap.size > 0 && (
+        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', backgroundColor: '#fafafa' }}>
+          <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+            Query Parameters
+          </Typography>
+          <Stack direction="row" spacing={2} flexWrap="wrap">
+            {commonQueryParams.map((paramName) => {
+              const mapping = getMappingByName(paramName);
+              if (!mapping) return null;
+
+              // If mapping has options, render as select
+              if (mapping.options?.items && mapping.options.items.length > 0) {
+                return (
+                  <FormControl key={paramName} size="small" sx={{ minWidth: 150 }}>
+                    <InputLabel>{mapping.label || paramName}</InputLabel>
+                    <Select
+                      value={queryParamsInput[paramName] || ''}
+                      label={mapping.label || paramName}
+                      onChange={(e) => handleQueryParamChange(paramName, e.target.value)}
+                    >
+                      {mapping.options.items.map((option) => (
+                        <SelectMenuItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectMenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                );
+              }
+
+              // Otherwise render as text field
+              return (
+                <TextField
+                  key={paramName}
+                  size="small"
+                  label={mapping.label || paramName}
+                  value={queryParamsInput[paramName] || ''}
+                  onChange={(e) => handleQueryParamChange(paramName, e.target.value)}
+                  type={mapping.dataType === 'Int' ? 'number' : 'text'}
+                  sx={{ minWidth: 150 }}
+                />
+              );
+            })}
+          </Stack>
+        </Box>
+      )}
 
       {/* Error message */}
       {error && (
