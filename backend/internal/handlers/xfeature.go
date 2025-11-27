@@ -39,6 +39,7 @@ func (h *XFeatureHandler) GetFeature(c *gin.Context) {
 		"version": xf.Version,
 		"backend": gin.H{
 			"queries": len(xf.Backend.Queries),
+			"actions": len(xf.Backend.ActionQueries),
 		},
 		"frontend": gin.H{
 			"forms":      len(xf.Frontend.Forms),

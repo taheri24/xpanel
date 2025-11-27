@@ -24,32 +24,8 @@ type XFeature struct {
 
 // Backend contains all backend queries and actions
 type Backend struct {
-	Queries []*Query `xml:"Query"`
-}
-
-// UnmarshalXML implements custom XML unmarshaling for Backend to handle both Query and ActionQuery elements
-func (b *Backend) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
-	for {
-		token, err := d.Token()
-		if err != nil {
-			return err
-		}
-
-		switch t := token.(type) {
-		case xml.StartElement:
-			if t.Name.Local == "Query" || t.Name.Local == "ActionQuery" {
-				var q Query
-				if err := d.DecodeElement(&q, &t); err != nil {
-					return err
-				}
-				b.Queries = append(b.Queries, &q)
-			}
-		case xml.EndElement:
-			if t == start.End() {
-				return nil
-			}
-		}
-	}
+	Queries       []*Query `xml:"Query"`
+	ActionQueries []*Query `xml:"ActionQuery"`
 }
 
 // Frontend contains all frontend forms and tables
@@ -164,6 +140,9 @@ func (xf *XFeature) LoadFromFile(path string) error {
 	for _, query := range xf.Backend.Queries {
 		query.SQL = strings.TrimSpace(query.SQL)
 	}
+	for _, action := range xf.Backend.ActionQueries {
+		action.SQL = strings.TrimSpace(action.SQL)
+	}
 
 	xf.Logger.Debug("Loaded XFeature from file", "path", path, "name", xf.Name, "version", xf.Version)
 	return nil
@@ -179,11 +158,11 @@ func (xf *XFeature) GetQuery(id string) (*Query, error) {
 	return nil, fmt.Errorf("query not found: %s", id)
 }
 
-// GetActionQuery finds an action query by ID (now unified with Query)
+// GetActionQuery finds an action query by ID
 func (xf *XFeature) GetActionQuery(id string) (*Query, error) {
-	for _, query := range xf.Backend.Queries {
-		if query.Id == id {
-			return query, nil
+	for _, action := range xf.Backend.ActionQueries {
+		if action.Id == id {
+			return action, nil
 		}
 	}
 	return nil, fmt.Errorf("action query not found: %s", id)
@@ -214,9 +193,9 @@ func (xf *XFeature) GetAllQueries() []*Query {
 	return xf.Backend.Queries
 }
 
-// GetAllActionQueries returns all action queries (now unified with Query)
+// GetAllActionQueries returns all action queries
 func (xf *XFeature) GetAllActionQueries() []*Query {
-	return xf.Backend.Queries
+	return xf.Backend.ActionQueries
 }
 
 // GetAllDataTables returns all data tables
