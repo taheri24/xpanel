@@ -812,13 +812,13 @@ func TestXFeatureJSONMarshaling(t *testing.T) {
 		t.Fatalf("Failed to unmarshal JSON: %v", err)
 	}
 
-	if result["Name"] != "TestFeature" {
-		t.Error("Expected 'Name' field in JSON")
+	if result["name"] != "TestFeature" {
+		t.Error("Expected 'name' field in JSON")
 	}
-	if result["ParameterMappings"] == nil {
-		t.Error("Expected 'ParameterMappings' field in JSON")
+	if result["parameterMappings"] == nil {
+		t.Error("Expected 'parameterMappings' field in JSON")
 	}
-	if paramMappings, ok := result["ParameterMappings"].([]interface{}); ok {
+	if paramMappings, ok := result["parameterMappings"].([]interface{}); ok {
 		if len(paramMappings) != 1 {
 			t.Errorf("Expected 1 ParameterMapping in JSON, got %d", len(paramMappings))
 		}
