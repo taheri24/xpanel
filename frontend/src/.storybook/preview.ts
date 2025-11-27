@@ -1,7 +1,7 @@
 import type { Preview } from '@storybook/react-vite';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { theme } from '../src/theme/theme';
+import { theme } from '../theme/theme';
 import React from 'react';
 
 const preview: Preview = {
