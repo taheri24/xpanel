@@ -70,11 +70,26 @@ export interface XFeatureAfterActionEvent {
 }
 
 /**
+ * Event fired before loading mappings
+ */
+export interface XFeatureBeforeMappingsEvent {
+  featureName?: string;
+}
+
+/**
+ * Event fired after successfully loading mappings
+ */
+export interface XFeatureAfterMappingsEvent {
+  featureName?: string;
+  result: MappingsResponse;
+}
+
+/**
  * Event fired when an error occurs
  */
 export interface XFeatureErrorEvent {
   error: Error;
-  context: 'feature' | 'query' | 'action';
+  context: 'feature' | 'query' | 'action' | 'mappings';
   featureName?: string;
   queryId?: string;
   actionId?: string;
@@ -106,6 +121,20 @@ export type XFeatureBeforeActionHandler = (
  */
 export type XFeatureAfterActionHandler = (
   event: XFeatureAfterActionEvent
+) => void | Promise<void>;
+
+/**
+ * Event handler that can return a modified response to short-circuit the API call
+ */
+export type XFeatureBeforeMappingsHandler = (
+  event: XFeatureBeforeMappingsEvent
+) => MappingsResponse | undefined | Promise<MappingsResponse | undefined>;
+
+/**
+ * Event handler called after mappings load successfully
+ */
+export type XFeatureAfterMappingsHandler = (
+  event: XFeatureAfterMappingsEvent
 ) => void | Promise<void>;
 
 /**
@@ -192,6 +221,15 @@ export interface XFeatureProviderProps {
    */
   onAfterFrontend?: XFeatureAfterFrontendHandler;
   /**
+   * Called before loading mappings
+   * Return a MappingsResponse to short-circuit the API call (useful for mocking)
+   */
+  onBeforeMappings?: XFeatureBeforeMappingsHandler;
+  /**
+   * Called after mappings load successfully
+   */
+  onAfterMappings?: XFeatureAfterMappingsHandler;
+  /**
    * Called when an error occurs during any operation
    */
   onError?: XFeatureErrorHandler;
@@ -205,6 +243,8 @@ export function XFeatureProvider({
   onAfterAction,
   onBeforeFrontend,
   onAfterFrontend,
+  onBeforeMappings: _onBeforeMappings,
+  onAfterMappings: _onAfterMappings,
   onError,
 }: XFeatureProviderProps) {
   const [state, dispatch] = useReducer(xfeatureReducer, {
@@ -600,8 +640,15 @@ export function useXFeatureFrontend(featureName: string, autoLoad = true) {
  * Hook to fetch all mappings for a feature
  * @param featureName - Optional feature name (defaults to user-management-sample)
  * @param autoLoad - Whether to automatically load mappings on mount
+ * @param onBeforeMappings - Optional handler to mock mappings response
+ * @param onAfterMappings - Optional handler called after mappings load
  */
-export function useXFeatureMappings(featureName?: string, autoLoad = true) {
+export function useXFeatureMappings(
+  featureName?: string,
+  autoLoad = true,
+  onBeforeMappings?: XFeatureBeforeMappingsHandler,
+  onAfterMappings?: XFeatureAfterMappingsHandler
+) {
   const [mappings, setMappings] = React.useState<Mapping[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<Error | undefined>();
@@ -612,7 +659,20 @@ export function useXFeatureMappings(featureName?: string, autoLoad = true) {
       setLoading(true);
       setError(undefined);
       try {
-        const result: MappingsResponse = await resolveXFeatureAllMappings(featureName);
+        // Call onBeforeMappings event - can return mocked response
+        let result: MappingsResponse | undefined;
+        if (onBeforeMappings) {
+          const mockResult = await onBeforeMappings({ featureName });
+          if (mockResult) {
+            result = mockResult;
+          }
+        }
+
+        // If no mocked response, fetch from API
+        if (!result) {
+          result = await resolveXFeatureAllMappings(featureName);
+        }
+
         setMappings(result.mappings || []);
 
         // Create a map for easy lookup by name
@@ -621,6 +681,11 @@ export function useXFeatureMappings(featureName?: string, autoLoad = true) {
           map.set(mapping.name, mapping);
         });
         setMappingsMap(map);
+
+        // Call onAfterMappings event
+        if (onAfterMappings) {
+          await onAfterMappings({ featureName, result });
+        }
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err));
         setError(error);
@@ -628,7 +693,7 @@ export function useXFeatureMappings(featureName?: string, autoLoad = true) {
         setLoading(false);
       }
     },
-    [featureName]
+    [featureName, onBeforeMappings, onAfterMappings]
   );
 
   React.useEffect(() => {
