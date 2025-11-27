@@ -314,3 +314,37 @@ func ConvertParametersForDriver(sqlStr string, driverName string) string {
 		return sqlStr
 	}
 }
+
+// ExtractParameterMappingsFromSQL extracts SQL parameters and returns them as ParameterMapping objects
+// It extracts parameter names from the SQL using regex and creates ParameterMapping stubs
+func ExtractParameterMappingsFromSQL(sqlStr string) []*ParameterMapping {
+	paramNames := ExtractParameters(sqlStr)
+	var mappings []*ParameterMapping
+
+	for _, paramName := range paramNames {
+		mappings = append(mappings, &ParameterMapping{
+			Name: paramName,
+		})
+	}
+
+	return mappings
+}
+
+// GetParameterMappingsForSQL extracts SQL parameters and returns matching ParameterMapping objects
+// It looks for ParameterMapping objects in the XFeature that correspond to SQL parameters
+func (xf *XFeature) GetParameterMappingsForSQL(sqlStr string) []*ParameterMapping {
+	paramNames := ExtractParameters(sqlStr)
+	var mappings []*ParameterMapping
+
+	// Match extracted parameters with existing ParameterMappings
+	for _, paramName := range paramNames {
+		for _, pm := range xf.ParameterMappings {
+			if pm.Name == paramName {
+				mappings = append(mappings, pm)
+				break
+			}
+		}
+	}
+
+	return mappings
+}
