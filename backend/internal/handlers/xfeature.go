@@ -18,6 +18,11 @@ func NewXFeatureHandler(db *database.DB) *XFeatureHandler {
 	return &XFeatureHandler{db: db}
 }
 
+// getFeatureFilePath constructs the file path for a feature definition
+func getFeatureFilePath(featureName string) string {
+	return "specs/xfeature/" + featureName + ".xml"
+}
+
 // GetFeature retrieves a feature definition by name
 func (h *XFeatureHandler) GetFeature(c *gin.Context) {
 	featureName := c.Param("name")
@@ -26,7 +31,7 @@ func (h *XFeatureHandler) GetFeature(c *gin.Context) {
 		Logger: slog.Default(),
 	}
 
-	filePath := "specs/xfeature/" + featureName + ".xml"
+	filePath := getFeatureFilePath(featureName)
 	if err := xf.LoadFromFile(filePath); err != nil {
 		slog.Warn("Failed to load feature definition", "feature", featureName, "error", err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Feature not found"})
@@ -59,7 +64,7 @@ func (h *XFeatureHandler) ExecuteQuery(c *gin.Context) {
 		Logger: slog.Default(),
 	}
 
-	filePath := "specs/xfeature/" + featureName + ".xml"
+	filePath := getFeatureFilePath(featureName)
 	if err := xf.LoadFromFile(filePath); err != nil {
 		slog.Warn("Failed to load feature definition", "feature", featureName, "error", err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Feature not found"})
@@ -113,7 +118,7 @@ func (h *XFeatureHandler) ExecuteAction(c *gin.Context) {
 		Logger: slog.Default(),
 	}
 
-	filePath := "specs/xfeature/" + featureName + ".xml"
+	filePath := getFeatureFilePath(featureName)
 	if err := xf.LoadFromFile(filePath); err != nil {
 		slog.Warn("Failed to load feature definition", "feature", featureName, "error", err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Feature not found"})
@@ -173,7 +178,7 @@ func (h *XFeatureHandler) GetFrontendElements(c *gin.Context) {
 		Logger: slog.Default(),
 	}
 
-	filePath := "specs/xfeature/" + featureName + ".xml"
+	filePath := getFeatureFilePath(featureName)
 	if err := xf.LoadFromFile(filePath); err != nil {
 		slog.Warn("Failed to load feature definition", "feature", featureName, "error", err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Feature not found"})
@@ -211,7 +216,7 @@ func (h *XFeatureHandler) ResolveParameterMappings(c *gin.Context) {
 		Logger: slog.Default(),
 	}
 
-	filePath := "specs/xfeature/" + featureName + ".xml"
+	filePath := getFeatureFilePath(featureName)
 	if err := xf.LoadFromFile(filePath); err != nil {
 		slog.Warn("Failed to load feature definition", "feature", featureName, "error", err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Feature not found"})
@@ -252,7 +257,7 @@ func (h *XFeatureHandler) ResolveDefaultParameterMappings(c *gin.Context) {
 		Logger: slog.Default(),
 	}
 
-	filePath := "specs/xfeature/" + featureName + ".xml"
+	filePath := getFeatureFilePath(featureName)
 	if err := xf.LoadFromFile(filePath); err != nil {
 		slog.Warn("Failed to load feature definition", "feature", featureName, "error", err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Feature not found"})
