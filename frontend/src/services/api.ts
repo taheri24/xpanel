@@ -158,14 +158,3 @@ export async function resolveXFeatureMappings(
 ): Promise<MappingsResponse> {
   return api.get(`xfeatures/${featureName}/mappings`).json<MappingsResponse>();
 }
-
-export async function resolveXFeatureAllMappings(
-  featureName?: string
-): Promise<MappingsResponse> {
-  if (featureName) {
-    return api.get('xfeatures/all-mappings', {
-      searchParams: { feature: featureName },
-    }).json<MappingsResponse>();
-  }
-  return api.get('xfeatures/all-mappings').json<MappingsResponse>();
-}

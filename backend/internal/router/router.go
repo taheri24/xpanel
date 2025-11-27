@@ -56,7 +56,6 @@ func NewRouter(params RouterParams) *gin.Engine {
 		xfeatures := v1.Group("/xfeatures")
 		{
 			xfeatures.GET("", params.XFeatureHandler.ListFeatures)
-			xfeatures.GET("/all-mappings", params.XFeatureHandler.ResolveDefaultMappings)
 			xfeatures.GET("/:name", params.XFeatureHandler.GetFeature)
 			xfeatures.GET("/:name/frontend", params.XFeatureHandler.GetFrontendElements)
 			xfeatures.GET("/:name/mappings", params.XFeatureHandler.ResolveMappings)
