@@ -141,6 +141,20 @@ Content-Type: application/json
 }
 ```
 
+## API Documentation
+
+The API is fully documented using **Swagger/OpenAPI** with interactive UI:
+
+- **Swagger UI**: Access at `http://localhost:8080/swagger/index.html` (when running)
+- **OpenAPI Spec**: Available at `/docs/swagger.json` and `/docs/swagger.yaml`
+- **Documentation Format**: Swagger comments in Go code (see CLAUDE.md for details)
+
+To regenerate API documentation after adding/modifying endpoints:
+```bash
+go install github.com/swaggo/swag/cmd/swag@latest
+swag init -g main.go
+```
+
 ## Development
 
 ### Adding a New Endpoint with FX

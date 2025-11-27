@@ -855,6 +855,272 @@ func ProcessOrder(order *Order) error {
 
 ---
 
+## API Documentation with Swagger/OpenAPI
+
+### Overview
+
+The XPanel backend uses [Swaggo](https://github.com/swaggo/swag) to automatically generate OpenAPI/Swagger documentation from code comments. This enables:
+
+- **Auto-generated API docs** from Go code
+- **Interactive Swagger UI** at `/swagger/index.html`
+- **OpenAPI spec file** at `/docs/swagger.json` or `/docs/swagger.yaml`
+- **Type-safe documentation** that stays in sync with code
+
+### Swagger Annotations
+
+#### Main Package Documentation
+
+Document the API at the package level in `main.go`:
+
+```go
+// @title XPanel API
+// @version 1.0
+// @description XPanel is a dynamic feature-based API platform
+// @contact.name Support
+// @license.name MIT
+// @host localhost:8080
+// @BasePath /
+// @schemes http https
+package main
+```
+
+#### Handler Annotations
+
+Every handler function should have a swagger comment block:
+
+```go
+// @Summary Get all users
+// @Description Retrieve a list of all users
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Success 200 {array} models.User "List of users"
+// @Failure 500 {object} map[string]interface{} "Server error"
+// @Router /api/v1/users [get]
+func (h *UserHandler) GetAll(c *gin.Context) {
+    // Implementation
+}
+```
+
+#### Parameter Documentation
+
+Document path, query, and body parameters:
+
+```go
+// @Summary Get user by ID
+// @Tags users
+// @Param id path int true "User ID"
+// @Param limit query int false "Limit results"
+// @Param filter body UserFilter true "Filter criteria"
+// @Success 200 {object} models.User
+// @Router /api/v1/users/{id} [get]
+func (h *UserHandler) GetByID(c *gin.Context) {
+    // Implementation
+}
+```
+
+Parameter formats:
+- `path`: URL path parameters
+- `query`: URL query parameters
+- `body`: Request body
+- `header`: HTTP headers
+- `formData`: Form fields
+
+#### Response Documentation
+
+Document response types and examples:
+
+```go
+// @Success 200 {object} models.User "User details"
+// @Success 201 {array} []models.User "Created users"
+// @Failure 400 {object} ErrorResponse "Bad request"
+// @Failure 404 {object} map[string]interface{} "Not found"
+```
+
+### Model Documentation
+
+Add struct tags to document model fields:
+
+```go
+type User struct {
+    ID        int       `json:"id" example:"1" description:"User ID"`
+    Username  string    `json:"username" example:"john_doe" description:"Username"`
+    Email     string    `json:"email" example:"john@example.com" description:"Email address"`
+    CreatedAt time.Time `json:"created_at" description:"Creation timestamp"`
+}
+```
+
+### Generating Swagger Spec
+
+Generate the OpenAPI specification from code comments:
+
+```bash
+# Install swag CLI (if not already installed)
+go install github.com/swaggo/swag/cmd/swag@latest
+
+# Generate docs from code comments
+swag init -g main.go
+
+# This creates:
+# - docs/docs.go (auto-generated, don't commit)
+# - docs/swagger.json (OpenAPI spec)
+# - docs/swagger.yaml (OpenAPI spec in YAML)
+```
+
+**Important**: The generated `docs/` directory should be committed to version control so the Swagger UI works without requiring swag CLI locally.
+
+### Accessing Swagger UI
+
+Once the documentation is generated and the app is running:
+
+```
+http://localhost:8080/swagger/index.html
+```
+
+The Swagger UI provides:
+- Interactive API documentation
+- Try-it-out functionality for testing endpoints
+- Schema validation
+- Request/response examples
+
+### GitHub Actions Workflow
+
+Use a GitHub Actions workflow to automatically generate and validate Swagger docs before merge:
+
+**File: `.github/workflows/swagger-validation.yml`**
+
+```yaml
+name: Swagger Documentation
+
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+
+jobs:
+  swagger:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.24.7
+
+      - name: Install swag
+        run: go install github.com/swaggo/swag/cmd/swag@latest
+
+      - name: Generate Swagger docs
+        working-directory: ./backend
+        run: |
+          /home/runner/go/bin/swag init -g main.go
+
+      - name: Check for uncommitted changes
+        run: |
+          if git diff --quiet backend/docs/; then
+            echo "✓ Swagger documentation is up to date"
+          else
+            echo "✗ Swagger documentation is out of date"
+            echo "Please run 'swag init -g main.go' and commit the changes"
+            git diff backend/docs/
+            exit 1
+          fi
+
+      - name: Validate generated files
+        run: |
+          if [ ! -f "backend/docs/swagger.json" ]; then
+            echo "Error: swagger.json not generated"
+            exit 1
+          fi
+          if [ ! -f "backend/docs/docs.go" ]; then
+            echo "Error: docs.go not generated"
+            exit 1
+          fi
+```
+
+### Swagger Comments Checklist
+
+Before committing handler changes:
+
+- [ ] `@Summary` - Brief description of the endpoint
+- [ ] `@Description` - Detailed description
+- [ ] `@Tags` - Tag for organizing endpoints
+- [ ] `@Accept` - Request content type (json, xml, etc.)
+- [ ] `@Produce` - Response content type
+- [ ] `@Param` - All path, query, and body parameters
+- [ ] `@Success` - Success response with status code and type
+- [ ] `@Failure` - Error responses for all error cases
+- [ ] `@Router` - Route path and HTTP method
+- [ ] Model struct tags - `example` and `description` tags on fields
+
+### Common Patterns
+
+#### Create Endpoint
+
+```go
+// @Summary Create a new user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param user body models.User true "User details"
+// @Success 201 {object} models.User "User created"
+// @Failure 400 {object} map[string]interface{} "Invalid input"
+// @Router /api/v1/users [post]
+func (h *UserHandler) Create(c *gin.Context) {
+    // Implementation
+}
+```
+
+#### Update Endpoint
+
+```go
+// @Summary Update a user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Param user body models.User true "Updated user details"
+// @Success 200 {object} models.User "User updated"
+// @Failure 404 {object} map[string]interface{} "User not found"
+// @Router /api/v1/users/{id} [put]
+func (h *UserHandler) Update(c *gin.Context) {
+    // Implementation
+}
+```
+
+#### Delete Endpoint
+
+```go
+// @Summary Delete a user
+// @Tags users
+// @Param id path int true "User ID"
+// @Success 200 {object} map[string]interface{} "User deleted"
+// @Failure 404 {object} map[string]interface{} "User not found"
+// @Router /api/v1/users/{id} [delete]
+func (h *UserHandler) Delete(c *gin.Context) {
+    // Implementation
+}
+```
+
+### Workflow
+
+When adding or modifying endpoints:
+
+1. **Add Swagger comments** to the handler function
+2. **Add struct tags** to request/response models
+3. **Generate docs**: `swag init -g main.go` (from backend dir)
+4. **Test in Swagger UI**: `http://localhost:8080/swagger/index.html`
+5. **Commit changes** including the generated `docs/` directory
+
+---
+
 ## Go-Specific Best Practices
 
 ### Context Usage

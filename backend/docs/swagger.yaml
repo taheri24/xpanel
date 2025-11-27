@@ -1,0 +1,444 @@
+basePath: /
+definitions:
+  models.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        example: john@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      updated_at:
+        type: string
+      username:
+        example: john_doe
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    name: Support
+  description: XPanel is a dynamic feature-based API platform with user management
+    and query/action execution capabilities
+  license:
+    name: MIT
+  title: XPanel API
+  version: "1.0"
+paths:
+  /api/v1/users:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of users
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "500":
+          description: Failed to retrieve users
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all users
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Create a new user with the provided details
+      parameters:
+      - description: User details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created successfully
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Invalid request body
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Failed to create user
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new user
+      tags:
+      - users
+  /api/v1/users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an existing user by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User deleted successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid user ID
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Failed to delete user
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete a user
+      tags:
+      - users
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific user by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User details
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Invalid user ID
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get user by ID
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Update an existing user's details
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated user details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User updated successfully
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Invalid user ID or request body
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Failed to update user
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update a user
+      tags:
+      - users
+  /api/v1/xfeatures:
+    get:
+      consumes:
+      - application/json
+      description: Get information about available features
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Available features
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List available features
+      tags:
+      - xfeatures
+  /api/v1/xfeatures/{name}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve metadata for a specific feature including backend and
+        frontend structure
+      parameters:
+      - description: Feature name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Feature metadata
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Feature not found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get feature metadata
+      tags:
+      - xfeatures
+  /api/v1/xfeatures/{name}/actions/{actionId}:
+    post:
+      consumes:
+      - application/json
+      description: Execute an INSERT/UPDATE/DELETE action from a feature definition
+      parameters:
+      - description: Feature name
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Action ID
+        in: path
+        name: actionId
+        required: true
+        type: string
+      - description: Action parameters
+        in: body
+        name: params
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Action execution result
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request body
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Feature or action not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Action execution failed
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Execute a feature action
+      tags:
+      - xfeatures
+  /api/v1/xfeatures/{name}/backend:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all backend queries and actions with their parameters
+        for a feature
+      parameters:
+      - description: Feature name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Backend information
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Feature not found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get backend information
+      tags:
+      - xfeatures
+  /api/v1/xfeatures/{name}/frontend:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all frontend elements (DataTables and Forms) for a feature
+      parameters:
+      - description: Feature name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Frontend elements
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Feature not found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get frontend elements
+      tags:
+      - xfeatures
+  /api/v1/xfeatures/{name}/mappings:
+    get:
+      consumes:
+      - application/json
+      description: Resolve all mappings by executing ListQuery and converting to options
+      parameters:
+      - description: Feature name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Resolved mappings
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Feature not found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Resolve feature mappings
+      tags:
+      - xfeatures
+  /api/v1/xfeatures/{name}/queries/{queryId}:
+    post:
+      consumes:
+      - application/json
+      description: Execute a SELECT query from a feature definition with parameters
+      parameters:
+      - description: Feature name
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Query ID
+        in: path
+        name: queryId
+        required: true
+        type: string
+      - description: Query parameters
+        in: body
+        name: params
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Query results
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request body
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Feature or query not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Query execution failed
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Execute a feature query
+      tags:
+      - xfeatures
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Check the health status of the application and database connection
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Application is healthy
+          schema:
+            additionalProperties: true
+            type: object
+        "503":
+          description: Database connection failed
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Health Check
+      tags:
+      - health
+  /ready:
+    get:
+      consumes:
+      - application/json
+      description: Check if the application is ready to accept requests
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Application is ready
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Readiness Check
+      tags:
+      - health
+schemes:
+- http
+- https
+swagger: "2.0"

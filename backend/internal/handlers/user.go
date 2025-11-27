@@ -18,6 +18,14 @@ func NewUserHandler(userRepo *models.UserRepository) *UserHandler {
 	return &UserHandler{userRepo: userRepo}
 }
 
+// @Summary Get all users
+// @Description Retrieve a list of all users
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Success 200 {array} models.User "List of users"
+// @Failure 500 {object} map[string]interface{} "Failed to retrieve users"
+// @Router /api/v1/users [get]
 func (h *UserHandler) GetAll(c *gin.Context) {
 	users, err := h.userRepo.GetAll(c.Request.Context())
 	if err != nil {
@@ -29,6 +37,16 @@ func (h *UserHandler) GetAll(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 }
 
+// @Summary Get user by ID
+// @Description Retrieve a specific user by their ID
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param id path int true "User ID"
+// @Success 200 {object} models.User "User details"
+// @Failure 400 {object} map[string]interface{} "Invalid user ID"
+// @Failure 404 {object} map[string]interface{} "User not found"
+// @Router /api/v1/users/{id} [get]
 func (h *UserHandler) GetByID(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -47,6 +65,16 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// @Summary Create a new user
+// @Description Create a new user with the provided details
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param user body models.User true "User details"
+// @Success 201 {object} models.User "User created successfully"
+// @Failure 400 {object} map[string]interface{} "Invalid request body"
+// @Failure 500 {object} map[string]interface{} "Failed to create user"
+// @Router /api/v1/users [post]
 func (h *UserHandler) Create(c *gin.Context) {
 	var user models.User
 
@@ -65,6 +93,17 @@ func (h *UserHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, user)
 }
 
+// @Summary Update a user
+// @Description Update an existing user's details
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param id path int true "User ID"
+// @Param user body models.User true "Updated user details"
+// @Success 200 {object} models.User "User updated successfully"
+// @Failure 400 {object} map[string]interface{} "Invalid user ID or request body"
+// @Failure 500 {object} map[string]interface{} "Failed to update user"
+// @Router /api/v1/users/{id} [put]
 func (h *UserHandler) Update(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -91,6 +130,16 @@ func (h *UserHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// @Summary Delete a user
+// @Description Delete an existing user by their ID
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param id path int true "User ID"
+// @Success 200 {object} map[string]interface{} "User deleted successfully"
+// @Failure 400 {object} map[string]interface{} "Invalid user ID"
+// @Failure 500 {object} map[string]interface{} "Failed to delete user"
+// @Router /api/v1/users/{id} [delete]
 func (h *UserHandler) Delete(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {

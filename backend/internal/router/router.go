@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	swaggerFiles "github.com/swaggo/files"
 	"github.com/taheri24/xpanel/backend/internal/handlers"
 	"github.com/taheri24/xpanel/backend/internal/middleware"
 	"github.com/taheri24/xpanel/backend/pkg/config"
@@ -39,6 +41,9 @@ func NewRouter(params RouterParams) *gin.Engine {
 	// Health check routes
 	router.GET("/health", params.HealthHandler.Health)
 	router.GET("/ready", params.HealthHandler.Ready)
+
+	// Swagger documentation routes
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// API v1 routes
 	v1 := router.Group("/api/v1")

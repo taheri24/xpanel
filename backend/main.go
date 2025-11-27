@@ -1,3 +1,11 @@
+// @title XPanel API
+// @version 1.0
+// @description XPanel is a dynamic feature-based API platform with user management and query/action execution capabilities
+// @contact.name Support
+// @license.name MIT
+// @host localhost:8080
+// @BasePath /
+// @schemes http https
 package main
 
 import (
@@ -9,6 +17,7 @@ import (
 	"github.com/taheri24/xpanel/backend/internal/router"
 	"github.com/taheri24/xpanel/backend/internal/server"
 	"github.com/taheri24/xpanel/backend/pkg/config"
+	_ "github.com/taheri24/xpanel/backend/docs"
 	"go.uber.org/fx"
 )
 

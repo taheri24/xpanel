@@ -1,0 +1,56 @@
+name: Swagger Documentation
+
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+
+jobs:
+  swagger:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.24.7
+
+      - name: Install swag
+        run: go install github.com/swaggo/swag/cmd/swag@latest
+
+      - name: Generate Swagger docs
+        working-directory: ./backend
+        run: |
+          /home/runner/go/bin/swag init -g main.go
+
+      - name: Check for uncommitted changes
+        run: |
+          if git diff --quiet backend/docs/; then
+            echo "✓ Swagger documentation is up to date"
+          else
+            echo "✗ Swagger documentation is out of date"
+            echo "Please run 'swag init -g main.go' from the backend directory and commit the changes"
+            echo ""
+            echo "Changes in backend/docs/:"
+            git diff backend/docs/
+            exit 1
+          fi
+
+      - name: Validate generated files
+        run: |
+          if [ ! -f "backend/docs/swagger.json" ]; then
+            echo "Error: swagger.json not generated"
+            exit 1
+          fi
+          if [ ! -f "backend/docs/docs.go" ]; then
+            echo "Error: docs.go not generated"
+            exit 1
+          fi
+          echo "✓ All Swagger documentation files are valid"
