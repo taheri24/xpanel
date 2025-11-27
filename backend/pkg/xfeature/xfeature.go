@@ -15,112 +15,141 @@ import (
 
 // XFeature represents the entire XML feature definition
 type XFeature struct {
-	Name     string     `xml:"Name,attr"`
-	Version  string     `xml:"Version,attr"`
-	Backend  Backend    `xml:"Backend"`
-	Frontend Frontend   `xml:"Frontend"`
-	Logger   *slog.Logger
+	Name                 string              `xml:"Name,attr" json:"name"`
+	Version              string              `xml:"Version,attr" json:"version"`
+	Backend              Backend             `xml:"Backend" json:"backend"`
+	Frontend             Frontend            `xml:"Frontend" json:"frontend"`
+	Mappings             []*Mapping `xml:"Mapping" json:"mappings"`
+	Logger               *slog.Logger        `json:"-"`
 }
 
 // Backend contains all backend queries and actions
 type Backend struct {
-	Queries      []*Query       `xml:"Query"`
-	ActionQueries []*ActionQuery `xml:"ActionQuery"`
+	Queries       []*Query       `xml:"Query" json:"queries"`
+	ActionQueries []*ActionQuery `xml:"ActionQuery" json:"actionQueries"`
 }
 
 // Frontend contains all frontend forms and tables
 type Frontend struct {
-	Forms      []*Form      `xml:"Form"`
-	DataTables []*DataTable `xml:"DataTable"`
+	Forms      []*Form      `xml:"Form" json:"forms"`
+	DataTables []*DataTable `xml:"DataTable" json:"dataTables"`
 }
 
 // Query represents a SELECT operation
 type Query struct {
-	Id          string `xml:"Id,attr"`
-	Type        string `xml:"Type,attr"`
-	Description string `xml:"Description,attr"`
-	SQL         string `xml:",chardata"`
+	Id          string `xml:"Id,attr" json:"id"`
+	Type        string `xml:"Type,attr" json:"type"`
+	Description string `xml:"Description,attr" json:"description"`
+	SQL         string `xml:",chardata" json:"sql"`
 }
 
 // ActionQuery represents an INSERT/UPDATE/DELETE operation
 type ActionQuery struct {
-	Id          string `xml:"Id,attr"`
-	Type        string `xml:"Type,attr"`
-	Description string `xml:"Description,attr"`
-	SQL         string `xml:",chardata"`
+	Id          string `xml:"Id,attr" json:"id"`
+	Type        string `xml:"Type,attr" json:"type"`
+	Description string `xml:"Description,attr" json:"description"`
+	SQL         string `xml:",chardata" json:"sql"`
 }
 
 // DataTable represents a frontend data table
 type DataTable struct {
-	Id          string    `xml:"Id,attr"`
-	QueryRef    string    `xml:"QueryRef,attr"`
-	Title       string    `xml:"Title,attr"`
-	Pagination  *bool     `xml:"Pagination,attr"`
-	PageSize    *int      `xml:"PageSize,attr"`
-	Sortable    *bool     `xml:"Sortable,attr"`
-	Filterable  *bool     `xml:"Filterable,attr"`
-	Searchable  *bool     `xml:"Searchable,attr"`
-	FormActions string    `xml:"FormActions,attr"`
-	Columns     []*Column `xml:"Column"`
+	Id          string    `xml:"Id,attr" json:"id"`
+	QueryRef    string    `xml:"QueryRef,attr" json:"queryRef"`
+	Title       string    `xml:"Title,attr" json:"title"`
+	Pagination  *bool     `xml:"Pagination,attr" json:"pagination"`
+	PageSize    *int      `xml:"PageSize,attr" json:"pageSize"`
+	Sortable    *bool     `xml:"Sortable,attr" json:"sortable"`
+	Filterable  *bool     `xml:"Filterable,attr" json:"filterable"`
+	Searchable  *bool     `xml:"Searchable,attr" json:"searchable"`
+	FormActions string    `xml:"FormActions,attr" json:"formActions"`
+	Columns     []*Column `xml:"Column" json:"columns"`
 }
 
 // Column represents a table column definition
 type Column struct {
-	Name       string `xml:"Name,attr"`
-	Label      string `xml:"Label,attr"`
-	Type       string `xml:"Type,attr"`
-	Sortable   *bool  `xml:"Sortable,attr"`
-	Filterable *bool  `xml:"Filterable,attr"`
-	Width      string `xml:"Width,attr"`
-	Format     string `xml:"Format,attr"`
-	Align      string `xml:"Align,attr"`
+	Name       string `xml:"Name,attr" json:"name"`
+	Label      string `xml:"Label,attr" json:"label"`
+	Type       string `xml:"Type,attr" json:"type"`
+	Sortable   *bool  `xml:"Sortable,attr" json:"sortable"`
+	Filterable *bool  `xml:"Filterable,attr" json:"filterable"`
+	Width      string `xml:"Width,attr" json:"width"`
+	Format     string `xml:"Format,attr" json:"format"`
+	Align      string `xml:"Align,attr" json:"align"`
 }
 
 // Form represents a frontend form
 type Form struct {
-	Id        string     `xml:"Id,attr"`
-	Mode      string     `xml:"Mode,attr"`
-	Dialog    bool       `xml:"Dialog,attr"`
-	Title     string     `xml:"Title,attr"`
-	ActionRef string     `xml:"ActionRef,attr"`
-	QueryRef  string     `xml:"QueryRef,attr"`
-	Fields    []*Field   `xml:"Field"`
-	Buttons   []*Button  `xml:"Button"`
-	Messages  []*Message `xml:"Message"`
+	Id        string     `xml:"Id,attr" json:"id"`
+	Mode      string     `xml:"Mode,attr" json:"mode"`
+	Dialog    bool       `xml:"Dialog,attr" json:"dialog"`
+	Title     string     `xml:"Title,attr" json:"title"`
+	ActionRef string     `xml:"ActionRef,attr" json:"actionRef"`
+	QueryRef  string     `xml:"QueryRef,attr" json:"queryRef"`
+	Fields    []*Field   `xml:"Field" json:"fields"`
+	Buttons   []*Button  `xml:"Button" json:"buttons"`
+	Messages  []*Message `xml:"Message" json:"messages"`
 }
 
 // Field represents a form field
 type Field struct {
-	Name         string    `xml:"Name,attr"`
-	Label        string    `xml:"Label,attr"`
-	Type         string    `xml:"Type,attr"`
-	Required     *bool     `xml:"Required,attr"`
-	Readonly     *bool     `xml:"Readonly,attr"`
-	Placeholder  string    `xml:"Placeholder,attr"`
-	Validation   string    `xml:"Validation,attr"`
-	Format       string    `xml:"Format,attr"`
-	DefaultValue string    `xml:"DefaultValue,attr"`
-	Options      []*Option `xml:"Option"`
+	Name         string    `xml:"Name,attr" json:"name"`
+	Label        string    `xml:"Label,attr" json:"label"`
+	Type         string    `xml:"Type,attr" json:"type"`
+	Required     *bool     `xml:"Required,attr" json:"required"`
+	Readonly     *bool     `xml:"Readonly,attr" json:"readonly"`
+	Placeholder  string    `xml:"Placeholder,attr" json:"placeholder"`
+	Validation   string    `xml:"Validation,attr" json:"validation"`
+	Format       string    `xml:"Format,attr" json:"format"`
+	DefaultValue string    `xml:"DefaultValue,attr" json:"defaultValue"`
+	Options      []*Option `xml:"Option" json:"options"`
 }
 
 // Option represents a select field option
 type Option struct {
-	Value string `xml:"Value,attr"`
-	Label string `xml:"Label,attr"`
+	Value string `xml:"Value,attr" json:"value"`
+	Label string `xml:"Label,attr" json:"label"`
 }
 
 // Button represents a form button
 type Button struct {
-	Type      string `xml:"Type,attr"`
-	Label     string `xml:"Label,attr"`
-	Style     string `xml:"Style,attr"`
-	ActionRef string `xml:"ActionRef,attr"`
+	Type      string `xml:"Type,attr" json:"type"`
+	Label     string `xml:"Label,attr" json:"label"`
+	Style     string `xml:"Style,attr" json:"style"`
+	ActionRef string `xml:"ActionRef,attr" json:"actionRef"`
 }
 
 // Message represents a form message
 type Message struct {
-	Type    string `xml:"Type,attr"`
-	Content string `xml:",chardata"`
+	Type    string `xml:"Type,attr" json:"type"`
+	Content string `xml:",chardata" json:"content"`
+}
+
+// Mapping represents a parameter mapping configuration
+type Mapping struct {
+	Name      string     `xml:"Name,attr" json:"name"`
+	DataType  string     `xml:"DataType,attr" json:"dataType"`
+	Label     string     `xml:"Label,attr" json:"label"`
+	ListQuery *ListQuery `xml:"ListQuery" json:"listQuery,omitempty"`
+	Options   *Options   `xml:"Options" json:"options,omitempty"`
+}
+
+// ListQuery represents a query for populating parameter values
+type ListQuery struct {
+	Id          string `xml:"Id,attr" json:"id"`
+	Type        string `xml:"Type,attr" json:"type"`
+	Description string `xml:"Description,attr" json:"description"`
+	SQL         string `xml:",chardata" json:"sql"`
+}
+
+// Options represents a collection of mapping options
+type Options struct {
+	Items []*MappingOption `xml:"Option" json:"items"`
+}
+
+// MappingOption represents an option for a mapping
+type MappingOption struct {
+	Label string `xml:"Label,attr" json:"label"`
+	Value string `xml:"Value,attr" json:"value"`
 }
 
 // NewXFeature creates a new XFeature instance
@@ -284,4 +313,111 @@ func ConvertParametersForDriver(sqlStr string, driverName string) string {
 		// Default: keep as is
 		return sqlStr
 	}
+}
+
+// ExtractMappingsFromSQL extracts SQL parameters and returns them as Mapping objects
+// It extracts parameter names from the SQL using regex and creates Mapping stubs
+func ExtractMappingsFromSQL(sqlStr string) []*Mapping {
+	paramNames := ExtractParameters(sqlStr)
+	var mappings []*Mapping
+
+	for _, paramName := range paramNames {
+		mappings = append(mappings, &Mapping{
+			Name: paramName,
+		})
+	}
+
+	return mappings
+}
+
+// GetMappingsForSQL extracts SQL parameters and returns matching Mapping objects
+// It looks for Mapping objects in the XFeature that correspond to SQL parameters
+func (xf *XFeature) GetMappingsForSQL(sqlStr string) []*Mapping {
+	paramNames := ExtractParameters(sqlStr)
+	var mappings []*Mapping
+
+	// Match extracted parameters with existing Mappings
+	for _, paramName := range paramNames {
+		for _, pm := range xf.Mappings {
+			if pm.Name == paramName {
+				mappings = append(mappings, pm)
+				break
+			}
+		}
+	}
+
+	return mappings
+}
+
+// ExecuteListQueryToOptions executes a ListQuery and converts the results to MappingOptions
+// It takes the first column from the query result and uses it as both Label and Value
+func (xf *XFeature) ExecuteListQueryToOptions(ctx context.Context, db *sqlx.DB, listQuery *ListQuery) ([]*MappingOption, error) {
+	if listQuery == nil || db == nil {
+		return nil, fmt.Errorf("listQuery and db cannot be nil")
+	}
+
+	executor := NewQueryExecutor(xf.Logger)
+	query := &Query{
+		Id:          listQuery.Id,
+		Type:        listQuery.Type,
+		Description: listQuery.Description,
+		SQL:         listQuery.SQL,
+	}
+
+	results, err := executor.Execute(ctx, db, query, make(map[string]interface{}))
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute ListQuery %s: %w", listQuery.Id, err)
+	}
+
+	var options []*MappingOption
+	for _, result := range results {
+		// Get the first value from the result map
+		var value string
+		for _, v := range result {
+			if v != nil {
+				value = fmt.Sprintf("%v", v)
+				break
+			}
+		}
+		if value != "" {
+			options = append(options, &MappingOption{
+				Label: value,
+				Value: value,
+			})
+		}
+	}
+
+	return options, nil
+}
+
+// ResolveMappings resolves all Mappings by executing ListQuery and converting to Options
+// It iterates through all Mappings in the XFeature and executes any ListQuery to populate Options
+func (xf *XFeature) ResolveMappings(ctx context.Context, db *sqlx.DB) []*Mapping {
+	var mappings []*Mapping
+
+	for _, pm := range xf.Mappings {
+		// Create a copy to avoid modifying the original
+		pmCopy := &Mapping{
+			Name:      pm.Name,
+			DataType:  pm.DataType,
+			Label:     pm.Label,
+			ListQuery: pm.ListQuery,
+			Options:   pm.Options,
+		}
+
+		// If there's a ListQuery, execute it and convert to Options
+		if pmCopy.ListQuery != nil && db != nil {
+			options, err := xf.ExecuteListQueryToOptions(ctx, db, pmCopy.ListQuery)
+			if err == nil && len(options) > 0 {
+				pmCopy.Options = &Options{Items: options}
+				pmCopy.ListQuery = nil // Clear ListQuery since we've resolved it to Options
+			} else if err != nil {
+				xf.Logger.Error("failed to execute ListQuery", "paramName", pmCopy.Name, "error", err)
+			}
+		}
+
+		mappings = append(mappings, pmCopy)
+	}
+
+	return mappings
 }

@@ -275,7 +275,41 @@
       <Button Type="Submit" Label="Activate" Style="Success"/>
       <Button Type="Cancel" Label="Cancel" Style="Secondary"/>
     </Form>
-    
+
   </Frontend>
-  
+
+  <!-- ============================= -->
+  <!-- PARAMETER MAPPINGS            -->
+  <!-- ============================= -->
+  <Mapping Name="ParamName" DataType="Int" Label="نام"/>
+
+  <Mapping Name="priority" DataType="String" Label="اولویت">
+    <Options>
+      <Option Label="خیلی مهم" Value="5"/>
+      <Option Label="مهم" Value="3"/>
+      <Option Label="عادی" Value="1"/>
+    </Options>
+  </Mapping>
+
+  <Mapping Name="status" DataType="String" Label="وضعیت">
+    <ListQuery Id="GetStatusValues" Type="Select" Description="Retrieve available status values">
+      <![CDATA[
+        SELECT DISTINCT status
+        FROM users
+        ORDER BY status
+      ]]>
+    </ListQuery>
+  </Mapping>
+
+  <Mapping Name="role" DataType="String" Label="نقش">
+    <Options>
+      <Option Label="کاربر" Value="user"/>
+      <Option Label="مدیر" Value="manager"/>
+      <Option Label="ادمین" Value="admin"/>
+    </Options>
+  </Mapping>
+
+  <Mapping Name="limit" DataType="Int" Label="محدودیت"/>
+  <Mapping Name="offset" DataType="Int" Label="جابجایی"/>
+
 </Feature>
