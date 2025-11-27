@@ -390,40 +390,33 @@ func (xf *XFeature) ExecuteListQueryToOptions(ctx context.Context, db *sqlx.DB, 
 	return options, nil
 }
 
-// ExtractAndResolveParameterMappingsFromSQL extracts SQL parameters and resolves ListQuery to Options
-// It finds matching ParameterMappings from the SQL and executes ListQuery to populate Options
-func (xf *XFeature) ExtractAndResolveParameterMappingsFromSQL(ctx context.Context, db *sqlx.DB, sqlStr string) []*ParameterMapping {
-	paramNames := ExtractParameters(sqlStr)
+// ResolveParameterMappings resolves all ParameterMappings by executing ListQuery and converting to Options
+// It iterates through all ParameterMappings in the XFeature and executes any ListQuery to populate Options
+func (xf *XFeature) ResolveParameterMappings(ctx context.Context, db *sqlx.DB) []*ParameterMapping {
 	var mappings []*ParameterMapping
 
-	// Match extracted parameters with existing ParameterMappings
-	for _, paramName := range paramNames {
-		for _, pm := range xf.ParameterMappings {
-			if pm.Name == paramName {
-				// Create a copy to avoid modifying the original
-				pmCopy := &ParameterMapping{
-					Name:      pm.Name,
-					DataType:  pm.DataType,
-					Label:     pm.Label,
-					ListQuery: pm.ListQuery,
-					Options:   pm.Options,
-				}
+	for _, pm := range xf.ParameterMappings {
+		// Create a copy to avoid modifying the original
+		pmCopy := &ParameterMapping{
+			Name:      pm.Name,
+			DataType:  pm.DataType,
+			Label:     pm.Label,
+			ListQuery: pm.ListQuery,
+			Options:   pm.Options,
+		}
 
-				// If there's a ListQuery, execute it and convert to Options
-				if pmCopy.ListQuery != nil && db != nil {
-					options, err := xf.ExecuteListQueryToOptions(ctx, db, pmCopy.ListQuery)
-					if err == nil && len(options) > 0 {
-						pmCopy.Options = &Options{Items: options}
-						pmCopy.ListQuery = nil // Clear ListQuery since we've resolved it to Options
-					} else if err != nil {
-						xf.Logger.Error("failed to execute ListQuery", "paramName", paramName, "error", err)
-					}
-				}
-
-				mappings = append(mappings, pmCopy)
-				break
+		// If there's a ListQuery, execute it and convert to Options
+		if pmCopy.ListQuery != nil && db != nil {
+			options, err := xf.ExecuteListQueryToOptions(ctx, db, pmCopy.ListQuery)
+			if err == nil && len(options) > 0 {
+				pmCopy.Options = &Options{Items: options}
+				pmCopy.ListQuery = nil // Clear ListQuery since we've resolved it to Options
+			} else if err != nil {
+				xf.Logger.Error("failed to execute ListQuery", "paramName", pmCopy.Name, "error", err)
 			}
 		}
+
+		mappings = append(mappings, pmCopy)
 	}
 
 	return mappings
