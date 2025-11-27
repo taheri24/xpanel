@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -26,6 +26,7 @@ import {
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import type { XFeatureDataTableProps, QueryRequest } from '../../types/xfeature';
 import { useXFeatureQuery, useXFeature, useXFeatureMappings } from '../../contexts/XFeatureContext';
+import { getXFeatureBackendInfo } from '../../services/api';
 import { formatCellValue } from '../../utils/format';
 
 /**
@@ -45,9 +46,38 @@ export function XFeatureDataTable({
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedRow, setSelectedRow] = useState<Record<string, unknown> | null>(null);
-  const [queryParamsInput, setQueryParamsInput] = useState<Record<string, string>>({
-    status: 'active', // Default value for status
-  });
+  const [queryParamsInput, setQueryParamsInput] = useState<Record<string, string>>({});
+  const [queryParamNames, setQueryParamNames] = useState<string[]>([]);
+  const [backendLoading, setBackendLoading] = useState(true);
+
+  // Fetch backend info and extract query parameters
+  useEffect(() => {
+    const fetchBackendInfo = async () => {
+      try {
+        setBackendLoading(true);
+        const backendInfo = await getXFeatureBackendInfo(featureName);
+
+        // Find the query definition that matches queryRef
+        const query = backendInfo.queries?.find((q) => q.id === definition.queryRef);
+
+        if (query?.parameters) {
+          const paramNames = query.parameters
+            .map((p) => p.name)
+            .filter((name) => name !== 'limit' && name !== 'offset'); // Exclude pagination params
+          setQueryParamNames(paramNames);
+        } else {
+          setQueryParamNames([]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch backend info:', err);
+        setQueryParamNames([]);
+      } finally {
+        setBackendLoading(false);
+      }
+    };
+
+    fetchBackendInfo();
+  }, [featureName, definition.queryRef]);
 
   // Build query parameters
   const queryParams: QueryRequest = {
@@ -130,9 +160,6 @@ export function XFeatureDataTable({
     }));
   }, []);
 
-  // Common query parameters to display in header
-  const commonQueryParams = ['status', 'role', 'priority', 'limit', 'offset'];
-
   return (
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
       {/* Header with title and actions */}
@@ -151,13 +178,13 @@ export function XFeatureDataTable({
       </Box>
 
       {/* Query Parameters Section */}
-      {mappingsMap.size > 0 && (
+      {queryParamNames.length > 0 && mappingsMap.size > 0 && !backendLoading && (
         <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', backgroundColor: '#fafafa' }}>
           <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
             Query Parameters
           </Typography>
           <Stack direction="row" spacing={2} flexWrap="wrap">
-            {commonQueryParams.map((paramName) => {
+            {queryParamNames.map((paramName) => {
               const mapping = getMappingByName(paramName);
               if (!mapping) return null;
 
