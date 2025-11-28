@@ -25,7 +25,6 @@ Core types representing the XFeature specification:
 State management for XFeature definitions and API calls:
 - `XFeatureProvider`: Context provider for managing XFeature state
 - `useXFeature()`: Access XFeature context
-- `useXFeatureDefinition()`: Load feature definition
 - `useXFeatureQuery()`: Execute SELECT queries
 - `useXFeatureAction()`: Execute INSERT/UPDATE/DELETE actions
 
@@ -246,8 +245,6 @@ const formatted = formatCellValue(value, 'Currency');
 
 ## Quick Start
 
-### 1. Setup Provider
-
 Wrap your app with the XFeatureProvider:
 
 ```tsx
@@ -261,35 +258,8 @@ function App() {
   );
 }
 ```
-
-### 2. Use Components
-
-```tsx
-import { XFeaturePageBuilder } from '@/components/xfeature';
-
-export function UserManagementPage() {
-  return (
-    <XFeaturePageBuilder
-      featureName="user-management-sample"
-    />
-  );
-}
-```
-
-### 3. Or Use Custom Hooks
-
-```tsx
-import { useXFeatureDefinition, useXFeatureQuery, useXFeatureAction } from '@/contexts/XFeatureContext';
-
-function MyComponent() {
-  const { feature, loading, error } = useXFeatureDefinition('user-management');
-  const { data, refetch } = useXFeatureQuery('user-management', 'ListUsers');
-  const { execute } = useXFeatureAction('user-management', 'CreateUser');
-
-  // Use data, refetch, execute...
-}
-```
-
+  
+ 
 ## Example: Complete User Management
 
 ```xml

@@ -8,8 +8,8 @@ import {
   Stack,
   Alert,
 } from '@mui/material';
-import type { XFeatureFormProps, FormState, ActionRequest } from '../../types/xfeature';
-import { useXFeatureAction } from '../../contexts/XFeatureContext';
+import type { XFeatureFormProps, FormState, ActionQueryRequest } from '../../types/xfeature';
+import { useXFeatureActionQuery } from '../../contexts/XFeatureContext';
 import { XFeatureField } from './XFeatureField';
 import { XFeatureButton } from './XFeatureButton';
 import { XFeatureMessage } from './XFeatureMessage';
@@ -21,14 +21,12 @@ import { validateFormField } from '../../utils/validation';
  */
 export function XFeatureForm({
   definition,
-  featureName,
   initialData = {},
   onSuccess,
   onCancel,
   onClose,
 }: XFeatureFormProps) {
-  const { execute: executeAction, loading, error, success } = useXFeatureAction(
-    featureName,
+  const { execute: executeAction, loading, error, success } = useXFeatureActionQuery(
     definition.actionRef || ''
   );
 
@@ -108,10 +106,10 @@ export function XFeatureForm({
       }));
 
       try {
-        const params: ActionRequest = formState.values;
+        const params: ActionQueryRequest = formState.values;
         const result = await executeAction(params);
 
-        if (result.success) {
+        if (result?.success) {
           if (onSuccess) {
             onSuccess(result);
           }
@@ -186,7 +184,6 @@ export function XFeatureForm({
               onChange={(value) => handleFieldChange(field.name, value)}
               onBlur={() => handleFieldBlur(field.name)}
               errors={fieldErrors}
-              featureName={featureName}
             />
           );
         })}

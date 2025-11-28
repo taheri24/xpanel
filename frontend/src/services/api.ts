@@ -109,11 +109,11 @@ import type {
   XFeature,
   QueryRequest,
   QueryResponse,
-  ActionRequest,
-  ActionResponse,
+  ActionQueryRequest,
+  ActionQueryResponse,
   FrontendElements,
   MappingsResponse,
-  Backend,
+  BackendInfo,
 } from '../types/xfeature';
 
 export async function getXFeatures(): Promise<string[]> {
@@ -139,13 +139,13 @@ export async function executeXFeatureQuery<T = Record<string, unknown>>(
 export async function executeXFeatureAction(
   featureName: string,
   actionId: string,
-  params: ActionRequest
-): Promise<ActionResponse> {
+  params: ActionQueryRequest
+): Promise<ActionQueryResponse> {
   return api
     .post(`xfeatures/${featureName}/actions/${actionId}`, {
       json: params,
     })
-    .json<ActionResponse>();
+    .json<ActionQueryResponse>();
 }
 
 export async function getXFeatureFrontendElements(
@@ -162,6 +162,6 @@ export async function resolveXFeatureMappings(
 
 export async function getXFeatureBackendInfo(
   featureName: string
-): Promise<Backend> {
-  return api.get(`xfeatures/${featureName}/backend`).json<Backend>();
+): Promise<BackendInfo> {
+  return api.get(`xfeatures/${featureName}/backend`).json<BackendInfo>();
 }
