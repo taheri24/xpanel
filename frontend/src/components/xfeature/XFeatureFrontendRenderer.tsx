@@ -1,16 +1,12 @@
 import React from 'react';
-import { Alert, CircularProgress, Container, Stack, Typography } from '@mui/material';
-import { useXFeatureFrontend } from '../../contexts/XFeatureContext';
+import { Alert,   Container, Stack, Typography } from '@mui/material';
 import { XFeatureDataTable } from './XFeatureDataTable';
 import { XFeatureForm } from './XFeatureForm';
 import type { DataTable, Form } from '../../types/xfeature';
+import { useXFeature } from '../../contexts/XFeatureContext';
 
 export interface XFeatureFrontendRendererProps {
-  /**
-   * The name of the XFeature to render
-   */
-  featureName: string;
-
+ 
   /**
    * Callback when a form action is triggered from a data table row
    */
@@ -42,24 +38,13 @@ export interface XFeatureFrontendRendererProps {
  * This component loads the feature definition from the API and renders all UI elements
  */
 export function XFeatureFrontendRenderer({
-  featureName,
-  onFormAction,
-  onRefresh,
-  onFormSuccess,
+
+   onFormSuccess,
   maxWidth = 'lg',
-  autoLoad = true,
 }: XFeatureFrontendRendererProps) {
-  const { frontendElements, loading, error, load } = useXFeatureFrontend(featureName, autoLoad);
+  const  x = useXFeature();
   const [expandedForms, setExpandedForms] = React.useState<Set<string>>(new Set());
 
-  const handleFormAction = (formId: string, rowData: Record<string, unknown>) => {
-    // Show the form for the row action
-    setExpandedForms((prev) => new Set([...prev, formId]));
-
-    if (onFormAction) {
-      onFormAction(formId, rowData);
-    }
-  };
 
   const handleFormSuccess = (formId: string) => {
     // Close the form after success
@@ -82,46 +67,20 @@ export function XFeatureFrontendRenderer({
     });
   };
 
-  if (loading) {
-    return (
-      <Container maxWidth={maxWidth} sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-        <CircularProgress />
-      </Container>
-    );
-  }
 
-  if (error) {
+  if (!x.frontendElements) {
     return (
       <Container maxWidth={maxWidth} sx={{ py: 4 }}>
-        <Alert severity="error">
-          Failed to load frontend elements for feature "{featureName}": {error.message}
-        </Alert>
+        <Alert severity="info">No frontend elements found for feature </Alert>
       </Container>
     );
   }
 
-  if (!frontendElements) {
-    return (
-      <Container maxWidth={maxWidth} sx={{ py: 4 }}>
-        <Alert severity="info">No frontend elements found for feature "{featureName}"</Alert>
-      </Container>
-    );
-  }
-
-  const { dataTables = [], forms = [] } = frontendElements;
+  const { dataTables = [], forms = [] } = x.frontendElements;
 
   return (
     <Container maxWidth={maxWidth} sx={{ py: 4 }}>
       <Stack spacing={4}>
-        {/* Feature Header */}
-        <div>
-          <Typography variant="h4" component="h1" gutterBottom>
-            {frontendElements.feature}
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            Version: {frontendElements.version}
-          </Typography>
-        </div>
         {/* Render Forms */}
         {forms.length > 0 && (
           <Stack spacing={3}>
@@ -132,7 +91,6 @@ export function XFeatureFrontendRenderer({
                 {(!form.dialog || expandedForms.has(form.id)) && (
                   <XFeatureForm
                     definition={form}
-                    featureName={featureName}
                     onSuccess={() => handleFormSuccess(form.id)}
                     onCancel={() => handleFormCancel(form.id)}
                   />
@@ -147,12 +105,7 @@ export function XFeatureFrontendRenderer({
           <Stack spacing={3}>
             {dataTables.map((table: DataTable) => (
               <React.Fragment key={table.id}>
-                <XFeatureDataTable
-                  definition={table}
-                  featureName={featureName}
-                  onRowAction={handleFormAction}
-                  onRefresh={() => onRefresh?.(table.id)}
-                />
+                <XFeatureDataTable id={table.id} />
               </React.Fragment>
             ))}
           </Stack>
@@ -169,7 +122,6 @@ export function XFeatureFrontendRenderer({
           <Typography
             variant="body2"
             component="button"
-            onClick={load}
             sx={{
               cursor: 'pointer',
               color: 'primary.main',

@@ -8,7 +8,7 @@ import {
   Stack,
   Alert,
 } from '@mui/material';
-import type { XFeatureFormProps, FormState, ActionRequest } from '../../types/xfeature';
+import type { XFeatureFormProps, FormState, ActionQueryRequest } from '../../types/xfeature';
 import { useXFeatureActionQuery } from '../../contexts/XFeatureContext';
 import { XFeatureField } from './XFeatureField';
 import { XFeatureButton } from './XFeatureButton';
@@ -108,7 +108,7 @@ export function XFeatureForm({
       }));
 
       try {
-        const params: ActionRequest = formState.values;
+        const params: ActionQueryRequest = formState.values;
         const result = await executeAction(params);
 
         if (result.success) {

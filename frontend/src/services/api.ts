@@ -109,8 +109,8 @@ import type {
   XFeature,
   QueryRequest,
   QueryResponse,
-  ActionRequest,
-  ActionResponse,
+  ActionQueryRequest,
+  ActionQueryResponse,
   FrontendElements,
   MappingsResponse,
   BackendInfo,
@@ -139,13 +139,13 @@ export async function executeXFeatureQuery<T = Record<string, unknown>>(
 export async function executeXFeatureAction(
   featureName: string,
   actionId: string,
-  params: ActionRequest
-): Promise<ActionResponse> {
+  params: ActionQueryRequest
+): Promise<ActionQueryResponse> {
   return api
     .post(`xfeatures/${featureName}/actions/${actionId}`, {
       json: params,
     })
-    .json<ActionResponse>();
+    .json<ActionQueryResponse>();
 }
 
 export async function getXFeatureFrontendElements(

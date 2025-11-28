@@ -237,11 +237,11 @@ export interface QueryResponse<T = Record<string, unknown>> {
   pageSize?: number;
 }
 
-export interface ActionRequest {
+export interface ActionQueryRequest {
   [key: string]: string | number | boolean | undefined;
 }
 
-export interface ActionResponse {
+export interface ActionQueryResponse {
   success: boolean;
   message?: string;
   data?: Record<string, unknown>;
@@ -267,7 +267,7 @@ id:string;
 export interface XFeatureFormProps {
   definition: Form;
   initialData?: Record<string, unknown>;
-  onSuccess?: (data: ActionResponse) => void;
+  onSuccess?: (data: ActionQueryResponse) => void;
   onCancel?: () => void;
   onClose?: () => void;
 }
@@ -277,7 +277,8 @@ export interface XFeatureFieldProps {
   onChange: (value: string | number | boolean) => void;
   onBlur?: () => void;
   errors?: string[];
-  name:string;
+  name?:string;
+  definition?:Mapping;
 }
 
 export interface XFeatureButtonProps {
