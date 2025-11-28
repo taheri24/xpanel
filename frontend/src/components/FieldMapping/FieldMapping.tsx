@@ -30,10 +30,13 @@ export interface FieldMappingProps {
 const FieldMapping: React.FC<FieldMappingProps> = ({ featureName, ids, title = 'Field Mappings' }) => {
   const { mappings, loading, error, getMappingByName } = useXFeatureMappings(featureName);
 
-  // Get the specific mappings requested
-  const selectedMappings: Mapping[] = ids
-    .map((id) => getMappingByName(id))
-    .filter((m): m is Mapping => m !== undefined);
+  // Get the specific mappings requested, preserving the field ID
+  const selectedMappings: Array<{ fieldId: string; mapping: Mapping }> = ids
+    .map((id) => {
+      const mapping = getMappingByName(id);
+      return mapping ? { fieldId: id, mapping } : null;
+    })
+    .filter((item): item is { fieldId: string; mapping: Mapping } => item !== null);
 
   if (loading) {
     return (
@@ -61,13 +64,13 @@ const FieldMapping: React.FC<FieldMappingProps> = ({ featureName, ids, title = '
         {title}
       </Typography>
       <Stack spacing={2}>
-        {selectedMappings.map((mapping) => (
+        {selectedMappings.map(({ fieldId, mapping }) => (
           <Card key={mapping.name} variant="outlined">
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
                 <Box>
                   <Typography variant="subtitle1" fontWeight="bold">
-                    {mapping.label}
+                    {fieldId}: {mapping.label}
                   </Typography>
                   <Typography variant="caption" color="textSecondary">
                     {mapping.name}
