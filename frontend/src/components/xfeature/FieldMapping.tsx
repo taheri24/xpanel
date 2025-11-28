@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   TextField,
   Select,
@@ -7,14 +6,12 @@ import {
   InputLabel,
   FormHelperText,
   Stack,
-  CircularProgress,
-  Alert,
 } from '@mui/material';
-import { useXFeature } from '../../contexts/XFeatureContext';
+import type { Mapping } from '../../types/xfeature';
 
 interface FieldMappingProps {
   ids: string[];
-  featureName?: string;
+  mappings: Mapping[];
   onChange?: (fieldName: string, value: any) => void;
   values?: Record<string, any>;
   errors?: Record<string, string[]>;
@@ -23,48 +20,18 @@ interface FieldMappingProps {
 /**
  * FieldMapping Component
  * Renders form fields based on mapping definitions from XFeature
- * Uses useXFeature hook to load feature definitions with embedded mappings
+ * Parent component should use useXFeature() to get mappings from feature
  */
 export function FieldMapping({
   ids,
-  featureName = 'default',
+  mappings,
   onChange,
   values = {},
   errors = {},
 }: FieldMappingProps) {
-  const { getFeature } = useXFeature();
-  const [feature, setFeature] = React.useState<any>(null);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    const loadFeature = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const loadedFeature = await getFeature(featureName);
-        setFeature(loadedFeature);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load feature');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadFeature();
-  }, [featureName, getFeature]);
-
-  if (loading) {
-    return <CircularProgress />;
-  }
-
-  if (error) {
-    return <Alert severity="error">Failed to load field mappings: {error}</Alert>;
-  }
-
-  // Create mappings map from feature
-  const mappingsMap = new Map();
-  feature?.mappings?.forEach((mapping: any) => {
+  // Create mappings map for quick lookup by name
+  const mappingsMap = new Map<string, Mapping>();
+  mappings.forEach((mapping) => {
     mappingsMap.set(mapping.name, mapping);
   });
 

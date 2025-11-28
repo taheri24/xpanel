@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { Stack } from '@mui/material';
 import { FieldMapping } from './FieldMapping';
-import type { MappingsResponse } from '../../types/xfeature';
+import type { Mapping } from '../../types/xfeature';
 
 /**
  * FieldMapping Component Story
@@ -20,26 +20,21 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // Mock mappings data for the status field
-const mockMappings: MappingsResponse = {
-  feature: 'TaskManagement',
-  version: '1.0',
-  resolvedCount: 1,
-  mappings: [
-    {
-      name: 'status',
-      dataType: 'String',
-      label: 'Task Status',
-      options: {
-        items: [
-          { label: 'Pending', value: 'pending' },
-          { label: 'In Progress', value: 'in_progress' },
-          { label: 'Completed', value: 'completed' },
-          { label: 'Cancelled', value: 'cancelled' },
-        ],
-      },
+const mockMappings: Mapping[] = [
+  {
+    name: 'status',
+    dataType: 'String',
+    label: 'Task Status',
+    options: {
+      items: [
+        { label: 'Pending', value: 'pending' },
+        { label: 'In Progress', value: 'in_progress' },
+        { label: 'Completed', value: 'completed' },
+        { label: 'Cancelled', value: 'cancelled' },
+      ],
     },
-  ],
-};
+  },
+];
 
 /**
  * Basic FieldMapping with status field dropdown
@@ -52,7 +47,7 @@ export const Basic: Story = {
       <Stack sx={{ width: '400px' }}>
         <FieldMapping
           ids={['status']}
-          featureName="TaskManagement"
+          mappings={mockMappings}
           values={values}
           onChange={(fieldName, value) =>
             setValues({ ...values, [fieldName]: value })
@@ -61,26 +56,6 @@ export const Basic: Story = {
       </Stack>
     );
   },
-  decorators: [
-    (Story) => {
-      // Mock the fetch for mappings
-      const originalFetch = global.fetch;
-      global.fetch = async (url: string | Request, ...args) => {
-        const urlStr = typeof url === 'string' ? url : url.toString();
-        if (urlStr.includes('/api/xfeatures/TaskManagement/mappings')) {
-          return Promise.resolve(
-            new Response(JSON.stringify(mockMappings), {
-              status: 200,
-              headers: { 'Content-Type': 'application/json' },
-            })
-          );
-        }
-        return originalFetch(url, ...args);
-      };
-
-      return <Story />;
-    },
-  ],
 };
 
 /**
@@ -95,7 +70,7 @@ export const WithErrors: Story = {
       <Stack sx={{ width: '400px' }}>
         <FieldMapping
           ids={['status']}
-          featureName="TaskManagement"
+          mappings={mockMappings}
           values={values}
           errors={errors}
           onChange={(fieldName, value) => {
@@ -109,25 +84,6 @@ export const WithErrors: Story = {
       </Stack>
     );
   },
-  decorators: [
-    (Story) => {
-      const originalFetch = global.fetch;
-      global.fetch = async (url: string | Request, ...args) => {
-        const urlStr = typeof url === 'string' ? url : url.toString();
-        if (urlStr.includes('/api/xfeatures/TaskManagement/mappings')) {
-          return Promise.resolve(
-            new Response(JSON.stringify(mockMappings), {
-              status: 200,
-              headers: { 'Content-Type': 'application/json' },
-            })
-          );
-        }
-        return originalFetch(url, ...args);
-      };
-
-      return <Story />;
-    },
-  ],
 };
 
 /**
@@ -141,7 +97,7 @@ export const WithValue: Story = {
       <Stack sx={{ width: '400px' }}>
         <FieldMapping
           ids={['status']}
-          featureName="TaskManagement"
+          mappings={mockMappings}
           values={values}
           onChange={(fieldName, value) =>
             setValues({ ...values, [fieldName]: value })
@@ -150,23 +106,4 @@ export const WithValue: Story = {
       </Stack>
     );
   },
-  decorators: [
-    (Story) => {
-      const originalFetch = global.fetch;
-      global.fetch = async (url: string | Request, ...args) => {
-        const urlStr = typeof url === 'string' ? url : url.toString();
-        if (urlStr.includes('/api/xfeatures/TaskManagement/mappings')) {
-          return Promise.resolve(
-            new Response(JSON.stringify(mockMappings), {
-              status: 200,
-              headers: { 'Content-Type': 'application/json' },
-            })
-          );
-        }
-        return originalFetch(url, ...args);
-      };
-
-      return <Story />;
-    },
-  ],
 };
