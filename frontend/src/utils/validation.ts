@@ -1,4 +1,4 @@
-import type { Field, ValidationResult } from '../types/xfeature';
+import type {   Mapping, ValidationResult } from '../types/xfeature';
 
 /**
  * Validation Utilities
@@ -15,7 +15,7 @@ const VALIDATION_PATTERNS: Record<string, RegExp> = {
 };
 
 export function validateFormField(
-  field: Field,
+  field: Mapping,
   value: unknown
 ): ValidationResult {
   const errors: string[] = [];
@@ -33,7 +33,7 @@ export function validateFormField(
   const stringValue = String(value);
 
   // Type-specific validation
-  switch (field.type) {
+  switch (field.dataType) {
     case 'Email':
       if (!VALIDATION_PATTERNS.email.test(stringValue)) {
         errors.push(`${field.label} must be a valid email address`);
@@ -75,7 +75,7 @@ export function validateFormField(
     default:
       break;
   }
-
+/*
   // Check custom validation pattern
   if (field.validation && !field.validation.includes('|')) {
     try {
@@ -87,7 +87,7 @@ export function validateFormField(
       console.warn(`Invalid validation pattern for ${field.name}:`, field.validation);
     }
   }
-
+*/
   return {
     valid: errors.length === 0,
     errors,
@@ -95,7 +95,7 @@ export function validateFormField(
 }
 
 export function validateFormFields(
-  fields: Field[],
+  fields: Mapping[],
   values: Record<string, unknown>
 ): Record<string, string[]> {
   const errors: Record<string, string[]> = {};

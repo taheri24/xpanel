@@ -21,14 +21,12 @@ import { validateFormField } from '../../utils/validation';
  */
 export function XFeatureForm({
   definition,
-  featureName,
   initialData = {},
   onSuccess,
   onCancel,
   onClose,
 }: XFeatureFormProps) {
   const { execute: executeAction, loading, error, success } = useXFeatureActionQuery(
-    featureName,
     definition.actionRef || ''
   );
 
@@ -111,7 +109,7 @@ export function XFeatureForm({
         const params: ActionQueryRequest = formState.values;
         const result = await executeAction(params);
 
-        if (result.success) {
+        if (result?.success) {
           if (onSuccess) {
             onSuccess(result);
           }
@@ -186,7 +184,6 @@ export function XFeatureForm({
               onChange={(value) => handleFieldChange(field.name, value)}
               onBlur={() => handleFieldBlur(field.name)}
               errors={fieldErrors}
-              featureName={featureName}
             />
           );
         })}

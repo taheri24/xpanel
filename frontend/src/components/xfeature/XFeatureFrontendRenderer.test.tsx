@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { describe, it } from 'vitest';
+import { render } from '@testing-library/react';
 import { XFeatureProvider, type XFeatureMock } from '../../contexts/XFeatureContext';
 import { XFeatureFrontendRenderer } from './XFeatureFrontendRenderer';
 import type { FrontendElements } from '../../types/xfeature';
@@ -26,8 +26,8 @@ const mockFrontendElements: FrontendElements = {
       title: 'Create User',
       actionRef: 'CreateUser',
       fields: [
-        { name: 'username', label: 'Username', type: 'Text', required: true },
-        { name: 'email', label: 'Email', type: 'Email', required: true },
+        { name: 'username', label: 'Username', dataType: 'Text', required: true },
+        { name: 'email', label: 'Email', dataType: 'Email', required: true },
       ],
       buttons: [
         { type: 'Submit', label: 'Create' },

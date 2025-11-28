@@ -8,8 +8,4 @@ export { XFeatureMessage } from './XFeatureMessage';
 export { XFeatureField } from './XFeatureField';
 export { XFeatureForm } from './XFeatureForm';
 export { XFeatureDataTable } from './XFeatureDataTable';
-export {
-  XFeaturePageBuilder,
-  XFeatureDataTableOnly,
-  XFeatureFormOnly,
-} from './XFeaturePageBuilder';
+ 

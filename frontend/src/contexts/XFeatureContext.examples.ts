@@ -24,7 +24,7 @@ export const createMockQueryHandler = (
   mockData: Record<string, unknown>
 ): XFeatureBeforeQueryHandler => {
   return async (event) => {
-    console.log(`[Mock] Query: ${event.featureName}/${event.queryId}`, event.params);
+    console.log(`[Mock] Query: ${event.queryId}`, event.params);
 
     // Return mocked data instead of calling the API
     return {
@@ -43,7 +43,7 @@ export const createMockActionHandler = (
   successMessage: string = 'Operation successful'
 ): XFeatureBeforeActionHandler => {
   return async (event) => {
-    console.log(`[Mock] Action: ${event.featureName}/${event.actionId}`, event.params);
+    console.log(`[Mock] Action: ${event.actionId}`, event.params);
 
     // Return mocked action response
     return {
@@ -63,7 +63,7 @@ export const createMockActionHandler = (
  */
 export const createLoggingQueryHandler = (): XFeatureAfterQueryHandler => {
   return async (event) => {
-    console.group(`📊 Query: ${event.featureName}/${event.queryId}`);
+    console.group(`📊 Query: ${event.queryId}`);
     console.log('Parameters:', event.params);
     console.log('Results:', event.result.data);
     console.log('Total:', event.result.total);
@@ -76,7 +76,7 @@ export const createLoggingQueryHandler = (): XFeatureAfterQueryHandler => {
  */
 export const createLoggingActionHandler = (): XFeatureAfterActionHandler => {
   return async (event) => {
-    console.group(`🔄 Action: ${event.featureName}/${event.actionId}`);
+    console.group(`🔄 Action: ${event.actionId}`);
     console.log('Parameters:', event.params);
     console.log('Success:', event.result.success);
     console.log('Message:', event.result.message);
@@ -105,51 +105,7 @@ export const createErrorLoggingHandler = (): XFeatureErrorHandler => {
   };
 };
 
-// ============================================================================
-// CONDITIONAL MOCKING EXAMPLE - Mock specific operations
-// ============================================================================
-
-/**
- * Example: Mock only specific queries while other queries use the real API
- */
-export const createConditionalMockQueryHandler = (
-  mockQueries: Record<string, unknown>
-): XFeatureBeforeQueryHandler => {
-  return async (event) => {
-    // Only mock specific queries
-    if (event.queryId === 'ListUsers' && event.featureName === 'user-management') {
-      return {
-        data: [mockQueries],
-        total: 1,
-      };
-    }
-
-    // Return undefined to use the real API
-    return undefined;
-  };
-};
-
-/**
- * Example: Mock only specific actions while other actions use the real API
- */
-export const createConditionalMockActionHandler = (
-  _mockActions: Record<string, unknown>
-): XFeatureBeforeActionHandler => {
-  return async (event) => {
-    // Only mock the CreateUser action
-    if (event.actionId === 'CreateUser' && event.featureName === 'user-management') {
-      return {
-        success: true,
-        message: 'User created successfully',
-        data: { id: 999, ...event.params },
-      };
-    }
-
-    // Return undefined to use the real API
-    return undefined;
-  };
-};
-
+ 
 // ============================================================================
 // STORYBOOK EXAMPLE - Setup for stories
 // ============================================================================
@@ -176,8 +132,8 @@ const mockFrontendElements: FrontendElements = {
       title: 'Create User',
       actionRef: 'CreateUser',
       fields: [
-        { name: 'username', label: 'Username', type: 'Text', required: true },
-        { name: 'email', label: 'Email', type: 'Email', required: true },
+        { name: 'username', label: 'Username', dataType: 'Text', required: true },
+        { name: 'email', label: 'Email', dataType: 'Email', required: true },
       ],
       buttons: [
         { type: 'Submit', label: 'Create' },

@@ -154,29 +154,14 @@ export interface Form {
   actionRef?: string;
   queryRef?: string;
   dialog?: boolean;
-  fields: Field[];
+  fields: Mapping[];
   buttons: Button[];
   messages?: Message[];
 }
 
 export type FormMode = 'Create' | 'Edit' | 'View' | 'Delete' | 'Search';
 
-export interface Field {
-  name: string;
-  label: string;
-  type: FieldType;
-  required?: boolean;
-  readonly?: boolean;
-  placeholder?: string;
-  validation?: string;
-  format?: string;
-  defaultValue?: string | number | boolean;
-  options?: Option[];
-  helperText?: string;
-  rows?: number; // For textarea
-  cols?: number; // For textarea
-}
-
+ 
 export type FieldType =
   | 'Text'
   | 'Email'
