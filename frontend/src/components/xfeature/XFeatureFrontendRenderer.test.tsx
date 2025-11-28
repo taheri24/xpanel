@@ -1,8 +1,12 @@
-import { describe, it } from 'vitest';
-import { render } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import { XFeatureProvider, type XFeatureMock } from '../../contexts/XFeatureContext';
 import { XFeatureFrontendRenderer } from './XFeatureFrontendRenderer';
-import type { FrontendElements } from '../../types/xfeature';
+import type { FrontendElements, QueryResponse, ActionQueryResponse, BackendInfo, Mapping } from '../../types/xfeature';
+
+// ============================================================================
+// MOCK DATA
+// ============================================================================
 
 const mockFrontendElements: FrontendElements = {
   feature: 'user-management',
@@ -25,6 +29,7 @@ const mockFrontendElements: FrontendElements = {
       mode: 'Create',
       title: 'Create User',
       actionRef: 'CreateUser',
+      dialog: false,
       fields: [
         { name: 'username', label: 'Username', dataType: 'Text', required: true },
         { name: 'email', label: 'Email', dataType: 'Email', required: true },
@@ -37,17 +42,103 @@ const mockFrontendElements: FrontendElements = {
   ],
 };
 
+const mockBackendInfo: BackendInfo = {
+  queries: [
+    {
+      id: 'ListUsers',
+      type: 'Select',
+      sql: 'SELECT * FROM users',
+      parameters: [
+        { name: 'limit', type: 'Int' },
+        { name: 'offset', type: 'Int' },
+      ],
+    },
+  ],
+  actionQueries: [
+    {
+      id: 'CreateUser',
+      type: 'Insert',
+      sql: 'INSERT INTO users (username, email) VALUES (?, ?)',
+      parameters: [
+        { name: 'username', type: 'Text' },
+        { name: 'email', type: 'Email' },
+      ],
+    },
+  ],
+};
+
+const mockMappings: Mapping[] = [
+  { name: 'username', dataType: 'Text', label: 'Username', required: true },
+  { name: 'email', dataType: 'Email', label: 'Email', required: true },
+];
+
+const mockQueryResponse: QueryResponse = {
+  data: [
+    { id: 1, username: 'john', email: 'john@example.com' },
+    { id: 2, username: 'jane', email: 'jane@example.com' },
+  ],
+  total: 2,
+};
+
+const mockActionResponse: ActionQueryResponse = {
+  success: true,
+  message: 'User created successfully',
+};
+
+// ============================================================================
+// TESTS
+// ========================================================================
+
 describe('XFeatureFrontendRenderer', () => {
-  it('renders loading state initially without expect (no panic)', () => {
-    const mock:XFeatureMock={
-      frontEnd:mockFrontendElements
-    }    
+  it('shows message when no frontend elements found', () => {
+    const mock: XFeatureMock = {};
+
     render(
-      <XFeatureProvider mock={mock}    >
+      <XFeatureProvider mock={mock}>
         <XFeatureFrontendRenderer />
       </XFeatureProvider>
     );
 
+    expect(screen.getByText(/no frontend elements/i)).toBeInTheDocument();
   });
 
- });
+  it('respects maxWidth prop', () => {
+    const mock: XFeatureMock = {
+      frontEnd: mockFrontendElements,
+      backEnd: mockBackendInfo,
+      mappings: mockMappings,
+      queries: { ListUsers: mockQueryResponse },
+      actionQueries: { CreateUser: mockActionResponse },
+    };
+
+    const { container } = render(
+      <XFeatureProvider mock={mock}>
+        <XFeatureFrontendRenderer maxWidth="md" />
+      </XFeatureProvider>
+    );
+
+    const containerElement = container.querySelector('.MuiContainer-root');
+    expect(containerElement).toBeInTheDocument();
+  });
+
+  it('defaults to lg maxWidth', async () => {
+    const mock: XFeatureMock = {
+      frontEnd: mockFrontendElements,
+      backEnd: mockBackendInfo,
+      mappings: mockMappings,
+      queries: { ListUsers: mockQueryResponse },
+      actionQueries: { CreateUser: mockActionResponse },
+    };
+
+    const { container } = render(
+      <XFeatureProvider mock={mock}>
+        <XFeatureFrontendRenderer />
+      </XFeatureProvider>
+    );
+
+    await waitFor(() => {
+      const containerElement = container.querySelector('.MuiContainer-root');
+      expect(containerElement).toBeInTheDocument();
+    });
+  });
+});
