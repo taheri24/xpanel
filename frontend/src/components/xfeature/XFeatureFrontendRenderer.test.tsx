@@ -40,7 +40,7 @@ const mockFrontendElements: FrontendElements = {
 describe('XFeatureFrontendRenderer', () => {
   it('renders loading state initially without expect (no panic)', () => {
     const mock:XFeatureMock={
-      frontend:mockFrontendElements
+      frontEnd:mockFrontendElements
     }    
     render(
       <XFeatureProvider mock={mock}    >

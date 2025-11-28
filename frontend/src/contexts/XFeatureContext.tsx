@@ -1,5 +1,5 @@
-import React, { createContext, useContext,   useMemo } from 'react';
-import type {   ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useReducer, useState } from 'react';
+import type { ReactNode } from 'react';
 import type {
   XFeature,
   QueryRequest,
@@ -10,7 +10,6 @@ import type {
   MappingsResponse,
   Mapping,
   BackendInfo,
-  FrontendInfo,
 } from '../types/xfeature';
 import {
   executeXFeatureQuery,
@@ -37,7 +36,7 @@ export interface XFeatureBeforeQueryEvent {
  * Event fired after successfully executing a query
  */
 export interface XFeatureAfterQueryEvent<T = Record<string, unknown>> {
- 
+
   queryId: string;
   params: QueryRequest;
   result: QueryResponse<T>;
@@ -65,7 +64,7 @@ export interface XFeatureAfterActionEvent {
  * Event fired before loading mappings
  */
 export interface XFeatureBeforeMappingsEvent {
-  
+
 }
 
 /**
@@ -143,38 +142,41 @@ export type XFeatureErrorHandler = (
 class XFeatureContextState {
   frontendElements: FrontendElements | undefined;
   backendInfo: BackendInfo | undefined;
-  mappingMap:Map<string,Mapping> | undefined;
-  props:XFeatureProviderProps;
-  loadState:undefined|'LOADING' |'LOADED' | 'FAILED' ;
+  mappingMap: Map<string, Mapping> | undefined;
+  props: XFeatureProviderProps;
+  loadState: undefined | 'LOADING' | 'LOADED' | 'FAILED';
+  revKey: number = 0;
+  updateUI?: Function;
   /**
    *
    */
-  constructor(  props:XFeatureProviderProps) {
-    this.props=props;
+  constructor(props: XFeatureProviderProps) {
+    this.props = props;
   }
-  getFeature () {
+  getFeature() {
     return this.feature;
   }
-  getForm(formId: string){
-    return this.frontendElements?.forms.find(f=>f.id==formId) || undefined
+  getForm(formId: string) {
+    return this.frontendElements?.forms.find(f => f.id == formId) || undefined
 
-    
-  } 
-  getMappingByName(name:string):Mapping | undefined{
+
+  }
+  getMappingByName(name: string): Mapping | undefined {
     return this.mappingMap?.get(name);
   }
-  
-   
-  getDataTable(tableId: string){
-    return this.frontendElements?.dataTables.find(d=>d.id==tableId) || this.frontendElements?.dataTables[0];
+
+
+  getDataTable(tableId: string) {
+    return this.frontendElements?.dataTables.find(d => d.id == tableId) || this.frontendElements?.dataTables[0];
   }
-  async executeQuery<T>(queryId: string, params: QueryRequest):Promise<QueryResponse<T>>{
-    const {featureName='',mock}=this.props;
-    if (mock){
-      if (mock.queries) return mock.queries[queryId] 
+  async executeQuery<T>(queryId: string, params: QueryRequest): Promise<QueryResponse<T>> {
+    const { featureName = '', mock } = this.props;
+    if (mock) {
+      if (!mock.queries) throw new Error(`!mock.queries`)
+      return mock.queries[queryId]
     }
     try {
-      return  await executeXFeatureQuery<T>(featureName, queryId, params);
+      return await executeXFeatureQuery<T>(featureName, queryId, params);
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
 
@@ -190,59 +192,70 @@ class XFeatureContextState {
       throw err;
     }
 
-  }    
+  }
 
-  async  load()  {
+  async load() {
     this.loadState = 'LOADING';
-    try{ 
-      const {featureName}=this.props;
-      if (!featureName) throw new Error(`!featureName`);
-      this.backendInfo = await getXFeatureBackendInfo(featureName );
-      this.frontendElements = await getXFeatureFrontendElements(featureName);
-      const mappinps= await resolveXFeatureMappings(featureName);
-
-      if(Array.isArray(  mappinps?.mappings)){
-        const map=new Map();
-        mappinps.mappings?.forEach(m=>map.set(m.name,m ));
-        this.mappingMap=map;
+    try {
+      const { featureName, mock } = this.props;
+      if (mock) {
+        this.backendInfo = mock.backEnd;
+        this.frontendElements = mock.frontEnd;
+        this.setMappings(mock.mappings || []);
+        return
       }
-      this.loadState = 'LOADED';  
+      if (!featureName) throw new Error(`!featureName`);
+      this.backendInfo = await getXFeatureBackendInfo(featureName);
+      this.frontendElements = await getXFeatureFrontendElements(featureName);
+      const mappinps = await resolveXFeatureMappings(featureName);
 
-    }catch(e){
-      this.loadState = 'FAILED';  
+      if (Array.isArray(mappinps?.mappings)) {
+        this.setMappings(mappinps.mappings);
+      }
+      this.loadState = 'LOADED';
+      this.revKey++;
+      if (this.updateUI instanceof Function)
+        this.updateUI();
+    } catch (e) {
+      this.loadState = 'FAILED';
 
-    } 
-     
+    }
+
   }
   error?: Error;
-  feature:XFeature | undefined;
+  feature: XFeature | undefined;
+  setMappings(items: Mapping[]) {
+    const map = new Map();
+    items.forEach(m => map.set(m.name, m));
+    this.mappingMap = map;
 
-  async executeActionQuery(  actionQueryId: string, params: ActionQueryRequest):Promise< ActionQueryResponse | undefined>{
-    
-    try {
-        // Call onBeforeAction event - can return mocked response
-        const {mock,featureName}=this.props;
-        if (!featureName) throw new Error(`!featureName`);
-        if (mock){
-          if (mock.actionQueries) return mock.actionQueries[actionQueryId] ;
-        }
-        return await executeXFeatureAction(featureName,  actionQueryId, params);
-    }
-    catch(error){  
-        const err = error instanceof Error ? error : new Error(String(error));
-        if (this.props?.onError) {
-          await this.props?.onError({
-            error: err,
-            context: 'action',
-            actionId: actionQueryId,
-          });
-        }
-
-        throw err;
-      }
   }
- 
- 
+  async executeActionQuery(actionQueryId: string, params: ActionQueryRequest): Promise<ActionQueryResponse | undefined> {
+
+    try {
+      // Call onBeforeAction event - can return mocked response
+      const { mock, featureName } = this.props;
+      if (!featureName) throw new Error(`!featureName`);
+      if (mock) {
+        if (mock.actionQueries) return mock.actionQueries[actionQueryId];
+      }
+      return await executeXFeatureAction(featureName, actionQueryId, params);
+    }
+    catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      if (this.props?.onError) {
+        await this.props?.onError({
+          error: err,
+          context: 'action',
+          actionId: actionQueryId,
+        });
+      }
+
+      throw err;
+    }
+  }
+
+
 }
 
 // ============================================================================
@@ -254,29 +267,33 @@ const XFeatureContext = createContext<XFeatureContextState | undefined>(undefine
 // ============================================================================
 // PROVIDER COMPONENT
 // ============================================================================
-export interface XFeatureMock{
-  backEndInfo?:BackendInfo;
-  frontend?:FrontendInfo;
-  mapping?:Mapping;
-  queries?:Record<string,QueryResponse<any>>;
-  actionQueries?:Record<string,ActionQueryResponse>;
-  
+export interface XFeatureMock {
+  backEnd?: BackendInfo;
+  frontEnd?: FrontendElements | undefined;
+  mappings?: Mapping[];
+  queries?: Record<string, QueryResponse<any>>;
+  actionQueries?: Record<string, ActionQueryResponse>;
+
 }
 export interface XFeatureProviderProps {
-  featureName?:string;
+  featureName?: string;
   children: ReactNode;
-  mock?:XFeatureMock;
+  mock?: XFeatureMock;
   onError?: XFeatureErrorHandler;
 }
 
 export function XFeatureProvider(p: XFeatureProviderProps) {
-const {
-  children,
-  featureName
-}=p;
-   const ctxVal=useMemo( ()=>new XFeatureContextState(p),[featureName]);
+  const { children, featureName } = p;
+  const [internKey, patch] = useReducer(n => n + 1, 0);
+
+  const ctxVal = useMemo(() => new XFeatureContextState(p), [featureName]);
+  ctxVal.updateUI = patch;
+
+  useEffect(() => {
+    ctxVal.load()
+  }, [featureName])
   return (
-    <XFeatureContext.Provider value={ctxVal}>{children}</XFeatureContext.Provider>
+    <XFeatureContext.Provider key={`D_${ctxVal.revKey}_${internKey}`} value={ctxVal}>{children}</XFeatureContext.Provider>
   );
 }
 
@@ -291,26 +308,26 @@ export function useXFeature(): XFeatureContextState {
   }
   return context;
 }
- 
+
 export function useXFeatureQuery<T = Record<string, unknown>>(
   queryId: string | undefined,
   params: QueryRequest = {},
   autoLoad = true
 ) {
-  const x  = useXFeature();
+  const x = useXFeature();
   const [data, setData] = React.useState<T[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<Error | undefined>();
   const [total, setTotal] = React.useState(0);
 
   const refetch = React.useCallback(
-    
+
     async (newParams: QueryRequest = params) => {
       if (!queryId) return;
       setLoading(true);
       setError(undefined);
       try {
-        const result = await x.executeQuery<T>(  queryId, newParams);
+        const result = await x.executeQuery<T>(queryId, newParams);
         setData(result.data || []);
         setTotal(result.total || 0);
       } catch (err) {
@@ -320,11 +337,11 @@ export function useXFeatureQuery<T = Record<string, unknown>>(
         setLoading(false);
       }
     },
-    [  x?.feature,queryId]
+    [x?.feature, queryId]
   );
 
   React.useEffect(() => {
-  
+
     if (autoLoad) {
       refetch();
     }
@@ -333,7 +350,7 @@ export function useXFeatureQuery<T = Record<string, unknown>>(
   return { data, loading, error, total, refetch };
 }
 
-export function useXFeatureActionQuery( actionId: string) {
+export function useXFeatureActionQuery(actionId: string) {
   const x = useXFeature();
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<Error | undefined>();
@@ -346,9 +363,9 @@ export function useXFeatureActionQuery( actionId: string) {
       setError(undefined);
       setSuccess(false);
       try {
-        const result = await x.executeActionQuery(  actionId, params);
+        const result = await x.executeActionQuery(actionId, params);
         setResponse(result);
-        setSuccess(Boolean( result?.success));
+        setSuccess(Boolean(result?.success));
         return result;
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err));
@@ -358,14 +375,14 @@ export function useXFeatureActionQuery( actionId: string) {
         setLoading(false);
       }
     },
-    [  actionId]
+    [actionId]
   );
 
   return { execute, loading, error, success, response };
 }
 
 export function useXFeatureFrontend() {
-  const x= useXFeature();
+  const x = useXFeature();
   return x?.feature;
 }
 
