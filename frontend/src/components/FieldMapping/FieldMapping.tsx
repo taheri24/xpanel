@@ -10,13 +10,10 @@ import {
   Stack,
 } from '@mui/material';
 import { useXFeatureMappings } from '../../contexts/XFeatureContext';
+import { useFieldMappingContext } from './FieldMappingContext';
 import type { Mapping } from '../../types/xfeature';
 
 export interface FieldMappingProps {
-  /**
-   * Name of the feature to load mappings from
-   */
-  featureName: string;
   /**
    * Array of mapping names to display
    */
@@ -27,7 +24,8 @@ export interface FieldMappingProps {
   title?: string;
 }
 
-const FieldMapping: React.FC<FieldMappingProps> = ({ featureName, ids, title = 'Field Mappings' }) => {
+const FieldMapping: React.FC<FieldMappingProps> = ({ ids, title = 'Field Mappings' }) => {
+  const { featureName } = useFieldMappingContext();
   const { mappings, loading, error, getMappingByName } = useXFeatureMappings(featureName);
 
   // Get the specific mappings requested, preserving the field ID

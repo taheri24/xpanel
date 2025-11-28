@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { XFeatureProvider } from '../../contexts/XFeatureContext';
+import { FieldMappingProvider } from './FieldMappingContext';
 import type { MappingsResponse } from '../../types/xfeature';
 import FieldMapping from './FieldMapping';
 
@@ -81,7 +82,9 @@ const meta = {
   decorators: [
     (Story) => (
       <XFeatureProvider onBeforeMappings={async () => mockMappingsResponse}>
-        <Story />
+        <FieldMappingProvider featureName="UserManagement">
+          <Story />
+        </FieldMappingProvider>
       </XFeatureProvider>
     ),
   ],
@@ -92,42 +95,36 @@ type Story = StoryObj<typeof meta>;
 
 export const SingleField: Story = {
   args: {
-    featureName: 'UserManagement',
     ids: ['status'],
   },
 };
 
 export const MultipleFields: Story = {
   args: {
-    featureName: 'UserManagement',
     ids: ['status', 'role', 'priority'],
   },
 };
 
 export const FieldWithoutOptions: Story = {
   args: {
-    featureName: 'UserManagement',
     ids: ['limit'],
   },
 };
 
 export const MixedFields: Story = {
   args: {
-    featureName: 'UserManagement',
     ids: ['status', 'limit', 'department'],
   },
 };
 
 export const AllFields: Story = {
   args: {
-    featureName: 'UserManagement',
     ids: ['status', 'role', 'priority', 'department', 'limit', 'offset'],
   },
 };
 
 export const CustomTitle: Story = {
   args: {
-    featureName: 'UserManagement',
     ids: ['status', 'role'],
     title: 'User Management Configuration Fields',
   },
@@ -135,7 +132,6 @@ export const CustomTitle: Story = {
 
 export const Empty: Story = {
   args: {
-    featureName: 'UserManagement',
     ids: [],
   },
 };

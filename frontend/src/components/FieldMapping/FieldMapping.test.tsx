@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { XFeatureProvider } from '../../contexts/XFeatureContext';
 import FieldMapping from './FieldMapping';
+import { FieldMappingProvider } from './FieldMappingContext';
 import type { MappingsResponse } from '../../types/xfeature';
 
 // Mock mappings data
@@ -45,13 +46,15 @@ describe('FieldMapping', () => {
   const renderWithProvider = (component: React.ReactElement) => {
     return render(
       <XFeatureProvider onBeforeMappings={async () => mockMappingsResponse}>
-        {component}
+        <FieldMappingProvider featureName="TestFeature">
+          {component}
+        </FieldMappingProvider>
       </XFeatureProvider>
     );
   };
 
   it('renders with default title', async () => {
-    renderWithProvider(<FieldMapping featureName="TestFeature" ids={['status']} />);
+    renderWithProvider(<FieldMapping ids={['status']} />);
 
     await waitFor(() => {
       expect(screen.getByText('Field Mappings')).toBeInTheDocument();
@@ -60,7 +63,7 @@ describe('FieldMapping', () => {
 
   it('renders with custom title', async () => {
     renderWithProvider(
-      <FieldMapping featureName="TestFeature" ids={['status']} title="Custom Title" />
+      <FieldMapping ids={['status']} title="Custom Title" />
     );
 
     await waitFor(() => {
@@ -69,7 +72,7 @@ describe('FieldMapping', () => {
   });
 
   it('displays selected mapping information', async () => {
-    renderWithProvider(<FieldMapping featureName="TestFeature" ids={['status']} />);
+    renderWithProvider(<FieldMapping ids={['status']} />);
 
     await waitFor(() => {
       expect(screen.getByText('Status')).toBeInTheDocument();
@@ -79,7 +82,7 @@ describe('FieldMapping', () => {
   });
 
   it('displays options for mappings with options', async () => {
-    renderWithProvider(<FieldMapping featureName="TestFeature" ids={['status']} />);
+    renderWithProvider(<FieldMapping ids={['status']} />);
 
     await waitFor(() => {
       expect(screen.getByText('Active')).toBeInTheDocument();
@@ -88,7 +91,7 @@ describe('FieldMapping', () => {
   });
 
   it('displays multiple mappings', async () => {
-    renderWithProvider(<FieldMapping featureName="TestFeature" ids={['status', 'priority']} />);
+    renderWithProvider(<FieldMapping ids={['status', 'priority']} />);
 
     await waitFor(() => {
       expect(screen.getByText('Status')).toBeInTheDocument();
@@ -99,7 +102,7 @@ describe('FieldMapping', () => {
   });
 
   it('displays warning when no mappings found', async () => {
-    renderWithProvider(<FieldMapping featureName="TestFeature" ids={['nonexistent']} />);
+    renderWithProvider(<FieldMapping ids={['nonexistent']} />);
 
     await waitFor(() => {
       expect(screen.getByText(/No mappings found for: nonexistent/)).toBeInTheDocument();
@@ -107,7 +110,7 @@ describe('FieldMapping', () => {
   });
 
   it('displays mappings without options', async () => {
-    renderWithProvider(<FieldMapping featureName="TestFeature" ids={['owner']} />);
+    renderWithProvider(<FieldMapping ids={['owner']} />);
 
     await waitFor(() => {
       expect(screen.getByText('Owner')).toBeInTheDocument();
@@ -117,7 +120,7 @@ describe('FieldMapping', () => {
 
   it('filters out non-existent mappings from mixed ids', async () => {
     renderWithProvider(
-      <FieldMapping featureName="TestFeature" ids={['status', 'nonexistent', 'owner']} />
+      <FieldMapping ids={['status', 'nonexistent', 'owner']} />
     );
 
     await waitFor(() => {
@@ -137,7 +140,9 @@ describe('FieldMapping', () => {
 
     render(
       <XFeatureProvider onBeforeMappings={slowMockHandler}>
-        <FieldMapping featureName="TestFeature" ids={['status']} />
+        <FieldMappingProvider featureName="TestFeature">
+          <FieldMapping ids={['status']} />
+        </FieldMappingProvider>
       </XFeatureProvider>
     );
 
