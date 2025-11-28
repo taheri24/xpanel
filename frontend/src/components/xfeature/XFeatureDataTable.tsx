@@ -24,9 +24,8 @@ import {
   Typography,
 } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import type { XFeatureDataTableProps, QueryRequest } from '../../types/xfeature';
-import { useXFeatureQuery, useXFeature, useXFeatureMappings } from '../../contexts/XFeatureContext';
-import { getXFeatureBackendInfo } from '../../services/api';
+import type { XFeatureDataTableProps, QueryRequest, Form } from '../../types/xfeature';
+import { useXFeatureQuery, useXFeature } from '../../contexts/XFeatureContext';
 import { formatCellValue } from '../../utils/format';
 
 /**
@@ -34,31 +33,26 @@ import { formatCellValue } from '../../utils/format';
  * Renders a dynamic data table based on XFeature datatable definition
  */
 export function XFeatureDataTable({
-  definition,
-  featureName,
+  id,
   onRowAction,
 }: XFeatureDataTableProps) {
-  const { getForm } = useXFeature();
-  const { mappingsMap, getMappingByName } = useXFeatureMappings(featureName);
+  const x = useXFeature();
+  const definition=x?.getDataTable(id);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(definition.pageSize || 10);
+  const [rowsPerPage, setRowsPerPage] = useState(definition?.pageSize || 10);
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedRow, setSelectedRow] = useState<Record<string, unknown> | null>(null);
   const [queryParamsInput, setQueryParamsInput] = useState<Record<string, string>>({});
   const [queryParamNames, setQueryParamNames] = useState<string[]>([]);
-  const [backendLoading, setBackendLoading] = useState(true);
-
+  const backendInfo=x?.backendInfo;
   // Fetch backend info and extract query parameters
   useEffect(() => {
-    const fetchBackendInfo = async () => {
-      try {
-        setBackendLoading(true);
-        const backendInfo = await getXFeatureBackendInfo(featureName);
+       try {
 
         // Find the query definition that matches queryRef
-        const query = backendInfo.queries?.find((q) => q.id === definition.queryRef);
+        const query = backendInfo?.queries?.find((q) => q.id === definition?.queryRef);
 
         if (query?.parameters) {
           const paramNames = query.parameters
@@ -71,13 +65,8 @@ export function XFeatureDataTable({
       } catch (err) {
         console.error('Failed to fetch backend info:', err);
         setQueryParamNames([]);
-      } finally {
-        setBackendLoading(false);
-      }
-    };
-
-    fetchBackendInfo();
-  }, [featureName, definition.queryRef]);
+      }  
+   }, [  definition?.queryRef]);
 
   // Build query parameters
   const queryParams: QueryRequest = {
@@ -88,9 +77,8 @@ export function XFeatureDataTable({
   };
 
   // Fetch data
-  const { data, loading, error, total, refetch } = useXFeatureQuery(
-    featureName,
-    definition.queryRef,
+  const { data, loading, error, total, refetch } = useXFeatureQuery(  
+    definition?.queryRef,
     queryParams,
     true
   );
@@ -143,8 +131,8 @@ export function XFeatureDataTable({
   // Refresh data
   
   const getFormActionIds = (): string[] => {
-    if (!definition.formActions) return [];
-    return definition.formActions.split(',').map((s) => s.trim());
+    if (!definition?.formActions) return [];
+    return definition?.formActions.split(',').map((s) => s.trim());
   };
 
   const getColumnFormActionIds = (colFormActions?: string): string[] => {
@@ -165,7 +153,7 @@ export function XFeatureDataTable({
       {/* Header with title and actions */}
       <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <h2>{definition.title || 'Data Table'}</h2>
+          <h2>{definition?.title || 'Data Table'}</h2>
           <Button
             variant="outlined"
             size="small"
@@ -178,14 +166,14 @@ export function XFeatureDataTable({
       </Box>
 
       {/* Query Parameters Section */}
-      {queryParamNames.length > 0 && mappingsMap.size > 0 && !backendLoading && (
+      {queryParamNames.length > 0 &&   (x?.mappingMap)   && (
         <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', backgroundColor: '#fafafa' }}>
           <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
             Query Parameters
           </Typography>
           <Stack direction="row" spacing={2} flexWrap="wrap">
             {queryParamNames.map((paramName) => {
-              const mapping = getMappingByName(paramName);
+              const mapping = x.getMappingByName(paramName);
               if (!mapping) return null;
 
               // If mapping has options, render as select
@@ -246,7 +234,7 @@ export function XFeatureDataTable({
             <Table>
               <TableHead>
                 <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                  {definition.columns.map((column) => (
+                  {definition?.columns.map((column) => (
                     <TableCell
                       key={column.name}
                       align={column.align || 'left'}
@@ -276,7 +264,7 @@ export function XFeatureDataTable({
               <TableBody>
                 {data.map((row, idx) => (
                   <TableRow key={idx} hover>
-                    {definition.columns.map((column) => {
+                    {definition?.columns.map((column) => {
                       const cellValue = row[column.name];
                       const columnFormActions = getColumnFormActionIds(
                         column.formActions
@@ -320,7 +308,7 @@ export function XFeatureDataTable({
           </TableContainer>
 
           {/* Pagination */}
-          {definition.pagination !== false && (
+          {definition?.pagination !== false && (
             <TablePagination
               rowsPerPageOptions={[5, 10, 25, 50]}
               component="div"
@@ -338,12 +326,12 @@ export function XFeatureDataTable({
             open={Boolean(anchorEl)}
             onClose={handleRowActionClose}
           >
-            {getFormActionIds().map((formId) => (
+            {getFormActionIds().map(id=>[id,x.getForm(  id)] as [string,Form]).filter(([_,form])=>!!form).map(([formId,form]) =>!!form&& (
               <MenuItem
                 key={formId}
                 onClick={() => handleFormAction(formId)}
               >
-                {getForm(featureName, formId)?.title || formId}
+                {form?.title || formId}
               </MenuItem>
             ))}
           </Menu>

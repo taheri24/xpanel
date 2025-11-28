@@ -10,8 +10,8 @@
 export interface XFeature {
   name: string;
   version: string;
-  backend: Backend;
-  frontend: Frontend;
+  backend: BackendInfo;
+  frontend: FrontendInfo;
   mappings?: Mapping[];
 }
 
@@ -19,7 +19,7 @@ export interface XFeature {
 // BACKEND TYPES
 // ============================================================================
 
-export interface Backend {
+export interface BackendInfo {
   queries: Query[];
   actionQueries: ActionQuery[];
 }
@@ -42,6 +42,12 @@ export interface Mapping {
   label: string;
   listQuery?: ListQuery;
   options?: Options;
+  required?:boolean;
+  disabled?:boolean;
+  placeholder?:string;
+  readonly?:boolean;
+  helperText?:string;
+  rows?:number;
 }
 
 export interface ListQuery {
@@ -86,7 +92,7 @@ export interface Parameter {
 // FRONTEND TYPES
 // ============================================================================
 
-export interface Frontend {
+export interface FrontendInfo {
   dataTables: DataTable[];
   forms: Form[];
 }
@@ -253,15 +259,13 @@ export interface FrontendElements {
 // ============================================================================
 
 export interface XFeatureDataTableProps {
-  definition: DataTable;
-  featureName: string;
+id:string;
   onRowAction?: (formId: string, rowData: Record<string, unknown>) => void;
   onRefresh?: () => void;
 }
 
 export interface XFeatureFormProps {
   definition: Form;
-  featureName: string;
   initialData?: Record<string, unknown>;
   onSuccess?: (data: ActionResponse) => void;
   onCancel?: () => void;
@@ -269,12 +273,11 @@ export interface XFeatureFormProps {
 }
 
 export interface XFeatureFieldProps {
-  definition: Field;
   value?: string | number | boolean;
   onChange: (value: string | number | boolean) => void;
   onBlur?: () => void;
   errors?: string[];
-  featureName?: string;
+  name:string;
 }
 
 export interface XFeatureButtonProps {
@@ -308,33 +311,7 @@ export type XFeatureAfterFrontendHandler = (
   event: XFeatureAfterFrontendEvent
 ) => void | Promise<void>;
 
-// ============================================================================
-// RUNTIME STATE TYPES
-// ============================================================================
-
-export interface XFeatureContextType {
-  features: Map<string, XFeature>;
-  loading: boolean;
-  error?: Error;
-  getFeature: (name: string) => Promise<XFeature | undefined>;
-  getQuery: (featureName: string, queryId: string) => Query | undefined;
-  getAction: (featureName: string, actionId: string) => ActionQuery | undefined;
-  getForm: (featureName: string, formId: string) => Form | undefined;
-  getDataTable: (featureName: string, tableId: string) => DataTable | undefined;
-  executeQuery: <T = Record<string, unknown>>(
-    featureName: string,
-    queryId: string,
-    params: QueryRequest
-  ) => Promise<QueryResponse<T>>;
-  executeAction: (
-    featureName: string,
-    actionId: string,
-    params: ActionRequest
-  ) => Promise<ActionResponse>;
-  executeFrontendElements: (featureName: string) => Promise<FrontendElements>;
-}
-
-export interface FormState {
+ export interface FormState {
   values: Record<string, string | number | boolean>;
   errors: Record<string, string[]>;
   touched: Record<string, boolean>;

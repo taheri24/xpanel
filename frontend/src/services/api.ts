@@ -113,7 +113,7 @@ import type {
   ActionResponse,
   FrontendElements,
   MappingsResponse,
-  Backend,
+  BackendInfo,
 } from '../types/xfeature';
 
 export async function getXFeatures(): Promise<string[]> {
@@ -162,6 +162,6 @@ export async function resolveXFeatureMappings(
 
 export async function getXFeatureBackendInfo(
   featureName: string
-): Promise<Backend> {
-  return api.get(`xfeatures/${featureName}/backend`).json<Backend>();
+): Promise<BackendInfo> {
+  return api.get(`xfeatures/${featureName}/backend`).json<BackendInfo>();
 }

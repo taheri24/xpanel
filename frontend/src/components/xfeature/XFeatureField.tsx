@@ -11,70 +11,66 @@ import {
   FormHelperText,
 } from '@mui/material';
 import type { XFeatureFieldProps } from '../../types/xfeature';
-import { useXFeatureMappings } from '../../contexts/XFeatureContext';
+import { useXFeature } from '../../contexts/XFeatureContext';
 
 /**
  * XFeatureField Component
  * Renders a form field based on XFeature field definition
  */
 export function XFeatureField({
-  definition,
+  name,
   value,
   onChange,
   onBlur,
   errors,
-  featureName,
+   
 }: XFeatureFieldProps) {
   // Only fetch mappings if featureName is provided
-  const { getMappingByName } = useXFeatureMappings(
-    featureName || 'default',
-    !!featureName // Only auto-load if featureName is provided
-  );
-  const hasError = errors && errors.length > 0;
+   const hasError = errors && errors.length > 0;
   const errorMessage = errors?.[0] || '';
-
+  const x=useXFeature();
   // Get mapping for this field if available (only when featureName is provided)
-  const mapping = featureName ? getMappingByName(definition.name) : undefined;
-
+  const mapping =  x?.getMappingByName(name) ;
+  if (!mapping) return<></>
   const renderTextInput = () => (
     <TextField
       fullWidth
-      name={definition.name}
-      label={definition.label}
-      type={getInputType(definition.type)}
+      name={mapping.name}
+      label={mapping.label}
+      type={getInputType(mapping?.dataType)}
       value={value || ''}
       onChange={(e) => onChange(e.target.value)}
       onBlur={onBlur}
-      placeholder={definition.placeholder}
-      disabled={definition.readonly}
-      required={definition.required}
+      placeholder={mapping.placeholder}
+      disabled={mapping.readonly}
+      required={mapping.required}
       error={hasError}
-      helperText={errorMessage || definition.helperText}
-      inputProps={getInputProps(definition.type)}
+      helperText={errorMessage || mapping.helperText}
+      inputProps={getInputProps(mapping.dataType)}
     />
   );
 
   const renderSelect = () => {
     // Use mapping options if available, otherwise use field options
-    const options = mapping?.options?.items || definition.options;
+    const options = mapping?.options?.items || mapping.options;
 
     return (
-      <FormControl fullWidth disabled={definition.readonly} error={hasError}>
-        <InputLabel>{mapping?.label || definition.label}</InputLabel>
+      <FormControl fullWidth disabled={mapping.readonly} error={hasError}>
+        <InputLabel>{mapping?.label || mapping.label}</InputLabel>
         <Select
-          name={definition.name}
+          name={mapping.name}
           value={(value as string) || ''}
-          label={mapping?.label || definition.label}
+          label={mapping?.label || mapping.label}
           onChange={(e) => onChange(e.target.value)}
           onBlur={onBlur}
-          required={definition.required}
+          required={mapping.required}
         >
-          {!definition.required && (
+          {!mapping.required && (
             <MenuItem value="">
               <em>Select an option</em>
             </MenuItem>
           )}
-          {options?.map((option) => (
+          {Array.isArray(options) &&  options?.map((option) => (
             <MenuItem key={option.value} value={option.value}>
               {option.label}
             </MenuItem>
@@ -89,26 +85,26 @@ export function XFeatureField({
     <FormControlLabel
       control={
         <Checkbox
-          name={definition.name}
+          name={mapping.name}
           checked={Boolean(value)}
           onChange={(e) => onChange(e.target.checked)}
-          disabled={definition.readonly}
+          disabled={mapping.readonly}
         />
       }
-      label={definition.label}
+      label={mapping.label}
     />
   );
 
   const renderRadio = () => (
-    <FormControl disabled={definition.readonly} error={hasError}>
-      <InputLabel>{definition.label}</InputLabel>
+    <FormControl disabled={mapping.readonly} error={hasError}>
+      <InputLabel>{mapping.label}</InputLabel>
       <RadioGroup
-        name={definition.name}
+        name={mapping.name}
         value={(value as string) || ''}
         onChange={(e) => onChange(e.target.value)}
         onBlur={onBlur}
       >
-        {definition.options?.map((option) => (
+        {Array.isArray(mapping?.options) &&  mapping?.options?.map((option) => (
           <FormControlLabel
             key={option.value}
             value={option.value}
@@ -125,22 +121,22 @@ export function XFeatureField({
     <TextField
       fullWidth
       multiline
-      name={definition.name}
-      label={definition.label}
+      name={mapping?.name}
+      label={mapping?.label}
       value={value || ''}
       onChange={(e) => onChange(e.target.value)}
       onBlur={onBlur}
-      placeholder={definition.placeholder}
-      disabled={definition.readonly}
-      required={definition.required}
+      placeholder={mapping?.placeholder}
+      disabled={mapping?.readonly}
+      required={mapping?.required}
       error={hasError}
-      helperText={errorMessage || definition.helperText}
-      rows={definition.rows || 4}
+      helperText={errorMessage || mapping.helperText}
+      rows={mapping?.rows || 4}
     />
   );
 
   const renderField = () => {
-    switch (definition.type) {
+    switch (mapping?.dataType) {
       case 'Text':
       case 'Email':
       case 'Password':
@@ -166,7 +162,7 @@ export function XFeatureField({
       case 'File':
         return renderTextInput();
       case 'Hidden':
-        return <input type="hidden" name={definition.name} value={String(value || '')} />;
+        return <input type="hidden" name={mapping?.name} value={String(value || '')} />;
       default:
         return renderTextInput();
     }
