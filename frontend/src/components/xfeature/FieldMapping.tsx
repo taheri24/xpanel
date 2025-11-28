@@ -1,17 +1,16 @@
+import React from 'react';
 import {
   TextField,
   Select,
   MenuItem,
   FormControl,
   InputLabel,
-  FormControlLabel,
-  Checkbox,
   FormHelperText,
   Stack,
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { useXFeatureMappings } from '../../contexts/XFeatureContext';
+import { useXFeature } from '../../contexts/XFeatureContext';
 
 interface FieldMappingProps {
   ids: string[];
@@ -24,7 +23,7 @@ interface FieldMappingProps {
 /**
  * FieldMapping Component
  * Renders form fields based on mapping definitions from XFeature
- * Uses useXFeatureMappings to load mapping data dynamically
+ * Uses useXFeature hook to load feature definitions with embedded mappings
  */
 export function FieldMapping({
   ids,
@@ -33,7 +32,27 @@ export function FieldMapping({
   values = {},
   errors = {},
 }: FieldMappingProps) {
-  const { mappingsMap, loading, error } = useXFeatureMappings(featureName, true);
+  const { getFeature } = useXFeature();
+  const [feature, setFeature] = React.useState<any>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const loadFeature = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const loadedFeature = await getFeature(featureName);
+        setFeature(loadedFeature);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load feature');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadFeature();
+  }, [featureName, getFeature]);
 
   if (loading) {
     return <CircularProgress />;
@@ -42,6 +61,12 @@ export function FieldMapping({
   if (error) {
     return <Alert severity="error">Failed to load field mappings: {error}</Alert>;
   }
+
+  // Create mappings map from feature
+  const mappingsMap = new Map();
+  feature?.mappings?.forEach((mapping: any) => {
+    mappingsMap.set(mapping.name, mapping);
+  });
 
   const renderField = (fieldId: string) => {
     const mapping = mappingsMap?.get(fieldId);
