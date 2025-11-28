@@ -32,10 +32,11 @@ const mockBackendInfo: BackendInfo = {
   queries: [
     {
       id: 'ListUsers',
-      sqlKey: 'select-users',
+      type: 'Select',
+      sql: 'SELECT * FROM users',
       parameters: [
-        { name: 'limit', dataType: 'Int' },
-        { name: 'offset', dataType: 'Int' },
+        { name: 'limit', type: 'Int' },
+        { name: 'offset', type: 'Int' },
       ],
     },
   ],

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { XFeatureProvider, type XFeatureMock } from '../../contexts/XFeatureContext';
 import { XFeatureFrontendRenderer } from './XFeatureFrontendRenderer';
@@ -46,20 +46,22 @@ const mockBackendInfo: BackendInfo = {
   queries: [
     {
       id: 'ListUsers',
-      sqlKey: 'select-users',
+      type: 'Select',
+      sql: 'SELECT * FROM users',
       parameters: [
-        { name: 'limit', dataType: 'Int' },
-        { name: 'offset', dataType: 'Int' },
+        { name: 'limit', type: 'Int' },
+        { name: 'offset', type: 'Int' },
       ],
     },
   ],
   actionQueries: [
     {
       id: 'CreateUser',
-      sqlKey: 'insert-user',
+      type: 'Insert',
+      sql: 'INSERT INTO users (username, email) VALUES (?, ?)',
       parameters: [
-        { name: 'username', dataType: 'Text' },
-        { name: 'email', dataType: 'Email' },
+        { name: 'username', type: 'Text' },
+        { name: 'email', type: 'Email' },
       ],
     },
   ],

@@ -27,21 +27,6 @@ const createUserForm: Form = {
   ],
 };
 
-const updateUserForm: Form = {
-  id: 'update-user',
-  mode: 'Edit',
-  title: 'Edit User',
-  actionRef: 'UpdateUser',
-  dialog: true,
-  fields: [
-    { name: 'username', label: 'Username', dataType: 'Text', required: true },
-  ],
-  buttons: [
-    { type: 'Submit', label: 'Update' },
-    { type: 'Cancel', label: 'Cancel' },
-  ],
-};
-
 const successResponse: ActionQueryResponse = {
   success: true,
   message: 'User created successfully',

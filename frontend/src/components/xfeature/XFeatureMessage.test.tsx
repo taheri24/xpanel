@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { XFeatureMessage } from './XFeatureMessage';
 import type { Message } from '../../types/xfeature';
-import type { XFeatureMock } from '../../contexts/XFeatureContext';
 
 describe('XFeatureMessage', () => {
   // ========================================================================
@@ -184,7 +183,7 @@ describe('XFeatureMessage', () => {
   // ========================================================================
 
   it('handles multiple messages with different visibility states', () => {
-    const { rerender } = render(
+    render(
       <>
         <XFeatureMessage definition={{ type: 'Info', content: 'Visible 1', visible: true }} />
         <XFeatureMessage definition={{ type: 'Info', content: 'Hidden 1', visible: false }} />

@@ -3,7 +3,6 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { XFeatureButton } from './XFeatureButton';
 import type { Button } from '../../types/xfeature';
-import type { XFeatureMock } from '../../contexts/XFeatureContext';
 
 describe('XFeatureButton', () => {
   // ========================================================================
