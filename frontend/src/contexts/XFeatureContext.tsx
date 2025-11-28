@@ -388,7 +388,7 @@ export function useXFeatureQuery<T = Record<string, unknown>>(
   return { data, loading, error, total, refetch };
 }
 
-export function useXFeatureAction( actionId: string) {
+export function useXFeatureActionQuery( actionId: string) {
   const x = useXFeature();
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<Error | undefined>();

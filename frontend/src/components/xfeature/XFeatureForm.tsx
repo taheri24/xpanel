@@ -9,7 +9,7 @@ import {
   Alert,
 } from '@mui/material';
 import type { XFeatureFormProps, FormState, ActionRequest } from '../../types/xfeature';
-import { useXFeatureAction } from '../../contexts/XFeatureContext';
+import { useXFeatureActionQuery } from '../../contexts/XFeatureContext';
 import { XFeatureField } from './XFeatureField';
 import { XFeatureButton } from './XFeatureButton';
 import { XFeatureMessage } from './XFeatureMessage';
@@ -27,7 +27,7 @@ export function XFeatureForm({
   onCancel,
   onClose,
 }: XFeatureFormProps) {
-  const { execute: executeAction, loading, error, success } = useXFeatureAction(
+  const { execute: executeAction, loading, error, success } = useXFeatureActionQuery(
     featureName,
     definition.actionRef || ''
   );
