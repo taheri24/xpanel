@@ -1,0 +1,29 @@
+# Claude Code ignore patterns
+# Files matching these patterns will be excluded from AI analysis
+
+# Design specifications (*.spec.md, *.design.md)
+# These are architectural documents for discussion only, not code to analyze
+**/*.spec.md
+**/*.design.md
+
+# Build artifacts and dependencies
+node_modules/
+dist/
+coverage/
+.next/
+
+# Environment files (may contain secrets)
+.env
+.env.local
+.env.*.local
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
