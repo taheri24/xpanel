@@ -3,7 +3,7 @@ version: '3.9'
 services:
   # SQL Server Database
   mssql:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: mcr.microsoft.com/mssql/server:latest
     container_name: xpanel-mssql
     environment:
       SA_PASSWORD: "YourStrong@Passw0rd"
@@ -99,7 +99,7 @@ services:
 
   # Loki - Log Aggregation
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:3-latest
     container_name: xpanel-loki
     ports:
       - "3100:3100"
@@ -118,7 +118,7 @@ services:
 
   # Promtail - Log Shipper
   promtail:
-    image: grafana/promtail:latest
+    image: grafana/promtail:3-latest
     container_name: xpanel-promtail
     volumes:
       - ./docker/promtail-config.yml:/etc/promtail/config.yml
@@ -138,7 +138,7 @@ services:
 
   # Grafana - Monitoring & Visualization
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:11-latest
     container_name: xpanel-grafana
     depends_on:
       - loki

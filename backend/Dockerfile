@@ -1,5 +1,5 @@
 # Development Dockerfile for Go Backend
-FROM golang:1.24.7-alpine
+FROM golang:1.24-alpine
 
 # Install build dependencies
 RUN apk add --no-cache git make ca-certificates
