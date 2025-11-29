@@ -1,0 +1,190 @@
+version: '3.9'
+
+services:
+  # SQL Server Database
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2017-latest
+    container_name: xpanel-mssql
+    environment:
+      SA_PASSWORD: "YourStrong@Passw0rd"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql/data
+      - ./backend/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourStrong@Passw0rd' -Q 'SELECT 1'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - xpanel-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=mssql"
+
+  # Backend Service (Go + Gin)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: xpanel-backend
+    depends_on:
+      mssql:
+        condition: service_healthy
+      loki:
+        condition: service_started
+    environment:
+      SERVER_PORT: "8080"
+      SERVER_HOST: "0.0.0.0"
+      ENV: "development"
+      DB_HOST: "mssql"
+      DB_PORT: "1433"
+      DB_USER: "sa"
+      DB_PASSWORD: "YourStrong@Passw0rd"
+      DB_NAME: "xpanel"
+      LOG_LEVEL: "info"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend:/app
+      - /app/bin
+      - go_mod_cache:/go/pkg/mod
+      - go_build_cache:/root/.cache/go-build
+    command: >
+      sh -c "go mod download &&
+             go run main.go"
+    networks:
+      - xpanel-network
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://loki:3100/loki/api/v1/push"
+        loki-pipeline-stages: |
+          - multiline:
+              line_start_pattern: '^\d{4}-\d{2}-\d{2}T'
+        max-size: "10m"
+        labels: "service=backend,env=development"
+
+  # Frontend Service (React + Vite)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=http://localhost:8080/api/v1
+    container_name: xpanel-frontend
+    depends_on:
+      - backend
+      - loki
+    environment:
+      VITE_API_BASE_URL: "http://localhost:8080/api/v1"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - npm_cache:/root/.npm
+    command: npm run dev -- --host
+    networks:
+      - xpanel-network
+    logging:
+      driver: "loki"
+      options:
+        loki-url: "http://loki:3100/loki/api/v1/push"
+        max-size: "10m"
+        labels: "service=frontend,env=development"
+
+  # Loki - Log Aggregation
+  loki:
+    image: grafana/loki:3-latest
+    container_name: xpanel-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./docker/loki-config.yml:/etc/loki/local-config.yml
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yml
+    networks:
+      - xpanel-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=loki"
+
+  # Promtail - Log Shipper
+  promtail:
+    image: grafana/promtail:3-latest
+    container_name: xpanel-promtail
+    volumes:
+      - ./docker/promtail-config.yml:/etc/promtail/config.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - xpanel-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=promtail"
+
+  # Grafana - Monitoring & Visualization
+  grafana:
+    image: grafana/grafana:11-latest
+    container_name: xpanel-grafana
+    depends_on:
+      - loki
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: "admin"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_INSTALL_PLUGINS: "grafana-piechart-panel"
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    networks:
+      - xpanel-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=grafana"
+
+volumes:
+  # Database
+  mssql_data:
+    driver: local
+
+  # Logging
+  loki_data:
+    driver: local
+
+  # Monitoring
+  grafana_data:
+    driver: local
+
+  # Module caches (persistent across rebuilds)
+  go_mod_cache:
+    driver: local
+  go_build_cache:
+    driver: local
+  npm_cache:
+    driver: local
+
+networks:
+  xpanel-network:
+    driver: bridge
