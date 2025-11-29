@@ -3,7 +3,7 @@ version: '3.9'
 services:
   # SQL Server Database
   mssql:
-    image: mcr.microsoft.com/mssql/server:latest
+    image: mcr.microsoft.com/mssql/server:2017-latest
     container_name: xpanel-mssql
     environment:
       SA_PASSWORD: "YourStrong@Passw0rd"
