@@ -102,6 +102,9 @@ importers:
       jsdom:
         specifier: ^27.2.0
         version: 27.2.0
+      ky-openapi-generator:
+        specifier: github:taheri24/ky-openapi-generator#claude/update-package-scripts-016SXkSj254FUDND34UzBod5
+        version: https://codeload.github.com/taheri24/ky-openapi-generator/tar.gz/5c8dce06c9f20ef3f0ee793e8a5a132b52c2e903
       storybook:
         specifier: ^10.0.8
         version: 10.1.0(@testing-library/dom@10.4.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -1869,6 +1872,11 @@ packages:
 
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
+
+  ky-openapi-generator@https://codeload.github.com/taheri24/ky-openapi-generator/tar.gz/5c8dce06c9f20ef3f0ee793e8a5a132b52c2e903:
+    resolution: {tarball: https://codeload.github.com/taheri24/ky-openapi-generator/tar.gz/5c8dce06c9f20ef3f0ee793e8a5a132b52c2e903}
+    version: 1.0.0
+    hasBin: true
 
   ky@1.14.0:
     resolution: {integrity: sha512-Rczb6FMM6JT0lvrOlP5WUOCB7s9XKxzwgErzhKlKde1bEV90FXplV1o87fpt4PU/asJFiqjYJxAJyzJhcrxOsQ==}
@@ -4276,6 +4284,10 @@ snapshots:
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
+
+  ky-openapi-generator@https://codeload.github.com/taheri24/ky-openapi-generator/tar.gz/5c8dce06c9f20ef3f0ee793e8a5a132b52c2e903:
+    dependencies:
+      ky: 1.14.0
 
   ky@1.14.0: {}
 

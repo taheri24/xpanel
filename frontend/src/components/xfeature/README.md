@@ -305,7 +305,7 @@ export function UserManagementPage() {
 All components include comprehensive tests using Vitest and React Testing Library:
 
 ```bash
-npm test
+pnpm test
 ```
 
 Test files:
@@ -319,7 +319,7 @@ Test files:
 View components in Storybook:
 
 ```bash
-npm run storybook
+pnpm run storybook
 ```
 
 Story files:
