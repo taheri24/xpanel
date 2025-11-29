@@ -148,15 +148,15 @@ describe('UserDashboard Integration', () => {
 - **Use semantic queries**: Prefer `getByRole`, `getByLabelText` over `getByTestId`
 - **Avoid testing implementation details**: Don't test state or props directly
 - **Test user interactions**: Use `userEvent` instead of `fireEvent`
-- **Run tests**: `npm test` or `npm run test:coverage`
+- **Run tests**: `pnpm test` or `pnpm run test:coverage`
 - **Aim for high coverage**: Target >80% code coverage
 
 ### Testing Commands
 
 ```bash
-npm test              # Run tests in watch mode
-npm run test:ui       # Run tests with UI
-npm run test:coverage # Generate coverage report
+pnpm test              # Run tests in watch mode
+pnpm run test:ui       # Run tests with UI
+pnpm run test:coverage # Generate coverage report
 ```
 
 ---
@@ -1019,12 +1019,12 @@ const UserProfile: React.FC = () => {
 
 Before committing code, ensure:
 
-- [ ] All tests pass: `npm test`
-- [ ] Test coverage is adequate: `npm run test:coverage`
-- [ ] No TypeScript errors: `npm run build`
-- [ ] Linter passes: `npm run lint`
+- [ ] All tests pass: `pnpm test`
+- [ ] Test coverage is adequate: `pnpm run test:coverage`
+- [ ] No TypeScript errors: `pnpm run build`
+- [ ] Linter passes: `pnpm run lint`
 - [ ] Code is formatted: Configure Prettier or use ESLint auto-fix
-- [ ] Components work in Storybook: `npm run storybook`
+- [ ] Components work in Storybook: `pnpm run storybook`
 - [ ] Accessibility checks pass (use axe-core or similar)
 
 ---

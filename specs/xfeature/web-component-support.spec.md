@@ -921,7 +921,7 @@ if (document.readyState === 'loading') {
 
 ### Development Environment
 - Node.js 18+
-- npm 8+
+- pnpm 8+
 - TypeScript 5.x
 - Vite 7.x
 

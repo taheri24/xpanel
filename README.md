@@ -53,7 +53,7 @@ xpanel/
 
 ### Frontend
 - Node.js 18+ or higher
-- npm or yarn
+- pnpm
 
 ## Quick Start
 
@@ -90,14 +90,14 @@ For detailed backend setup and documentation, see [backend/README.md](backend/RE
 cd frontend
 
 # Install dependencies
-npm install
+pnpm install
 
 # Configure environment
 cp .env.example .env
 # Edit .env with your API endpoint
 
 # Run the development server
-npm run dev
+pnpm run dev
 ```
 
 The frontend will be available at `http://localhost:5173`
@@ -119,7 +119,7 @@ go run main.go
 **Terminal 2 (Frontend)**:
 ```bash
 cd frontend
-npm run dev
+pnpm run dev
 ```
 
 ### Database Setup
@@ -178,9 +178,9 @@ go test ./...
 
 ```bash
 cd frontend
-npm run test              # Run tests
-npm run test:ui           # Run tests with UI
-npm run test:coverage     # Run tests with coverage
+pnpm run test              # Run tests
+pnpm run test:ui           # Run tests with UI
+pnpm run test:coverage     # Run tests with coverage
 ```
 
 ## Storybook
@@ -189,7 +189,7 @@ The frontend includes Storybook for component development and documentation:
 
 ```bash
 cd frontend
-npm run storybook
+pnpm run storybook
 ```
 
 Storybook will be available at `http://localhost:6006`
@@ -208,8 +208,8 @@ go build -o bin/xpanel main.go
 
 ```bash
 cd frontend
-npm run build
-npm run preview
+pnpm run build
+pnpm run preview
 ```
 
 ## Contributing

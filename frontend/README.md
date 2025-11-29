@@ -48,7 +48,7 @@ frontend/
 ## Prerequisites
 
 - Node.js 18+ or higher
-- npm or yarn
+- pnpm
 
 ## Setup
 
@@ -60,7 +60,7 @@ frontend/
 
 2. **Install dependencies**
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. **Configure environment variables**
@@ -71,7 +71,7 @@ frontend/
 
 4. **Start the development server**
    ```bash
-   npm run dev
+   pnpm run dev
    ```
 
 ## Available Scripts
@@ -79,25 +79,25 @@ frontend/
 ### Development
 
 ```bash
-npm run dev              # Start development server
-npm run build            # Build for production
-npm run preview          # Preview production build
-npm run lint             # Run ESLint
+pnpm run dev              # Start development server
+pnpm run build            # Build for production
+pnpm run preview          # Preview production build
+pnpm run lint             # Run ESLint
 ```
 
 ### Testing
 
 ```bash
-npm run test             # Run tests in watch mode
-npm run test:ui          # Run tests with UI
-npm run test:coverage    # Run tests with coverage report
+pnpm run test             # Run tests in watch mode
+pnpm run test:ui          # Run tests with UI
+pnpm run test:coverage    # Run tests with coverage report
 ```
 
 ### Storybook
 
 ```bash
-npm run storybook        # Start Storybook dev server
-npm run build-storybook  # Build Storybook for production
+pnpm run storybook        # Start Storybook dev server
+pnpm run build-storybook  # Build Storybook for production
 ```
 
 ## Environment Variables
@@ -459,10 +459,10 @@ export default MyPage;
 
 ```bash
 # Build the application
-npm run build
+pnpm run build
 
 # Preview the production build
-npm run preview
+pnpm run preview
 ```
 
 The build output will be in the `dist/` directory.
@@ -473,13 +473,13 @@ The build output will be in the `dist/` directory.
 
 ```bash
 # Run all tests
-npm run test
+pnpm run test
 
 # Run tests with UI
-npm run test:ui
+pnpm run test:ui
 
 # Run tests with coverage
-npm run test:coverage
+pnpm run test:coverage
 ```
 
 ### Test Coverage
@@ -491,7 +491,7 @@ Coverage reports are generated in the `coverage/` directory.
 ### Running Storybook
 
 ```bash
-npm run storybook
+pnpm run storybook
 ```
 
 Storybook will be available at `http://localhost:6006`
@@ -499,7 +499,7 @@ Storybook will be available at `http://localhost:6006`
 ### Building Storybook
 
 ```bash
-npm run build-storybook
+pnpm run build-storybook
 ```
 
 The build output will be in the `storybook-static/` directory.

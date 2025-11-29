@@ -226,7 +226,7 @@ docker compose exec backend go test ./...
 
 **Frontend Tests:**
 ```bash
-docker compose exec frontend npm test
+docker compose exec frontend pnpm test
 ```
 
 ### Building for Production
@@ -323,7 +323,7 @@ docker compose logs -f frontend  # Follow mode
 
 # Execute command in running container
 docker compose exec backend go run main.go
-docker compose exec frontend npm run build
+docker compose exec frontend pnpm run build
 
 # View container status
 docker compose ps
