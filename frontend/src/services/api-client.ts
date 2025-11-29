@@ -1,5 +1,7 @@
 // Auto-generated from OpenAPI spec - Do not edit manually
 
+// Generated from OpenAPI spec with MD5 checksum: d4fdb9dee5742591b378d5e758e9fd10
+
 import ky from 'ky';
 
 
@@ -137,6 +139,7 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 
 
 
 export class XPanelApiClient {
+  static readonly SPEC_CHECKSUM = 'd4fdb9dee5742591b378d5e758e9fd10';
   private baseUrl: string;
   private ky: typeof ky;
 
