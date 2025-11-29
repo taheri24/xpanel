@@ -10,8 +10,11 @@ WORKDIR /app
 # Copy go mod files
 COPY go.mod go.sum ./
 
-# Download dependencies (this layer is cached unless go.mod/sum change)
-RUN go mod download
+# Download dependencies with cache mount for faster rebuilds
+# Using --mount=type=cache for go mod cache
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    go mod download
 
 # Copy entire backend source
 COPY . .
