@@ -48,6 +48,7 @@
     "eslint-plugin-storybook": "^10.0.8",
     "globals": "^16.5.0",
     "jsdom": "^27.2.0",
+    "ky-openapi-generator": "github:taheri24/ky-openapi-generator#claude/update-package-scripts-016SXkSj254FUDND34UzBod5",
     "storybook": "^10.0.8",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
