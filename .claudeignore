@@ -9,7 +9,6 @@
 # Build artifacts and dependencies
 node_modules/
 dist/
-build/
 coverage/
 .next/
 
