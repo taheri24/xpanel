@@ -18,6 +18,28 @@ The Docker Compose setup includes:
 - Docker Engine 20.10+
 - Docker Compose 1.29+
 - Git
+- Docker BuildKit (enabled by default in Docker Desktop and Docker Engine 20.10+)
+
+## Build Optimization with Docker BuildKit
+
+The Dockerfiles are configured to use Docker BuildKit caching for faster rebuilds:
+
+**Go Backend** (`backend/Dockerfile`):
+- Caches Go modules in `/go/pkg/mod` - avoids re-downloading dependencies
+- Caches build artifacts in `/root/.cache/go-build` - speeds up go run compilation
+
+**Node.js Frontend** (`frontend/Dockerfile`):
+- Caches npm packages in `/root/.npm` - reuses cached node modules
+- Uses `--prefer-offline` flag - prioritizes cached packages
+
+**Enabling BuildKit explicitly:**
+
+```bash
+export DOCKER_BUILDKIT=1
+docker compose up
+```
+
+BuildKit is automatically enabled in Docker Desktop. For Docker Engine, ensure you're on version 20.10+ (default since 2021).
 
 ## Quick Start
 
