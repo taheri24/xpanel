@@ -20,17 +20,24 @@ The Docker Compose setup includes:
 - Git
 - Docker BuildKit (enabled by default in Docker Desktop and Docker Engine 20.10+)
 
-## Build Optimization with Docker BuildKit
+## Build Optimization with Docker BuildKit & Persistent Caching
 
-The Dockerfiles are configured to use Docker BuildKit caching for faster rebuilds:
+The Dockerfiles are configured to use Docker BuildKit caching combined with persistent Docker volumes for ultra-fast rebuilds:
 
 **Go Backend** (`backend/Dockerfile`):
-- Caches Go modules in `/go/pkg/mod` - avoids re-downloading dependencies
-- Caches build artifacts in `/root/.cache/go-build` - speeds up go run compilation
+- Caches Go modules in `/go/pkg/mod` → Volume: `go_mod_cache` - avoids re-downloading dependencies
+- Caches build artifacts in `/root/.cache/go-build` → Volume: `go_build_cache` - speeds up go run compilation
 
 **Node.js Frontend** (`frontend/Dockerfile`):
-- Caches npm packages in `/root/.npm` - reuses cached node modules
+- Caches npm packages in `/root/.npm` → Volume: `npm_cache` - reuses cached node modules
 - Uses `--prefer-offline` flag - prioritizes cached packages
+
+**How It Works:**
+- BuildKit layer caching + Docker volumes create a two-tier caching system
+- First build: Downloads all dependencies
+- Subsequent builds: Uses cached volumes, **only downloads new/changed packages**
+- Volumes persist even after `docker compose down`, so you only download once
+- Clean rebuild: `docker compose down -v` removes all cached volumes
 
 **Enabling BuildKit explicitly:**
 
@@ -40,6 +47,15 @@ docker compose up
 ```
 
 BuildKit is automatically enabled in Docker Desktop. For Docker Engine, ensure you're on version 20.10+ (default since 2021).
+
+**Cache Persistence:**
+All module caches are stored in named Docker volumes:
+```bash
+docker volume ls | grep xpanel
+# go_mod_cache - Go modules cache
+# go_build_cache - Go build artifacts cache
+# npm_cache - npm packages cache
+```
 
 ## Quick Start
 
@@ -380,7 +396,7 @@ Add to `docker-compose.yml`:
 Remove all Docker artifacts:
 
 ```bash
-# Stop and remove containers, volumes, networks
+# Stop and remove containers, volumes, networks (includes cache volumes)
 docker compose down -v
 
 # Remove dangling images
@@ -389,6 +405,24 @@ docker image prune -a
 # Full cleanup (use with caution)
 docker system prune -a --volumes
 ```
+
+**Cache Volume Cleanup:**
+```bash
+# Remove only cache volumes (preserves database and Grafana data)
+docker volume rm xpanel_go_mod_cache xpanel_go_build_cache xpanel_npm_cache
+
+# View all xpanel volumes
+docker volume ls | grep xpanel
+
+# Remove a specific cache to force re-download
+docker volume rm xpanel_npm_cache  # Rebuilds npm cache on next start
+docker volume rm xpanel_go_mod_cache  # Rebuilds Go modules on next start
+```
+
+**Important:**
+- Use `docker compose down -v` for complete cleanup (removes ALL volumes including database)
+- Use individual `docker volume rm` to selectively clean only cache volumes
+- Cache volumes are automatically created on first build if they don't exist
 
 ## Security Notes for Development
 

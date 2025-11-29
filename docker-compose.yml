@@ -54,6 +54,8 @@ services:
     volumes:
       - ./backend:/app
       - /app/bin
+      - go_mod_cache:/go/pkg/mod
+      - go_build_cache:/root/.cache/go-build
     command: >
       sh -c "go mod download &&
              go run main.go"
@@ -87,6 +89,7 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      - npm_cache:/root/.npm
     command: npm run dev -- --host
     networks:
       - xpanel-network
@@ -162,11 +165,24 @@ services:
         labels: "service=grafana"
 
 volumes:
+  # Database
   mssql_data:
     driver: local
+
+  # Logging
   loki_data:
     driver: local
+
+  # Monitoring
   grafana_data:
+    driver: local
+
+  # Module caches (persistent across rebuilds)
+  go_mod_cache:
+    driver: local
+  go_build_cache:
+    driver: local
+  npm_cache:
     driver: local
 
 networks:
