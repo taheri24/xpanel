@@ -12,7 +12,8 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "storybook": "storybook dev -p 6006 --no-open -c src/.storybook",
-    "build-storybook": "storybook build -c src/.storybook"
+    "build-storybook": "storybook build -c src/.storybook",
+    "generate:api": "ky-openapi-gen ../backend/docs/swagger.json --output src/services/api-client.ts --clientName XPanelApiClient --banner 'Auto-generated from OpenAPI spec - Do not edit manually' --checksum sha256"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
