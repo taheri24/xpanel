@@ -13,7 +13,7 @@ cp .env.example .env
 Edit `.env`:
 ```
 REACT_APP_USE_MOCK_API=true
-REACT_APP_API_URL=http://localhost:8000/api
+REACT_APP_API_URL=http://localhost:8000/api/v1/x
 ```
 
 ### Step 3: Start development server
@@ -49,7 +49,7 @@ Make sure your backend API is running on the configured URL
 ### Step 2: Update environment
 Ensure `.env` has the correct API URL and mock disabled:
 ```
-REACT_APP_API_URL=http://localhost:8000/api
+REACT_APP_API_URL=http://localhost:8000/api/v1/x
 REACT_APP_USE_MOCK_API=false
 ```
 

@@ -78,7 +78,7 @@ export { API }
 
 Update `.env.example`:
 ```
-REACT_APP_API_URL=http://localhost:8000/api
+REACT_APP_API_URL=http://localhost:8000/api/v1/x
 REACT_APP_USE_MOCK_API=false
 ```
 

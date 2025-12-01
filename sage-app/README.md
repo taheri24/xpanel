@@ -122,24 +122,24 @@ cp .env.example .env
 
 Then edit `.env` and set the API URL:
 ```
-REACT_APP_API_URL=http://localhost:8000/api
+REACT_APP_API_URL=http://localhost:8000/api/v1/x
 ```
 
 ### Required API Endpoints
 
-The backend API should provide the following endpoints:
+The backend API should provide the following endpoints under `/api/v1/x/`:
 
 #### Invoices
-- `GET /api/invoices` - List all invoices
-- `GET /api/invoices/:invoiceNo` - Get single invoice details
+- `GET /api/v1/x/invoices` - List all invoices
+- `GET /api/v1/x/invoices/:invoiceNo` - Get single invoice details
 
 #### Receipts
-- `GET /api/receipts` - List all receipts
-- `GET /api/receipts/:invoiceNo` - Get receipt details by invoice number
+- `GET /api/v1/x/receipts` - List all receipts
+- `GET /api/v1/x/receipts/:invoiceNo` - Get receipt details by invoice number
 
 #### Line Items
-- `GET /api/line-items` - List all line items
-- `GET /api/line-items/:invoiceNo` - Get line items for specific invoice
+- `GET /api/v1/x/line-items` - List all line items
+- `GET /api/v1/x/line-items/:invoiceNo` - Get line items for specific invoice
 
 All endpoints should return responses in this format:
 ```json
