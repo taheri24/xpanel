@@ -40,6 +40,7 @@ type Query struct {
 	Id          string   `xml:"Id,attr" json:"id"`
 	Type        string   `xml:"Type,attr" json:"type"`
 	Description string   `xml:"Description,attr" json:"description"`
+	MockFile    string   `xml:"MockFile,attr" json:"mockFile"`
 	SQL         string   `xml:",chardata" json:"sql"`
 	Parameters  []string `json:"parameters"`
 }
@@ -49,6 +50,7 @@ type ActionQuery struct {
 	Id          string   `xml:"Id,attr" json:"id"`
 	Type        string   `xml:"Type,attr" json:"type"`
 	Description string   `xml:"Description,attr" json:"description"`
+	MockFile    string   `xml:"MockFile,attr" json:"mockFile"`
 	SQL         string   `xml:",chardata" json:"sql"`
 	Parameters  []string `json:"parameters"`
 }

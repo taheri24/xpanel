@@ -2,8 +2,10 @@ package xfeature
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -32,6 +34,25 @@ func (qe *QueryExecutor) Execute(
 	params map[string]interface{},
 ) ([]map[string]interface{}, error) {
 	startTime := time.Now()
+
+	// Check if MockFile is specified and exists
+	if query.MockFile != "" {
+		if mockData, err := qe.loadMockFile(query.MockFile); err == nil {
+			qe.logger.Debug("Mock data loaded successfully",
+				"queryId", query.Id,
+				"mockFile", query.MockFile,
+				"rowCount", len(mockData),
+				"duration_ms", time.Since(startTime).Milliseconds(),
+			)
+			return mockData, nil
+		} else if os.IsExist(os.ErrNotExist) || !os.IsNotExist(err) {
+			qe.logger.Warn("Mock file error, falling back to database query",
+				"queryId", query.Id,
+				"mockFile", query.MockFile,
+				"error", err,
+			)
+		}
+	}
 
 	// Extract expected parameters from SQL
 	expectedParams := ExtractParameters(query.SQL)
@@ -167,4 +188,19 @@ func (qe *QueryExecutor) buildArgs(sql string, params map[string]interface{}, dr
 	}
 
 	return args
+}
+
+// loadMockFile loads mock data from a JSON file
+func (qe *QueryExecutor) loadMockFile(filePath string) ([]map[string]interface{}, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read mock file %s: %w", filePath, err)
+	}
+
+	var mockData []map[string]interface{}
+	if err := json.Unmarshal(data, &mockData); err != nil {
+		return nil, fmt.Errorf("failed to parse mock file %s as JSON: %w", filePath, err)
+	}
+
+	return mockData, nil
 }

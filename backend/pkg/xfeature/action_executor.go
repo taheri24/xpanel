@@ -3,8 +3,10 @@ package xfeature
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log/slog"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -33,6 +35,26 @@ func (ae *ActionExecutor) Execute(
 	params map[string]interface{},
 ) (sql.Result, error) {
 	startTime := time.Now()
+
+	// Check if MockFile is specified and exists
+	if action.MockFile != "" {
+		if mockResult, err := ae.loadMockFile(action.MockFile); err == nil {
+			rowsAffected, _ := mockResult.RowsAffected()
+			ae.logger.Debug("Mock action executed successfully",
+				"actionId", action.Id,
+				"mockFile", action.MockFile,
+				"rowsAffected", rowsAffected,
+				"duration_ms", time.Since(startTime).Milliseconds(),
+			)
+			return mockResult, nil
+		} else if !os.IsNotExist(err) {
+			ae.logger.Warn("Mock file error, falling back to database action",
+				"actionId", action.Id,
+				"mockFile", action.MockFile,
+				"error", err,
+			)
+		}
+	}
 
 	// Extract expected parameters from SQL
 	expectedParams := ExtractParameters(action.SQL)
@@ -174,4 +196,42 @@ func (ae *ActionExecutor) sanitizeParams(params map[string]interface{}) map[stri
 	}
 
 	return sanitized
+}
+
+// MockResult implements sql.Result for mock action execution
+type MockResult struct {
+	rowsAffected int64
+	lastInsertId int64
+}
+
+func (mr *MockResult) LastInsertId() (int64, error) {
+	return mr.lastInsertId, nil
+}
+
+func (mr *MockResult) RowsAffected() (int64, error) {
+	return mr.rowsAffected, nil
+}
+
+// MockActionResponse represents the structure of mock action response
+type MockActionResponse struct {
+	RowsAffected int64 `json:"rowsAffected"`
+	LastInsertId int64 `json:"lastInsertId"`
+}
+
+// loadMockFile loads mock action response from a JSON file
+func (ae *ActionExecutor) loadMockFile(filePath string) (*MockResult, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read mock file %s: %w", filePath, err)
+	}
+
+	var mockResponse MockActionResponse
+	if err := json.Unmarshal(data, &mockResponse); err != nil {
+		return nil, fmt.Errorf("failed to parse mock file %s as JSON: %w", filePath, err)
+	}
+
+	return &MockResult{
+		rowsAffected: mockResponse.RowsAffected,
+		lastInsertId: mockResponse.LastInsertId,
+	}, nil
 }
