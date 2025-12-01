@@ -10,8 +10,9 @@
 import { apiService } from './api'
 import { mockApiService } from './api.mock'
 
-// Check environment variable - defaults to false (use real API)
-const USE_MOCK_API = process.env.REACT_APP_USE_MOCK_API === 'true'
+// Check environment variable - defaults to true (use mock API)
+// Set to 'false' to use real API, or omit to use mock API
+const USE_MOCK_API = process.env.REACT_APP_USE_MOCK_API !== 'false'
 
 // Log which API is being used (helpful for debugging)
 if (typeof window !== 'undefined') {

@@ -24,62 +24,51 @@ import { mockApiService } from '../services/api.mock'
 const invoices = await mockApiService.getInvoices()
 ```
 
-## Switching Between Real and Mock API
+## Switching Between Real and Mock API (Recommended)
 
-### Option 1: Create an environment-based API selector
+The `api.config.ts` file provides automatic switching between real and mock APIs based on environment variables.
 
-Create a new file `api.config.ts`:
+### Usage in Components
 
-```typescript
-import { apiService } from './api'
-import { mockApiService } from './api.mock'
-
-const USE_MOCK_API = process.env.REACT_APP_USE_MOCK_API === 'true'
-
-export const api = USE_MOCK_API ? mockApiService : apiService
-```
-
-Then use in components:
+Import from `api.config`:
 ```typescript
 import { api } from '../services/api.config'
 
+// All calls automatically use the configured API
 const invoices = await api.getInvoices()
+const receipts = await api.getReceipts()
 ```
 
-### Option 2: Manual switching in components
+### Configuration
 
-In development, temporarily import mock service:
+The `REACT_APP_USE_MOCK_API` environment variable controls which API is used:
+- `true` (default) = Use mock API with sample data
+- `false` = Use real API at `REACT_APP_API_URL`
+- Not set = Defaults to mock API (true)
 
-```typescript
-// Comment out real API
-// import { apiService } from '../services/api'
-
-// Use mock API instead
-import { mockApiService as apiService } from '../services/api.mock'
+Update `.env` file:
 ```
-
-### Option 3: Environment variable approach (Recommended)
-
-Add to `.env` file:
-```
+REACT_APP_API_URL=http://localhost:8000/api/v1/x
 REACT_APP_USE_MOCK_API=true
 ```
 
-Then create `api.config.ts`:
+To use real API, set:
+```
+REACT_APP_USE_MOCK_API=false
+```
+
+### Alternative: Manual Switching (Not Recommended)
+
+If you need to manually switch APIs during development:
 
 ```typescript
-import { apiService } from './api'
-import { mockApiService } from './api.mock'
+// Use mock API
+import { mockApiService as apiService } from '../services/api.mock'
 
-const API = process.env.REACT_APP_USE_MOCK_API === 'true' ? mockApiService : apiService
+// Or use real API
+import { apiService } from '../services/api'
 
-export { API }
-```
-
-Update `.env.example`:
-```
-REACT_APP_API_URL=http://localhost:8000/api/v1/x
-REACT_APP_USE_MOCK_API=false
+const invoices = await apiService.getInvoices()
 ```
 
 ## Mock Data Features

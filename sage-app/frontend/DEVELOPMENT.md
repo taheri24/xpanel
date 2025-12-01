@@ -1,15 +1,28 @@
 # Development Guide
 
-## Running with Mock API
+## Quick Start (with Mock API - Default)
 
-For local development without a backend server, use the mock API:
+Mock API is enabled by default for local development without a backend server:
+
+### Step 1: Setup
+```bash
+cp .env.example .env
+npm install
+npm run dev
+```
+
+That's it! The application will use mock data with realistic 800ms delays to simulate network latency.
+
+## Running with Mock API (Explicit)
+
+If you want to explicitly enable mock API:
 
 ### Step 1: Copy environment file
 ```bash
 cp .env.example .env
 ```
 
-### Step 2: Enable mock API
+### Step 2: Ensure mock API is enabled
 Edit `.env`:
 ```
 REACT_APP_USE_MOCK_API=true
@@ -20,8 +33,6 @@ REACT_APP_API_URL=http://localhost:8000/api/v1/x
 ```bash
 npm run dev
 ```
-
-The application will now use mock data with realistic 800ms delays to simulate network latency.
 
 ## Using the API Configuration
 
@@ -38,8 +49,9 @@ const lineItems = await api.getLineItems()
 ```
 
 The environment variable `REACT_APP_USE_MOCK_API` controls which API is used:
-- `false` (default) = Use real API at `REACT_APP_API_URL`
-- `true` = Use mock API with sample data
+- `true` (default) = Use mock API with sample data
+- `false` = Use real API at `REACT_APP_API_URL`
+- Not set = Use mock API (defaults to true)
 
 ## Running with Real Backend
 
