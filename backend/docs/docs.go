@@ -243,7 +243,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/xfeatures": {
+        "/api/v1/x": {
             "get": {
                 "description": "Get information about available features",
                 "consumes": [
@@ -267,7 +267,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/xfeatures/{name}": {
+        "/api/v1/x/{name}": {
             "get": {
                 "description": "Retrieve metadata for a specific feature including backend and frontend structure",
                 "consumes": [
@@ -307,7 +307,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/xfeatures/{name}/actions/{actionId}": {
+        "/api/v1/x/{name}/actions/{actionId}": {
             "post": {
                 "description": "Execute an INSERT/UPDATE/DELETE action from a feature definition",
                 "consumes": [
@@ -378,7 +378,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/xfeatures/{name}/backend": {
+        "/api/v1/x/{name}/backend": {
             "get": {
                 "description": "Retrieve all backend queries and actions with their parameters for a feature",
                 "consumes": [
@@ -418,7 +418,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/xfeatures/{name}/frontend": {
+        "/api/v1/x/{name}/frontend": {
             "get": {
                 "description": "Retrieve all frontend elements (DataTables and Forms) for a feature",
                 "consumes": [
@@ -458,7 +458,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/xfeatures/{name}/mappings": {
+        "/api/v1/x/{name}/mappings": {
             "get": {
                 "description": "Resolve all mappings by executing ListQuery and converting to options",
                 "consumes": [
@@ -498,7 +498,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/xfeatures/{name}/queries/{queryId}": {
+        "/api/v1/x/{name}/queries/{queryId}": {
             "post": {
                 "description": "Execute a SELECT query from a feature definition with parameters",
                 "consumes": [

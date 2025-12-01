@@ -178,7 +178,7 @@ paths:
       summary: Update a user
       tags:
       - users
-  /api/v1/xfeatures:
+  /api/v1/x:
     get:
       consumes:
       - application/json
@@ -194,7 +194,7 @@ paths:
       summary: List available features
       tags:
       - xfeatures
-  /api/v1/xfeatures/{name}:
+  /api/v1/x/{name}:
     get:
       consumes:
       - application/json
@@ -222,7 +222,7 @@ paths:
       summary: Get feature metadata
       tags:
       - xfeatures
-  /api/v1/xfeatures/{name}/actions/{actionId}:
+  /api/v1/x/{name}/actions/{actionId}:
     post:
       consumes:
       - application/json
@@ -271,7 +271,7 @@ paths:
       summary: Execute a feature action
       tags:
       - xfeatures
-  /api/v1/xfeatures/{name}/backend:
+  /api/v1/x/{name}/backend:
     get:
       consumes:
       - application/json
@@ -299,7 +299,7 @@ paths:
       summary: Get backend information
       tags:
       - xfeatures
-  /api/v1/xfeatures/{name}/frontend:
+  /api/v1/x/{name}/frontend:
     get:
       consumes:
       - application/json
@@ -326,7 +326,7 @@ paths:
       summary: Get frontend elements
       tags:
       - xfeatures
-  /api/v1/xfeatures/{name}/mappings:
+  /api/v1/x/{name}/mappings:
     get:
       consumes:
       - application/json
@@ -353,7 +353,7 @@ paths:
       summary: Resolve feature mappings
       tags:
       - xfeatures
-  /api/v1/xfeatures/{name}/queries/{queryId}:
+  /api/v1/x/{name}/queries/{queryId}:
     post:
       consumes:
       - application/json

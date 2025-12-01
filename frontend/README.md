@@ -272,14 +272,14 @@ The XFeature system enables dynamic UI generation from feature definitions. Feat
 
 #### Get Feature Definition
 ```
-GET /api/v1/xfeatures/:name
+GET /api/v1/x/:name
 ```
 
 Returns complete XFeature definition including backend queries/actions and frontend forms/tables.
 
 #### Get All Frontend Elements
 ```
-GET /api/v1/xfeatures/:name/frontend
+GET /api/v1/x/:name/frontend
 ```
 
 Returns only frontend elements (forms and data tables) for a feature. Useful for rendering complete UI without backend logic definitions.
