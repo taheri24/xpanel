@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/taheri24/xpanel/backend/internal/handlers"
 	"github.com/taheri24/xpanel/backend/internal/middleware"
 	"github.com/taheri24/xpanel/backend/pkg/config"
@@ -58,7 +58,7 @@ func NewRouter(params RouterParams) *gin.Engine {
 		}
 
 		// XFeature routes
-		xfeatures := v1.Group("/xfeatures")
+		xfeatures := v1.Group("/x")
 		{
 			xfeatures.GET("", params.XFeatureHandler.ListFeatures)
 			xfeatures.GET("/:name", params.XFeatureHandler.GetFeature)
