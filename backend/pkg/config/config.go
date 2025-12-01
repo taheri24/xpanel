@@ -12,6 +12,7 @@ import (
 type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
+	Feature  FeatureConfig
 }
 
 type ServerConfig struct {
@@ -26,6 +27,11 @@ type DatabaseConfig struct {
 	User     string
 	Password string
 	Database string
+}
+
+type FeatureConfig struct {
+	XFeatureFileLocation string
+	MockFileLocation     string
 }
 
 func Load() (*Config, error) {
@@ -46,6 +52,10 @@ func Load() (*Config, error) {
 			User:     getEnv("DB_USER", "sa"),
 			Password: getEnv("DB_PASSWORD", ""),
 			Database: getEnv("DB_NAME", "xpanel"),
+		},
+		Feature: FeatureConfig{
+			XFeatureFileLocation: getEnv("XFEATURE_FILE_LOCATION", "specs/xfeature/"),
+			MockFileLocation:     getEnv("MOCK_FILE_LOCATION", "specs/mock/"),
 		},
 	}
 

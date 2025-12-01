@@ -15,7 +15,8 @@ import (
 
 // QueryExecutor handles execution of SELECT queries
 type QueryExecutor struct {
-	logger *slog.Logger
+	logger           *slog.Logger
+	mockFileLocation string
 }
 
 // NewQueryExecutor creates a new query executor
@@ -23,7 +24,18 @@ func NewQueryExecutor(logger *slog.Logger) *QueryExecutor {
 	if logger == nil {
 		logger = slog.Default()
 	}
-	return &QueryExecutor{logger: logger}
+	return &QueryExecutor{logger: logger, mockFileLocation: "specs/mock/"}
+}
+
+// NewQueryExecutorWithLocation creates a new query executor with a custom mock file location
+func NewQueryExecutorWithLocation(logger *slog.Logger, mockFileLocation string) *QueryExecutor {
+	if logger == nil {
+		logger = slog.Default()
+	}
+	if mockFileLocation == "" {
+		mockFileLocation = "specs/mock/"
+	}
+	return &QueryExecutor{logger: logger, mockFileLocation: mockFileLocation}
 }
 
 // Execute runs a SELECT query and returns results as slice of maps
@@ -192,6 +204,11 @@ func (qe *QueryExecutor) buildArgs(sql string, params map[string]interface{}, dr
 
 // loadMockFile loads mock data from a JSON file
 func (qe *QueryExecutor) loadMockFile(filePath string) ([]map[string]interface{}, error) {
+	// If the path doesn't contain path separators, use the configured location
+	if !strings.Contains(filePath, "/") && !strings.Contains(filePath, "\\") {
+		filePath = qe.mockFileLocation + filePath
+	}
+
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read mock file %s: %w", filePath, err)
