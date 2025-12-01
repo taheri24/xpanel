@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Table,
   TableBody,
@@ -10,66 +10,41 @@ import {
   TablePagination,
   TableSortLabel,
   Box,
-  TextField
+  TextField,
+  CircularProgress,
+  Alert
 } from '@mui/material'
-
-interface Invoice {
-  satici_vergiNo: string
-  faturaNo: string
-  faturaTarihi: string
-  faturaTuru: string
-  faturaTipi: string
-  paraBirimi: string
-  Toplam: number
-  vergi: number
-  odenecekTutar: number
-}
-
-// Sample data
-const SAMPLE_INVOICES: Invoice[] = [
-  {
-    satici_vergiNo: '1234567890',
-    faturaNo: 'INV-001',
-    faturaTarihi: '2024-11-01',
-    faturaTuru: 'Standard',
-    faturaTipi: 'Purchase',
-    paraBirimi: 'TRY',
-    Toplam: 1000.00,
-    vergi: 180.00,
-    odenecekTutar: 1180.00
-  },
-  {
-    satici_vergiNo: '0987654321',
-    faturaNo: 'INV-002',
-    faturaTarihi: '2024-11-02',
-    faturaTuru: 'Credit',
-    faturaTipi: 'Purchase',
-    paraBirimi: 'TRY',
-    Toplam: 2500.00,
-    vergi: 450.00,
-    odenecekTutar: 2950.00
-  },
-  {
-    satici_vergiNo: '1122334455',
-    faturaNo: 'INV-003',
-    faturaTarihi: '2024-11-03',
-    faturaTuru: 'Debit',
-    faturaTipi: 'Purchase',
-    paraBirimi: 'USD',
-    Toplam: 5000.00,
-    vergi: 800.00,
-    odenecekTutar: 5800.00
-  }
-]
+import { apiService, Invoice } from '../services/api'
 
 type Order = 'asc' | 'desc'
 
 export default function InvoicesTable() {
+  const [data, setData] = useState<Invoice[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [order, setOrder] = useState<Order>('desc')
   const [orderBy, setOrderBy] = useState<string>('faturaTarihi')
   const [searchTerm, setSearchTerm] = useState('')
+
+  useEffect(() => {
+    fetchInvoices()
+  }, [])
+
+  const fetchInvoices = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const invoices = await apiService.getInvoices()
+      setData(invoices)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch invoices')
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleRequestSort = (property: string) => {
     const isAsc = orderBy === property && order === 'asc'
@@ -86,7 +61,7 @@ export default function InvoicesTable() {
     setPage(0)
   }
 
-  const filteredData = SAMPLE_INVOICES.filter(invoice =>
+  const filteredData = data.filter(invoice =>
     Object.values(invoice).some(val =>
       String(val).toLowerCase().includes(searchTerm.toLowerCase())
     )
@@ -111,6 +86,16 @@ export default function InvoicesTable() {
 
   return (
     <Box>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+          <Box sx={{ mt: 1 }}>
+            <button onClick={fetchInvoices} style={{ cursor: 'pointer' }}>
+              Retry
+            </button>
+          </Box>
+        </Alert>
+      )}
       <Box sx={{ mb: 2 }}>
         <TextField
           placeholder="Search invoices..."
@@ -122,12 +107,20 @@ export default function InvoicesTable() {
             setPage(0)
           }}
           sx={{ width: '100%', maxWidth: 300 }}
+          disabled={loading}
         />
       </Box>
-      <TableContainer component={Paper} sx={{ backgroundColor: '#2a2a2a' }}>
-        <Table sx={{ minWidth: 750 }}>
-          <TableHead>
-            <TableRow sx={{ backgroundColor: '#1a1a1a' }}>
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress />
+        </Box>
+      )}
+      {!loading && (
+        <>
+          <TableContainer component={Paper} sx={{ backgroundColor: '#2a2a2a' }}>
+            <Table sx={{ minWidth: 750 }}>
+              <TableHead>
+                <TableRow sx={{ backgroundColor: '#1a1a1a' }}>
               <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>
                 <TableSortLabel
                   active={orderBy === 'satici_vergiNo'}
@@ -224,18 +217,20 @@ export default function InvoicesTable() {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
-      </TableContainer>
-      <TablePagination
-        rowsPerPageOptions={[5, 10, 25]}
-        component="div"
-        count={filteredData.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-        sx={{ backgroundColor: '#2a2a2a', color: '#ccc' }}
-      />
+          </Table>
+          </TableContainer>
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={filteredData.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            sx={{ backgroundColor: '#2a2a2a', color: '#ccc' }}
+          />
+        </>
+      )}
     </Box>
   )
 }

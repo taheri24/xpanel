@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Table,
   TableBody,
@@ -10,47 +10,41 @@ import {
   TablePagination,
   TableSortLabel,
   Box,
-  TextField
+  TextField,
+  CircularProgress,
+  Alert
 } from '@mui/material'
-
-interface Receipt {
-  PTHNUM_0: string
-  BPSNDE_0: string
-  RCPDAT_0: string
-}
-
-// Sample data
-const SAMPLE_RECEIPTS: Receipt[] = [
-  {
-    PTHNUM_0: 'RCP-2024-001',
-    BPSNDE_0: 'INV-001',
-    RCPDAT_0: '2024-11-01'
-  },
-  {
-    PTHNUM_0: 'RCP-2024-002',
-    BPSNDE_0: 'INV-002',
-    RCPDAT_0: '2024-11-02'
-  },
-  {
-    PTHNUM_0: 'RCP-2024-003',
-    BPSNDE_0: 'INV-003',
-    RCPDAT_0: '2024-11-03'
-  },
-  {
-    PTHNUM_0: 'RCP-2024-004',
-    BPSNDE_0: 'INV-004',
-    RCPDAT_0: '2024-11-04'
-  }
-]
+import { apiService, Receipt } from '../services/api'
 
 type Order = 'asc' | 'desc'
 
 export default function ReceiptsTable() {
+  const [data, setData] = useState<Receipt[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [order, setOrder] = useState<Order>('desc')
   const [orderBy, setOrderBy] = useState<string>('RCPDAT_0')
   const [searchTerm, setSearchTerm] = useState('')
+
+  useEffect(() => {
+    fetchReceipts()
+  }, [])
+
+  const fetchReceipts = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const receipts = await apiService.getReceipts()
+      setData(receipts)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch receipts')
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleRequestSort = (property: string) => {
     const isAsc = orderBy === property && order === 'asc'
@@ -67,7 +61,7 @@ export default function ReceiptsTable() {
     setPage(0)
   }
 
-  const filteredData = SAMPLE_RECEIPTS.filter(receipt =>
+  const filteredData = data.filter(receipt =>
     Object.values(receipt).some(val =>
       String(val).toLowerCase().includes(searchTerm.toLowerCase())
     )
@@ -88,6 +82,16 @@ export default function ReceiptsTable() {
 
   return (
     <Box>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+          <Box sx={{ mt: 1 }}>
+            <button onClick={fetchReceipts} style={{ cursor: 'pointer' }}>
+              Retry
+            </button>
+          </Box>
+        </Alert>
+      )}
       <Box sx={{ mb: 2 }}>
         <TextField
           placeholder="Search receipts..."
@@ -99,9 +103,17 @@ export default function ReceiptsTable() {
             setPage(0)
           }}
           sx={{ width: '100%', maxWidth: 300 }}
+          disabled={loading}
         />
       </Box>
-      <TableContainer component={Paper} sx={{ backgroundColor: '#2a2a2a' }}>
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress />
+        </Box>
+      )}
+      {!loading && (
+        <>
+          <TableContainer component={Paper} sx={{ backgroundColor: '#2a2a2a' }}>
         <Table sx={{ minWidth: 650 }}>
           <TableHead>
             <TableRow sx={{ backgroundColor: '#1a1a1a' }}>
@@ -146,18 +158,20 @@ export default function ReceiptsTable() {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
-      </TableContainer>
-      <TablePagination
-        rowsPerPageOptions={[5, 10, 25]}
-        component="div"
-        count={filteredData.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-        sx={{ backgroundColor: '#2a2a2a', color: '#ccc' }}
-      />
+          </Table>
+          </TableContainer>
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={filteredData.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            sx={{ backgroundColor: '#2a2a2a', color: '#ccc' }}
+          />
+        </>
+      )}
     </Box>
   )
 }

@@ -93,6 +93,71 @@ Displays line items from both Sage and Portal invoices with columns:
 - Quantity
 - Source (Sage or Portal)
 
+### API Service
+
+The frontend includes a complete API service (`src/services/api.ts`) that handles all communication with the backend. The service provides the following functions:
+
+- `apiService.getInvoices()` - Fetch all invoices
+- `apiService.getInvoiceDetails(invoiceNo)` - Fetch single invoice
+- `apiService.getReceipts()` - Fetch all receipts
+- `apiService.getReceiptDetails(invoiceNo)` - Fetch single receipt
+- `apiService.getLineItems()` - Fetch all line items
+- `apiService.getLineItemsByInvoice(invoiceNo)` - Fetch line items for invoice
+
+Each component uses React hooks (`useEffect`, `useState`) to:
+- Fetch data on mount
+- Manage loading and error states
+- Display loading spinner while fetching
+- Show error alerts with retry button
+- Disable search while loading
+
+### API Configuration
+
+Configure the API endpoint by creating a `.env` file in the `frontend` directory:
+
+```bash
+cd frontend
+cp .env.example .env
+```
+
+Then edit `.env` and set the API URL:
+```
+REACT_APP_API_URL=http://localhost:8000/api
+```
+
+### Required API Endpoints
+
+The backend API should provide the following endpoints:
+
+#### Invoices
+- `GET /api/invoices` - List all invoices
+- `GET /api/invoices/:invoiceNo` - Get single invoice details
+
+#### Receipts
+- `GET /api/receipts` - List all receipts
+- `GET /api/receipts/:invoiceNo` - Get receipt details by invoice number
+
+#### Line Items
+- `GET /api/line-items` - List all line items
+- `GET /api/line-items/:invoiceNo` - Get line items for specific invoice
+
+All endpoints should return responses in this format:
+```json
+{
+  "success": true,
+  "data": [...],
+  "message": "optional success message"
+}
+```
+
+On error:
+```json
+{
+  "success": false,
+  "error": "error message"
+}
+```
+
 ### Running the Frontend
 
 ```bash
@@ -122,7 +187,10 @@ The application queries are designed to work with the following SQL Server table
 
 ## Notes
 
-- Currently uses sample/mock data for demonstration
+- API calls are fully integrated with error handling and loading states
 - Tables support sorting, pagination, and searching
 - All data tables use MUI's standard DataTable components
-- No API calls are implemented (uses static sample data)
+- Features error alerts with retry functionality
+- Loading spinners display while fetching data
+- Full TypeScript type safety for API responses
+- Environment-based API URL configuration

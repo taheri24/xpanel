@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Table,
   TableBody,
@@ -10,58 +10,41 @@ import {
   TablePagination,
   TableSortLabel,
   Box,
-  TextField
+  TextField,
+  CircularProgress,
+  Alert
 } from '@mui/material'
-
-interface LineItem {
-  ITMREF_0: string
-  ITMDES_0: string
-  QTYSTU_0: number
-  loc: string
-}
-
-// Sample data
-const SAMPLE_LINE_ITEMS: LineItem[] = [
-  {
-    ITMREF_0: 'ITEM-001',
-    ITMDES_0: 'Office Supplies',
-    QTYSTU_0: 100,
-    loc: 'Recipt_Sage'
-  },
-  {
-    ITMREF_0: 'ITEM-002',
-    ITMDES_0: 'Electronic Equipment',
-    QTYSTU_0: 5,
-    loc: 'Recipt_Sage'
-  },
-  {
-    ITMREF_0: 'ITEM-003',
-    ITMDES_0: 'Consulting Services',
-    QTYSTU_0: 40,
-    loc: 'Recived_Invoice_Portal'
-  },
-  {
-    ITMREF_0: 'ITEM-004',
-    ITMDES_0: 'Software Licenses',
-    QTYSTU_0: 25,
-    loc: 'Recipt_Sage'
-  },
-  {
-    ITMREF_0: 'ITEM-005',
-    ITMDES_0: 'Hardware Components',
-    QTYSTU_0: 15,
-    loc: 'Recived_Invoice_Portal'
-  }
-]
+import { apiService, LineItem } from '../services/api'
 
 type Order = 'asc' | 'desc'
 
 export default function LineItemsTable() {
+  const [data, setData] = useState<LineItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [order, setOrder] = useState<Order>('asc')
   const [orderBy, setOrderBy] = useState<string>('ITMREF_0')
   const [searchTerm, setSearchTerm] = useState('')
+
+  useEffect(() => {
+    fetchLineItems()
+  }, [])
+
+  const fetchLineItems = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const lineItems = await apiService.getLineItems()
+      setData(lineItems)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch line items')
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleRequestSort = (property: string) => {
     const isAsc = orderBy === property && order === 'asc'
@@ -78,7 +61,7 @@ export default function LineItemsTable() {
     setPage(0)
   }
 
-  const filteredData = SAMPLE_LINE_ITEMS.filter(item =>
+  const filteredData = data.filter(item =>
     Object.values(item).some(val =>
       String(val).toLowerCase().includes(searchTerm.toLowerCase())
     )
@@ -103,6 +86,16 @@ export default function LineItemsTable() {
 
   return (
     <Box>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+          <Box sx={{ mt: 1 }}>
+            <button onClick={fetchLineItems} style={{ cursor: 'pointer' }}>
+              Retry
+            </button>
+          </Box>
+        </Alert>
+      )}
       <Box sx={{ mb: 2 }}>
         <TextField
           placeholder="Search line items..."
@@ -114,9 +107,17 @@ export default function LineItemsTable() {
             setPage(0)
           }}
           sx={{ width: '100%', maxWidth: 300 }}
+          disabled={loading}
         />
       </Box>
-      <TableContainer component={Paper} sx={{ backgroundColor: '#2a2a2a' }}>
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress />
+        </Box>
+      )}
+      {!loading && (
+        <>
+          <TableContainer component={Paper} sx={{ backgroundColor: '#2a2a2a' }}>
         <Table sx={{ minWidth: 750 }}>
           <TableHead>
             <TableRow sx={{ backgroundColor: '#1a1a1a' }}>
@@ -172,18 +173,20 @@ export default function LineItemsTable() {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
-      </TableContainer>
-      <TablePagination
-        rowsPerPageOptions={[5, 10, 25]}
-        component="div"
-        count={filteredData.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-        sx={{ backgroundColor: '#2a2a2a', color: '#ccc' }}
-      />
+          </Table>
+          </TableContainer>
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={filteredData.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            sx={{ backgroundColor: '#2a2a2a', color: '#ccc' }}
+          />
+        </>
+      )}
     </Box>
   )
 }
