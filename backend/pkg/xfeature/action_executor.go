@@ -16,7 +16,8 @@ import (
 
 // ActionExecutor handles execution of INSERT/UPDATE/DELETE actions
 type ActionExecutor struct {
-	logger *slog.Logger
+	logger           *slog.Logger
+	mockFileLocation string
 }
 
 // NewActionExecutor creates a new action executor
@@ -24,7 +25,18 @@ func NewActionExecutor(logger *slog.Logger) *ActionExecutor {
 	if logger == nil {
 		logger = slog.Default()
 	}
-	return &ActionExecutor{logger: logger}
+	return &ActionExecutor{logger: logger, mockFileLocation: "specs/mock/"}
+}
+
+// NewActionExecutorWithLocation creates a new action executor with a custom mock file location
+func NewActionExecutorWithLocation(logger *slog.Logger, mockFileLocation string) *ActionExecutor {
+	if logger == nil {
+		logger = slog.Default()
+	}
+	if mockFileLocation == "" {
+		mockFileLocation = "specs/mock/"
+	}
+	return &ActionExecutor{logger: logger, mockFileLocation: mockFileLocation}
 }
 
 // Execute runs an INSERT/UPDATE/DELETE action
@@ -220,6 +232,11 @@ type MockActionResponse struct {
 
 // loadMockFile loads mock action response from a JSON file
 func (ae *ActionExecutor) loadMockFile(filePath string) (*MockResult, error) {
+	// If the path doesn't contain path separators, use the configured location
+	if !strings.Contains(filePath, "/") && !strings.Contains(filePath, "\\") {
+		filePath = ae.mockFileLocation + filePath
+	}
+
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read mock file %s: %w", filePath, err)
