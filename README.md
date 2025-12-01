@@ -165,6 +165,18 @@ VITE_API_BASE_URL=http://localhost:8080/api/v1
 - `PUT /api/v1/users/:id` - Update a user
 - `DELETE /api/v1/users/:id` - Delete a user
 
+### XFeature Endpoints (Dynamic Queries & Actions)
+
+- `GET /api/v1/xfeatures` - List available features
+- `GET /api/v1/xfeatures/{name}` - Get feature metadata
+- `GET /api/v1/xfeatures/{name}/backend` - Get all queries and actions
+- `GET /api/v1/xfeatures/{name}/frontend` - Get frontend forms and data tables
+- `POST /api/v1/xfeatures/{name}/queries/{queryId}` - Execute a SELECT query
+- `POST /api/v1/xfeatures/{name}/actions/{actionId}` - Execute an INSERT/UPDATE/DELETE action
+- `GET /api/v1/xfeatures/{name}/mappings` - Resolve feature mappings
+
+**XFeature supports mock data** via the optional `MockFile` attribute. Define mock JSON files to test API endpoints without database dependencies. See [backend/README.md](backend/README.md#xfeature-system) for detailed documentation.
+
 ## Testing
 
 ### Backend Tests
@@ -284,6 +296,12 @@ For issues and questions:
 - Contact the development team
 
 ## Changelog
+
+### 2025-12-01
+- **Feature**: Added MockFile attribute to XFeature Query and ActionQuery elements
+- **Backend**: Implemented mock data support in QueryExecutor and ActionExecutor
+- **Schema**: Updated feature-schema.xsd to include optional MockFile attribute
+- **Documentation**: Added comprehensive XFeature MockFile usage guide
 
 ### 2025-11-25
 - Initial project setup
