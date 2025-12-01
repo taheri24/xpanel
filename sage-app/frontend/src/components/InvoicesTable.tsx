@@ -12,13 +12,15 @@ import {
   Box,
   TextField,
   CircularProgress,
-  Alert
+  Alert,
+  useTheme
 } from '@mui/material'
 import { apiService, Invoice } from '../services/api'
 
 type Order = 'asc' | 'desc'
 
 export default function InvoicesTable() {
+  const theme = useTheme()
   const [data, setData] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -117,26 +119,26 @@ export default function InvoicesTable() {
       )}
       {!loading && (
         <>
-          <TableContainer component={Paper} sx={{ backgroundColor: '#2a2a2a' }}>
+          <TableContainer component={Paper} sx={{ backgroundColor: theme.palette.background.paper }}>
             <Table sx={{ minWidth: 750 }}>
               <TableHead>
-                <TableRow sx={{ backgroundColor: '#1a1a1a' }}>
-              <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>
+                <TableRow sx={{ backgroundColor: theme.palette.mode === 'light' ? '#f5f5f5' : '#2a2a2a' }}>
+              <TableCell sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>
                 <TableSortLabel
                   active={orderBy === 'satici_vergiNo'}
                   direction={orderBy === 'satici_vergiNo' ? order : 'asc'}
                   onClick={() => handleRequestSort('satici_vergiNo')}
-                  sx={{ color: '#fff' }}
+                  sx={{ color: theme.palette.text.primary }}
                 >
                   Vendor Tax ID
                 </TableSortLabel>
               </TableCell>
-              <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>
+              <TableCell sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>
                 <TableSortLabel
                   active={orderBy === 'faturaNo'}
                   direction={orderBy === 'faturaNo' ? order : 'asc'}
                   onClick={() => handleRequestSort('faturaNo')}
-                  sx={{ color: '#fff' }}
+                  sx={{ color: theme.palette.text.primary }}
                 >
                   Invoice No
                 </TableSortLabel>
@@ -146,7 +148,7 @@ export default function InvoicesTable() {
                   active={orderBy === 'faturaTarihi'}
                   direction={orderBy === 'faturaTarihi' ? order : 'asc'}
                   onClick={() => handleRequestSort('faturaTarihi')}
-                  sx={{ color: '#fff' }}
+                  sx={{ color: theme.palette.text.primary }}
                 >
                   Invoice Date
                 </TableSortLabel>
@@ -156,7 +158,7 @@ export default function InvoicesTable() {
                   active={orderBy === 'faturaTuru'}
                   direction={orderBy === 'faturaTuru' ? order : 'asc'}
                   onClick={() => handleRequestSort('faturaTuru')}
-                  sx={{ color: '#fff' }}
+                  sx={{ color: theme.palette.text.primary }}
                 >
                   Type
                 </TableSortLabel>
@@ -176,7 +178,7 @@ export default function InvoicesTable() {
                   active={orderBy === 'Toplam'}
                   direction={orderBy === 'Toplam' ? order : 'asc'}
                   onClick={() => handleRequestSort('Toplam')}
-                  sx={{ color: '#fff' }}
+                  sx={{ color: theme.palette.text.primary }}
                 >
                   Total Goods/Services
                 </TableSortLabel>
@@ -186,7 +188,7 @@ export default function InvoicesTable() {
                   active={orderBy === 'vergi'}
                   direction={orderBy === 'vergi' ? order : 'asc'}
                   onClick={() => handleRequestSort('vergi')}
-                  sx={{ color: '#fff' }}
+                  sx={{ color: theme.palette.text.primary }}
                 >
                   Tax Amount
                 </TableSortLabel>
@@ -196,7 +198,7 @@ export default function InvoicesTable() {
                   active={orderBy === 'odenecekTutar'}
                   direction={orderBy === 'odenecekTutar' ? order : 'asc'}
                   onClick={() => handleRequestSort('odenecekTutar')}
-                  sx={{ color: '#fff' }}
+                  sx={{ color: theme.palette.text.primary }}
                 >
                   Total Payable
                 </TableSortLabel>
@@ -205,15 +207,15 @@ export default function InvoicesTable() {
           </TableHead>
           <TableBody>
             {displayedData.map((row, index) => (
-              <TableRow key={index} sx={{ '&:hover': { backgroundColor: '#3a3a3a' } }}>
-                <TableCell sx={{ color: '#ccc' }}>{row.satici_vergiNo}</TableCell>
-                <TableCell sx={{ color: '#ccc' }}>{row.faturaNo}</TableCell>
-                <TableCell sx={{ color: '#ccc' }}>{row.faturaTarihi}</TableCell>
-                <TableCell sx={{ color: '#ccc' }}>{row.faturaTuru}</TableCell>
-                <TableCell align="center" sx={{ color: '#ccc' }}>{row.paraBirimi}</TableCell>
-                <TableCell align="right" sx={{ color: '#ccc' }}>{row.Toplam.toFixed(2)}</TableCell>
-                <TableCell align="right" sx={{ color: '#ccc' }}>{row.vergi.toFixed(2)}</TableCell>
-                <TableCell align="right" sx={{ color: '#ccc' }}>{row.odenecekTutar.toFixed(2)}</TableCell>
+              <TableRow key={index} sx={{ '&:hover': { backgroundColor: theme.palette.mode === 'light' ? '#eeeeee' : '#3a3a3a' } }}>
+                <TableCell sx={{ color: theme.palette.text.primary }}>{row.satici_vergiNo}</TableCell>
+                <TableCell sx={{ color: theme.palette.text.primary }}>{row.faturaNo}</TableCell>
+                <TableCell sx={{ color: theme.palette.text.primary }}>{row.faturaTarihi}</TableCell>
+                <TableCell sx={{ color: theme.palette.text.primary }}>{row.faturaTuru}</TableCell>
+                <TableCell align="center" sx={{ color: theme.palette.text.secondary }}>{row.paraBirimi}</TableCell>
+                <TableCell align="right" sx={{ color: theme.palette.text.secondary }}>{row.Toplam.toFixed(2)}</TableCell>
+                <TableCell align="right" sx={{ color: theme.palette.text.secondary }}>{row.vergi.toFixed(2)}</TableCell>
+                <TableCell align="right" sx={{ color: theme.palette.text.secondary }}>{row.odenecekTutar.toFixed(2)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -227,7 +229,7 @@ export default function InvoicesTable() {
             page={page}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
-            sx={{ backgroundColor: '#2a2a2a', color: '#ccc' }}
+            sx={{ backgroundColor: theme.palette.background.paper, color: theme.palette.text.primary }}
           />
         </>
       )}

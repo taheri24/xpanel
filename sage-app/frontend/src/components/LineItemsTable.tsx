@@ -12,13 +12,15 @@ import {
   Box,
   TextField,
   CircularProgress,
-  Alert
+  Alert,
+  useTheme
 } from '@mui/material'
 import { apiService, LineItem } from '../services/api'
 
 type Order = 'asc' | 'desc'
 
 export default function LineItemsTable() {
+  const theme = useTheme()
   const [data, setData] = useState<LineItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -117,26 +119,26 @@ export default function LineItemsTable() {
       )}
       {!loading && (
         <>
-          <TableContainer component={Paper} sx={{ backgroundColor: '#2a2a2a' }}>
+          <TableContainer component={Paper} sx={{ backgroundColor: theme.palette.background.paper }}>
         <Table sx={{ minWidth: 750 }}>
           <TableHead>
-            <TableRow sx={{ backgroundColor: '#1a1a1a' }}>
-              <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>
+            <TableRow sx={{ backgroundColor: theme.palette.mode === 'light' ? '#f5f5f5' : '#2a2a2a' }}>
+              <TableCell sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>
                 <TableSortLabel
                   active={orderBy === 'ITMREF_0'}
                   direction={orderBy === 'ITMREF_0' ? order : 'asc'}
                   onClick={() => handleRequestSort('ITMREF_0')}
-                  sx={{ color: '#fff' }}
+                  sx={{ color: theme.palette.text.primary }}
                 >
                   Product Code
                 </TableSortLabel>
               </TableCell>
-              <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>
+              <TableCell sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>
                 <TableSortLabel
                   active={orderBy === 'ITMDES_0'}
                   direction={orderBy === 'ITMDES_0' ? order : 'asc'}
                   onClick={() => handleRequestSort('ITMDES_0')}
-                  sx={{ color: '#fff' }}
+                  sx={{ color: theme.palette.text.primary }}
                 >
                   Product Description
                 </TableSortLabel>
@@ -146,17 +148,17 @@ export default function LineItemsTable() {
                   active={orderBy === 'QTYSTU_0'}
                   direction={orderBy === 'QTYSTU_0' ? order : 'asc'}
                   onClick={() => handleRequestSort('QTYSTU_0')}
-                  sx={{ color: '#fff' }}
+                  sx={{ color: theme.palette.text.primary }}
                 >
                   Quantity
                 </TableSortLabel>
               </TableCell>
-              <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>
+              <TableCell sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>
                 <TableSortLabel
                   active={orderBy === 'loc'}
                   direction={orderBy === 'loc' ? order : 'asc'}
                   onClick={() => handleRequestSort('loc')}
-                  sx={{ color: '#fff' }}
+                  sx={{ color: theme.palette.text.primary }}
                 >
                   Source
                 </TableSortLabel>
@@ -165,11 +167,11 @@ export default function LineItemsTable() {
           </TableHead>
           <TableBody>
             {displayedData.map((row, index) => (
-              <TableRow key={index} sx={{ '&:hover': { backgroundColor: '#3a3a3a' } }}>
-                <TableCell sx={{ color: '#ccc' }}>{row.ITMREF_0}</TableCell>
-                <TableCell sx={{ color: '#ccc' }}>{row.ITMDES_0}</TableCell>
+              <TableRow key={index} sx={{ '&:hover': { backgroundColor: theme.palette.mode === 'light' ? '#eeeeee' : '#3a3a3a' } }}>
+                <TableCell sx={{ color: theme.palette.text.primary }}>{row.ITMREF_0}</TableCell>
+                <TableCell sx={{ color: theme.palette.text.primary }}>{row.ITMDES_0}</TableCell>
                 <TableCell align="right" sx={{ color: '#ccc' }}>{row.QTYSTU_0}</TableCell>
-                <TableCell sx={{ color: '#ccc' }}>{row.loc}</TableCell>
+                <TableCell sx={{ color: theme.palette.text.primary }}>{row.loc}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -183,7 +185,7 @@ export default function LineItemsTable() {
             page={page}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
-            sx={{ backgroundColor: '#2a2a2a', color: '#ccc' }}
+            sx={{ backgroundColor: theme.palette.background.paper, color: theme.palette.text.primary }}
           />
         </>
       )}

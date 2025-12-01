@@ -12,13 +12,15 @@ import {
   Box,
   TextField,
   CircularProgress,
-  Alert
+  Alert,
+  useTheme
 } from '@mui/material'
 import { apiService, Receipt } from '../services/api'
 
 type Order = 'asc' | 'desc'
 
 export default function ReceiptsTable() {
+  const theme = useTheme()
   const [data, setData] = useState<Receipt[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -113,36 +115,36 @@ export default function ReceiptsTable() {
       )}
       {!loading && (
         <>
-          <TableContainer component={Paper} sx={{ backgroundColor: '#2a2a2a' }}>
+          <TableContainer component={Paper} sx={{ backgroundColor: theme.palette.background.paper }}>
         <Table sx={{ minWidth: 650 }}>
           <TableHead>
-            <TableRow sx={{ backgroundColor: '#1a1a1a' }}>
-              <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>
+            <TableRow sx={{ backgroundColor: theme.palette.mode === 'light' ? '#f5f5f5' : '#2a2a2a' }}>
+              <TableCell sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>
                 <TableSortLabel
                   active={orderBy === 'PTHNUM_0'}
                   direction={orderBy === 'PTHNUM_0' ? order : 'asc'}
                   onClick={() => handleRequestSort('PTHNUM_0')}
-                  sx={{ color: '#fff' }}
+                  sx={{ color: theme.palette.text.primary }}
                 >
                   Receipt Number
                 </TableSortLabel>
               </TableCell>
-              <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>
+              <TableCell sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>
                 <TableSortLabel
                   active={orderBy === 'BPSNDE_0'}
                   direction={orderBy === 'BPSNDE_0' ? order : 'asc'}
                   onClick={() => handleRequestSort('BPSNDE_0')}
-                  sx={{ color: '#fff' }}
+                  sx={{ color: theme.palette.text.primary }}
                 >
                   Invoice Number
                 </TableSortLabel>
               </TableCell>
-              <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>
+              <TableCell sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>
                 <TableSortLabel
                   active={orderBy === 'RCPDAT_0'}
                   direction={orderBy === 'RCPDAT_0' ? order : 'asc'}
                   onClick={() => handleRequestSort('RCPDAT_0')}
-                  sx={{ color: '#fff' }}
+                  sx={{ color: theme.palette.text.primary }}
                 >
                   Receipt Date
                 </TableSortLabel>
@@ -151,10 +153,10 @@ export default function ReceiptsTable() {
           </TableHead>
           <TableBody>
             {displayedData.map((row, index) => (
-              <TableRow key={index} sx={{ '&:hover': { backgroundColor: '#3a3a3a' } }}>
-                <TableCell sx={{ color: '#ccc' }}>{row.PTHNUM_0}</TableCell>
-                <TableCell sx={{ color: '#ccc' }}>{row.BPSNDE_0}</TableCell>
-                <TableCell sx={{ color: '#ccc' }}>{row.RCPDAT_0}</TableCell>
+              <TableRow key={index} sx={{ '&:hover': { backgroundColor: theme.palette.mode === 'light' ? '#eeeeee' : '#3a3a3a' } }}>
+                <TableCell sx={{ color: theme.palette.text.primary }}>{row.PTHNUM_0}</TableCell>
+                <TableCell sx={{ color: theme.palette.text.primary }}>{row.BPSNDE_0}</TableCell>
+                <TableCell sx={{ color: theme.palette.text.primary }}>{row.RCPDAT_0}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -168,7 +170,7 @@ export default function ReceiptsTable() {
             page={page}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
-            sx={{ backgroundColor: '#2a2a2a', color: '#ccc' }}
+            sx={{ backgroundColor: theme.palette.background.paper, color: theme.palette.text.primary }}
           />
         </>
       )}
