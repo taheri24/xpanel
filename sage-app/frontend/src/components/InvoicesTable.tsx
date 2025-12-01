@@ -14,7 +14,7 @@ import {
   CircularProgress,
   Alert
 } from '@mui/material'
-import { apiService, Invoice } from '../services/api'
+import { apiService, Invoice } from '../services/api.config'
 
 type Order = 'asc' | 'desc'
 
