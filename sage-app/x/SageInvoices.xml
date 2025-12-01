@@ -9,7 +9,7 @@
   <Backend>
 
     <!-- SELECT QUERIES: Data retrieval operations -->
-    <Query Id="ListInvoices" Type="Select" Description="Retrieve all purchase invoices with tax and payment details" MockFile="../frontend/src/data/mock-invoices.json">
+    <Query Id="ListInvoices" Type="Select" Description="Retrieve all purchase invoices with tax and payment details" MockFile="mock-invoices.json">
       <![CDATA[
         SELECT
           satici_vergiNo,
@@ -26,7 +26,7 @@
       ]]>
     </Query>
 
-    <Query Id="GetInvoiceDetails" Type="Select" Description="Retrieve single invoice details" MockFile="../frontend/src/data/mock-invoices.json">
+    <Query Id="GetInvoiceDetails" Type="Select" Description="Retrieve single invoice details" MockFile="mock-invoices.json">
       <![CDATA[
         SELECT
           satici_vergiNo,
