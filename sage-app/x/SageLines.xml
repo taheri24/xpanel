@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Feature Name="SageLines" Version="1.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="feature-schema.xsd">
+
+  <!-- ============================= -->
+  <!-- BACKEND ELEMENTS              -->
+  <!-- ============================= -->
+  <Backend>
+
+    <!-- SELECT QUERIES: Data retrieval operations -->
+    <Query Id="ListLineItems" Type="Select" Description="Retrieve all line items from Sage and Portal invoices">
+      <![CDATA[
+        SELECT
+          ITMREF_0 collate Latin1_General_BIN ITMREF_0,
+          ITMDES_0 collate Latin1_General_BIN ITMDES_0,
+          QTYSTU_0,
+          'Recipt_Sage' loc
+        FROM [TR-EDOCS].[dbo].[sagedbLIVEPRECEIPTD]
+        WHERE PTHNUM_0 = (
+          SELECT PTHNUM_0
+          FROM [TR-EDOCS].[dbo].[sagedbLIVEPRECEIPT]
+          WHERE BPSNDE_0 = :invoiceNo
+        )
+        UNION ALL
+        SELECT
+          saticiUrunKodu,
+          urunAdi,
+          miktar,
+          Recived_Invoice_Portal
+        FROM [TR-EDOCS].[dbo].[PUR_INVD]
+        WHERE belgeno = :invoiceNo
+        ORDER BY 3, 4
+      ]]>
+    </Query>
+
+    <Query Id="GetLineItemsByInvoice" Type="Select" Description="Retrieve line items for a specific invoice">
+      <![CDATA[
+        SELECT
+          ITMREF_0 collate Latin1_General_BIN ITMREF_0,
+          ITMDES_0 collate Latin1_General_BIN ITMDES_0,
+          QTYSTU_0,
+          'Recipt_Sage' loc
+        FROM [TR-EDOCS].[dbo].[sagedbLIVEPRECEIPTD]
+        WHERE PTHNUM_0 = (
+          SELECT PTHNUM_0
+          FROM [TR-EDOCS].[dbo].[sagedbLIVEPRECEIPT]
+          WHERE BPSNDE_0 = :invoiceNo
+        )
+        UNION ALL
+        SELECT
+          saticiUrunKodu,
+          urunAdi,
+          miktar,
+          Recived_Invoice_Portal
+        FROM [TR-EDOCS].[dbo].[PUR_INVD]
+        WHERE belgeno = :invoiceNo
+        ORDER BY 3, 4
+      ]]>
+    </Query>
+
+  </Backend>
+
+  <!-- ============================= -->
+  <!-- FRONTEND ELEMENTS             -->
+  <!-- ============================= -->
+  <Frontend>
+
+    <!-- DATA TABLES: Display data in tabular format -->
+    <DataTable Id="LineItemsTable" QueryRef="ListLineItems" Title="Invoice Line Items"
+               Pagination="true" PageSize="25" Sortable="true" Searchable="true">
+      <Column Name="ITMREF_0" Label="Product Code" Type="Text" Sortable="true" Width="150px"/>
+      <Column Name="ITMDES_0" Label="Product Description" Type="Text" Sortable="true"/>
+      <Column Name="QTYSTU_0" Label="Quantity" Type="Number" Sortable="true" Width="100px" Align="Right"/>
+      <Column Name="loc" Label="Source" Type="Text" Sortable="true" Width="150px" Align="Center"/>
+    </DataTable>
+
+  </Frontend>
+
+</Feature>

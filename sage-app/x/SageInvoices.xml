@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Feature Name="SageInvoices" Version="1.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="feature-schema.xsd">
+
+  <!-- ============================= -->
+  <!-- BACKEND ELEMENTS              -->
+  <!-- ============================= -->
+  <Backend>
+
+    <!-- SELECT QUERIES: Data retrieval operations -->
+    <Query Id="ListInvoices" Type="Select" Description="Retrieve all purchase invoices with tax and payment details">
+      <![CDATA[
+        SELECT
+          satici_vergiNo,
+          faturaNo,
+          faturaTarihi,
+          faturaTuru,
+          faturaTipi,
+          paraBirimi,
+          toplamMalHizmetMiktari Toplam,
+          odenecekTutar - toplamMalHizmetMiktari vergi,
+          odenecekTutar
+        FROM [TR-EDOCS].[dbo].[PUR_INVH]
+        ORDER BY faturaTarihi DESC
+      ]]>
+    </Query>
+
+    <Query Id="GetInvoiceDetails" Type="Select" Description="Retrieve single invoice details">
+      <![CDATA[
+        SELECT
+          satici_vergiNo,
+          faturaNo,
+          faturaTarihi,
+          faturaTuru,
+          faturaTipi,
+          paraBirimi,
+          toplamMalHizmetMiktari Toplam,
+          odenecekTutar - toplamMalHizmetMiktari vergi,
+          odenecekTutar
+        FROM [TR-EDOCS].[dbo].[PUR_INVH]
+        WHERE faturaNo = :invoiceNo
+      ]]>
+    </Query>
+
+  </Backend>
+
+  <!-- ============================= -->
+  <!-- FRONTEND ELEMENTS             -->
+  <!-- ============================= -->
+  <Frontend>
+
+    <!-- DATA TABLES: Display data in tabular format -->
+    <DataTable Id="InvoicesTable" QueryRef="ListInvoices" Title="Purchase Invoices"
+               Pagination="true" PageSize="20" Sortable="true" Searchable="true">
+      <Column Name="satici_vergiNo" Label="Vendor Tax ID" Type="Text" Sortable="true"/>
+      <Column Name="faturaNo" Label="Invoice No" Type="Text" Sortable="true" Width="120px"/>
+      <Column Name="faturaTarihi" Label="Invoice Date" Type="Date" Sortable="true" Width="120px"/>
+      <Column Name="faturaTuru" Label="Invoice Type" Type="Text" Sortable="true"/>
+      <Column Name="faturaTipi" Label="Invoice Category" Type="Text" Sortable="true"/>
+      <Column Name="paraBirimi" Label="Currency" Type="Text" Sortable="true" Width="80px" Align="Center"/>
+      <Column Name="Toplam" Label="Total Goods/Services" Type="Number" Sortable="true" Width="130px" Align="Right"/>
+      <Column Name="vergi" Label="Tax Amount" Type="Number" Sortable="true" Width="120px" Align="Right"/>
+      <Column Name="odenecekTutar" Label="Total Payable" Type="Number" Sortable="true" Width="130px" Align="Right"/>
+    </DataTable>
+
+  </Frontend>
+
+</Feature>
