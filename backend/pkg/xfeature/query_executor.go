@@ -17,6 +17,7 @@ import (
 type QueryExecutor struct {
 	logger           *slog.Logger
 	mockFileLocation string
+	LastMockFile     string
 }
 
 // NewQueryExecutor creates a new query executor
@@ -46,7 +47,7 @@ func (qe *QueryExecutor) Execute(
 	params map[string]interface{},
 ) ([]map[string]interface{}, error) {
 	startTime := time.Now()
-
+	qe.LastMockFile = ""
 	// Check if MockFile is specified and exists
 	if query.MockFile != "" {
 		if mockData, err := qe.loadMockFile(query.MockFile); err == nil {
@@ -81,8 +82,8 @@ func (qe *QueryExecutor) Execute(
 	sql = ConvertParametersForDriver(sql, driverName)
 
 	// Build args slice in the order of parameters used in SQL
-	args := qe.buildArgs(sql, params, driverName)
-
+	sql, args := qe.buildArgs(sql, params, driverName)
+	slog.Info("prequery", "args", args, "params", params, "sql", sql)
 	// Execute query
 	rows, err := db.QueryxContext(ctx, sql, args...)
 	if err != nil {
@@ -130,6 +131,7 @@ func (qe *QueryExecutor) Execute(
 		"rowCount", len(results),
 		"duration_ms", time.Since(startTime).Milliseconds(),
 		"params", params,
+		"args", args,
 	)
 
 	return results, nil
@@ -146,23 +148,21 @@ func (qe *QueryExecutor) validateParameters(required []string, provided map[stri
 }
 
 // buildArgs constructs the arguments slice for the query based on parameter order
-func (qe *QueryExecutor) buildArgs(sql string, params map[string]interface{}, driverName string) []interface{} {
-	var args []interface{}
-
+func (qe *QueryExecutor) buildArgs(sql string, params map[string]interface{}, driverName string) (string, []interface{}) {
+	var args []any
 	switch driverName {
 	case "sqlserver":
 		// For SQL Server, extract @param names in order
 		paramRegex := regexp.MustCompile(`@(\w+)`)
 		matches := paramRegex.FindAllStringSubmatch(sql, -1)
 
-		seen := make(map[string]bool)
+		//seen := make(map[string]bool)
 		for _, match := range matches {
 			paramName := match[1]
-			if !seen[paramName] {
-				if val, ok := params[paramName]; ok {
-					args = append(args, val)
-					seen[paramName] = true
-				}
+			sql = strings.Replace(sql, match[0], fmt.Sprintf("'%s'", params[match[1]]), 1)
+			if val, ok := params[paramName]; ok {
+				args = append(args, val)
+				//					seen[paramName] = true
 			}
 		}
 
@@ -199,7 +199,7 @@ func (qe *QueryExecutor) buildArgs(sql string, params map[string]interface{}, dr
 		}
 	}
 
-	return args
+	return sql, args
 }
 
 // loadMockFile loads mock data from a JSON file
@@ -208,7 +208,7 @@ func (qe *QueryExecutor) loadMockFile(filePath string) ([]map[string]interface{}
 	if !strings.Contains(filePath, "/") && !strings.Contains(filePath, "\\") {
 		filePath = qe.mockFileLocation + filePath
 	}
-
+	qe.LastMockFile = filePath
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read mock file %s: %w", filePath, err)

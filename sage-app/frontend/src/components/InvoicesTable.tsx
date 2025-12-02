@@ -18,8 +18,24 @@ import {
 import { apiService, Invoice } from '../services/api.config'
 
 type Order = 'asc' | 'desc'
+const formatValue=(s:number | string)=>{
+  if (typeof s=='string'){
+    return s
+  }
+  if (typeof s=='number'){
+    return s.toFixed(2);
+  }
+}
 
-export default function InvoicesTable() {
+function getValue(obj:any,key:string){
+  const results= Object.entries(obj).filter(([fieldName='']=['',''])=>((fieldName as string).toLowerCase()==key.toLowerCase() )).map(([_,val])=>val)
+  if(results.length>0) return results[0];
+  return null;
+}
+interface Props{
+  setRef:Function;
+}
+export default function InvoicesTable({setRef}:Props) {
   const theme = useTheme()
   const [data, setData] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
@@ -202,20 +218,24 @@ export default function InvoicesTable() {
                 >
                   Total Payable
                 </TableSortLabel>
+
               </TableCell>
+              {['Note1','Note2','Note3','Note4','Note5'].map(fld=> <TableCell align="right" sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>{fld} </TableCell>)}
+
             </TableRow>
           </TableHead>
           <TableBody>
             {displayedData.map((row, index) => (
-              <TableRow key={index} sx={{ '&:hover': { backgroundColor: theme.palette.mode === 'light' ? '#eeeeee' : '#3a3a3a' } }}>
+              <TableRow key={index} onClick={e=>setRef&&  setRef(getValue(row,'ref'))} sx={{ '&:hover': { backgroundColor: theme.palette.mode === 'light' ? '#eeeeee' : '#3a3a3a' } }}>
                 <TableCell sx={{ color: theme.palette.text.primary }}>{row.satici_vergiNo}</TableCell>
                 <TableCell sx={{ color: theme.palette.text.primary }}>{row.faturaNo}</TableCell>
                 <TableCell sx={{ color: theme.palette.text.primary }}>{row.faturaTarihi}</TableCell>
                 <TableCell sx={{ color: theme.palette.text.primary }}>{row.faturaTuru}</TableCell>
                 <TableCell align="center" sx={{ color: theme.palette.text.secondary }}>{row.paraBirimi}</TableCell>
-                <TableCell align="right" sx={{ color: theme.palette.text.secondary }}>{row.Toplam.toFixed(2)}</TableCell>
-                <TableCell align="right" sx={{ color: theme.palette.text.secondary }}>{row.vergi.toFixed(2)}</TableCell>
-                <TableCell align="right" sx={{ color: theme.palette.text.secondary }}>{row.odenecekTutar.toFixed(2)}</TableCell>
+                <TableCell align="right" sx={{ color: theme.palette.text.secondary }}>{formatValue(row.Toplam)}</TableCell>
+                <TableCell align="right" sx={{ color: theme.palette.text.secondary }}>{formatValue(row.vergi)}</TableCell>
+                <TableCell align="right" sx={{ color: theme.palette.text.secondary }}>{formatValue(row.odenecekTutar)}</TableCell>
+                {['Note1','Note2','Note3','Note4','Note5'].map(fld=> <TableCell align="right" sx={{ color: theme.palette.text.secondary }}>{getValue(row,fld)} </TableCell>)}
               </TableRow>
             ))}
           </TableBody>

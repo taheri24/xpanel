@@ -1,4 +1,4 @@
-const API_BASE_URL =  '/api/v1/x'
+const API_BASE_URL =  '/api/v1'
 
 // Types
 export interface Invoice {
@@ -20,26 +20,27 @@ export interface Receipt {
 }
 
 export interface LineItem {
-  ITMREF_0: string
-  ITMDES_0: string
-  QTYSTU_0: number
-  loc: string
+  saticiUrunKodu: string
+  urunAdi: string
+  miktar: number
+  Recived_Invoice_Portal: string
 }
 
 export interface ApiResponse<T> {
   success: boolean
-  data: T[]
+  results: T[]
   error?: string
   message?: string
 }
-
+ 
+	
 // API Service Functions
 export const apiService = {
   // Invoices API
   async getInvoices(): Promise<Invoice[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/invoices`, {
-        method: 'GET',
+      const response = await fetch(`${API_BASE_URL}/x/SageInvoices/queries/ListInvoices`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -50,42 +51,23 @@ export const apiService = {
       }
 
       const data: ApiResponse<Invoice> = await response.json()
-      return data.data || []
+      return data.results || []
     } catch (error) {
       console.error('Error fetching invoices:', error)
       throw error
     }
   },
 
-  async getInvoiceDetails(invoiceNo: string): Promise<Invoice | null> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/invoices/${invoiceNo}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch invoice details: ${response.statusText}`)
-      }
-
-      const data: ApiResponse<Invoice> = await response.json()
-      return data.data?.[0] || null
-    } catch (error) {
-      console.error('Error fetching invoice details:', error)
-      throw error
-    }
-  },
 
   // Receipts API
-  async getReceipts(): Promise<Receipt[]> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/receipts`, {
-        method: 'GET',
+  async getReceipts(ref:string): Promise<Receipt[]> {
+    try { 
+      const response = await fetch(`${API_BASE_URL}/x/SageReceipt/queries/ListReceipts`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body:JSON.stringify({ref})
       })
 
       if (!response.ok) {
@@ -93,42 +75,23 @@ export const apiService = {
       }
 
       const data: ApiResponse<Receipt> = await response.json()
-      return data.data || []
+      return data.results || []
     } catch (error) {
       console.error('Error fetching receipts:', error)
       throw error
     }
   },
-
-  async getReceiptDetails(invoiceNo: string): Promise<Receipt | null> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/receipts/${invoiceNo}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch receipt details: ${response.statusText}`)
-      }
-
-      const data: ApiResponse<Receipt> = await response.json()
-      return data.data?.[0] || null
-    } catch (error) {
-      console.error('Error fetching receipt details:', error)
-      throw error
-    }
-  },
+ 
 
   // Line Items API
-  async getLineItems(): Promise<LineItem[]> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/line-items`, {
-        method: 'GET',
+  async getLineItems(ref:string): Promise<LineItem[]> {
+    try { 
+      const response = await fetch(`${API_BASE_URL}/x/SageLines/queries/ListLineItems`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body:JSON.stringify({ref})
       })
 
       if (!response.ok) {
@@ -136,7 +99,7 @@ export const apiService = {
       }
 
       const data: ApiResponse<LineItem> = await response.json()
-      return data.data || []
+      return data.results || []
     } catch (error) {
       console.error('Error fetching line items:', error)
       throw error
@@ -157,7 +120,7 @@ export const apiService = {
       }
 
       const data: ApiResponse<LineItem> = await response.json()
-      return data.data || []
+      return data.results || []
     } catch (error) {
       console.error('Error fetching line items:', error)
       throw error

@@ -44,7 +44,7 @@ func (h *XFeatureHandler) GetFeature(c *gin.Context) {
 	filePath := getFeatureFilePath(featureName, h.cfg.Feature.XFeatureFileLocation)
 	if err := xf.LoadFromFile(filePath); err != nil {
 		slog.Warn("Failed to load feature definition", "feature", featureName, "error", err)
-		c.JSON(http.StatusNotFound, gin.H{"error": "Feature not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Feature not found", "filePath": filePath})
 		return
 	}
 
@@ -128,6 +128,7 @@ func (h *XFeatureHandler) ExecuteQuery(c *gin.Context) {
 		"query":       queryID,
 		"resultCount": len(results),
 		"results":     results,
+		"mockFile":    queryExecutor.LastMockFile,
 	})
 }
 
@@ -229,10 +230,10 @@ func (h *XFeatureHandler) GetBackendInfo(c *gin.Context) {
 
 	// Build response with detailed backend information
 	response := gin.H{
-		"feature":  featureName,
-		"version":  xf.Version,
-		"queries":  xf.Backend.Queries,
-		"actions":  xf.Backend.ActionQueries,
+		"feature": featureName,
+		"version": xf.Version,
+		"queries": xf.Backend.Queries,
+		"actions": xf.Backend.ActionQueries,
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -263,8 +264,8 @@ func (h *XFeatureHandler) GetFrontendElements(c *gin.Context) {
 
 	// Build response with all frontend elements
 	response := gin.H{
-		"feature":   featureName,
-		"version":   xf.Version,
+		"feature":    featureName,
+		"version":    xf.Version,
 		"dataTables": xf.Frontend.DataTables,
 		"forms":      xf.Frontend.Forms,
 	}

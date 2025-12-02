@@ -22,7 +22,9 @@ func New(cfg *config.DatabaseConfig) (*DB, error) {
 		"database", cfg.Database,
 	)
 
-	db, err := sqlx.Connect("sqlserver", cfg.ConnectionString())
+	dsn := cfg.ConnectionString()
+	slog.Info("ConnectionString>>>", "dsn", dsn)
+	db, err := sqlx.Connect("sqlserver", dsn)
 	if err != nil {
 		slog.Error("Failed to connect to database", "error", err)
 		return nil, err

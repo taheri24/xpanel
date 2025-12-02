@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Container,
   Paper,
@@ -45,19 +45,23 @@ function TabPanel(props: TabPanelProps) {
 
 function AppContent() {
   const [tabValue, setTabValue] = useState(0)
-  const { mode, toggleTheme } = useTheme()
+  const { mode, toggleTheme } = useTheme();
   const muiTheme = useMuiTheme()
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue)
   }
-
+  const [invoiceRef,setInvoiceRef]= useState('');
+  const [receiptRef,setReceiptRef]= useState('');
+  
+   
+  
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Sage Invoice Comparison
+        <Toolbar sx={{background:'#333'}}>
+          <Typography variant="h6"  color='green' component="div" sx={{ flexGrow: 1 }}>
+          SAGE X3 E-Purchase invoice
           </Typography>
           <IconButton
             onClick={toggleTheme}
@@ -75,7 +79,7 @@ function AppContent() {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="lg" sx={{ py: 4, flex: 1 }}>
+      <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
         <Paper
           sx={{
             backgroundColor: muiTheme.palette.background.paper,
@@ -92,21 +96,22 @@ function AppContent() {
               backgroundColor: muiTheme.palette.mode === 'light' ? '#f5f5f5' : '#2a2a2a',
             }}
           >
-            <Tab label="Invoices" id="tab-0" aria-controls="tabpanel-0" />
-            <Tab label="Receipts" id="tab-1" aria-controls="tabpanel-1" />
-            <Tab label="Line Items" id="tab-2" aria-controls="tabpanel-2" />
+            {/*Tab1 = Received invoices  Tab2= Pending Receipts and POs   Tab3: Mapping Items*/}
+            <Tab label="Received invoices" id="tab-0" aria-controls="tabpanel-0" />
+            <Tab label={(!!invoiceRef ? '✅ '  : '' )+"Pending Receipts and POs"}   id="tab-1" aria-controls="tabpanel-1" />
+            <Tab label={(!!receiptRef? '✅ ' : '' )+"Mapping Items"}   id="tab-2" aria-controls="tabpanel-2" />
           </Tabs>
 
           <TabPanel value={tabValue} index={0}>
-            <InvoicesTable />
+            <InvoicesTable setRef={setInvoiceRef} />
           </TabPanel>
 
-          <TabPanel value={tabValue} index={1}>
-            <ReceiptsTable />
+          <TabPanel value={tabValue} index={1} key={invoiceRef}>
+            <ReceiptsTable setReceiptRef={setReceiptRef} invoiceRef={invoiceRef} />
           </TabPanel>
 
-          <TabPanel value={tabValue} index={2}>
-            <LineItemsTable />
+          <TabPanel value={tabValue} key={receiptRef} index={2}>
+            <LineItemsTable receiptRef={receiptRef} />
           </TabPanel>
         </Paper>
       </Container>

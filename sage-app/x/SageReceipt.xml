@@ -9,29 +9,19 @@
   <Backend>
 
     <!-- SELECT QUERIES: Data retrieval operations -->
-    <Query Id="ListReceipts" Type="Select" Description="Retrieve all Sage receipt records" MockFile="mock-receipts.json">
+    <Query Id="ListReceipts" Type="Select" Description="Retrieve all Sage receipt records" MockFile2="mock-receipts.json">
       <![CDATA[
         SELECT
           PTHNUM_0,
           BPSNDE_0,
-          RCPDAT_0
-        FROM [TR-EDOCS].[dbo].[sagedbLIVEPRECEIPT]
+          @ref AS RCPDAT_0
+        FROM [TR-EDOCS].[dbo].[sagedbLIVEPRECEIPTD]
+        
+       WHERE BPSNDE_0 = @ref 
         ORDER BY RCPDAT_0 DESC
       ]]>
     </Query>
-
-    <Query Id="GetReceiptDetails" Type="Select" Description="Retrieve receipt details by invoice number" MockFile="mock-receipts.json">
-      <![CDATA[
-        SELECT
-          PTHNUM_0,
-          BPSNDE_0,
-          RCPDAT_0
-        FROM [TR-EDOCS].[dbo].[sagedbLIVEPRECEIPT]
-        WHERE BPSNDE_0 = :invoiceNo
-      ]]>
-    </Query>
-
-  </Backend>
+   </Backend>
 
   <!-- ============================= -->
   <!-- FRONTEND ELEMENTS             -->

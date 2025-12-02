@@ -9,55 +9,19 @@
   <Backend>
 
     <!-- SELECT QUERIES: Data retrieval operations -->
-    <Query Id="ListLineItems" Type="Select" Description="Retrieve all line items from Sage and Portal invoices" MockFile="mock-line-items.json">
+    <Query Id="ListLineItems" Type="Select" Description="Retrieve all line items from Sage and Portal invoices" MockFile2="mock-line-items.json">
       <![CDATA[
-        SELECT
-          ITMREF_0 collate Latin1_General_BIN ITMREF_0,
-          ITMDES_0 collate Latin1_General_BIN ITMDES_0,
-          QTYSTU_0,
-          'Recipt_Sage' loc
-        FROM [TR-EDOCS].[dbo].[sagedbLIVEPRECEIPTD]
-        WHERE PTHNUM_0 = (
-          SELECT PTHNUM_0
-          FROM [TR-EDOCS].[dbo].[sagedbLIVEPRECEIPT]
-          WHERE BPSNDE_0 = :invoiceNo
-        )
-        UNION ALL
+         
         SELECT
           saticiUrunKodu,
           urunAdi,
           miktar,
-          Recived_Invoice_Portal
-        FROM [TR-EDOCS].[dbo].[PUR_INVD]
-        WHERE belgeno = :invoiceNo
-        ORDER BY 3, 4
+          '' AS  Recived_Invoice_Portal
+        FROM [TR-EDOCS].[dbo].[_PORTALD]
+      WHERE @ref>''
       ]]>
     </Query>
-
-    <Query Id="GetLineItemsByInvoice" Type="Select" Description="Retrieve line items for a specific invoice" MockFile="mock-line-items.json">
-      <![CDATA[
-        SELECT
-          ITMREF_0 collate Latin1_General_BIN ITMREF_0,
-          ITMDES_0 collate Latin1_General_BIN ITMDES_0,
-          QTYSTU_0,
-          'Recipt_Sage' loc
-        FROM [TR-EDOCS].[dbo].[sagedbLIVEPRECEIPTD]
-        WHERE PTHNUM_0 = (
-          SELECT PTHNUM_0
-          FROM [TR-EDOCS].[dbo].[sagedbLIVEPRECEIPT]
-          WHERE BPSNDE_0 = :invoiceNo
-        )
-        UNION ALL
-        SELECT
-          saticiUrunKodu,
-          urunAdi,
-          miktar,
-          Recived_Invoice_Portal
-        FROM [TR-EDOCS].[dbo].[PUR_INVD]
-        WHERE belgeno = :invoiceNo
-        ORDER BY 3, 4
-      ]]>
-    </Query>
+ 
 
   </Backend>
 

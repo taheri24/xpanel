@@ -9,9 +9,10 @@
   <Backend>
 
     <!-- SELECT QUERIES: Data retrieval operations -->
-    <Query Id="ListInvoices" Type="Select" Description="Retrieve all purchase invoices with tax and payment details" MockFile="mock-invoices.json">
+    <Query Id="ListInvoices" Type="Select" Description="Retrieve all purchase invoices with tax and payment details" MockFile2="mock-invoices.json">
       <![CDATA[
         SELECT
+          faturaNo ref,
           satici_vergiNo,
           faturaNo,
           faturaTarihi,
@@ -21,29 +22,11 @@
           toplamMalHizmetMiktari Toplam,
           odenecekTutar - toplamMalHizmetMiktari vergi,
           odenecekTutar
-        FROM [TR-EDOCS].[dbo].[PUR_INVH]
+        FROM [TR-EDOCS].[dbo].[_PORTALH]
         ORDER BY faturaTarihi DESC
       ]]>
     </Query>
-
-    <Query Id="GetInvoiceDetails" Type="Select" Description="Retrieve single invoice details" MockFile="mock-invoices.json">
-      <![CDATA[
-        SELECT
-          satici_vergiNo,
-          faturaNo,
-          faturaTarihi,
-          faturaTuru,
-          faturaTipi,
-          paraBirimi,
-          toplamMalHizmetMiktari Toplam,
-          odenecekTutar - toplamMalHizmetMiktari vergi,
-          odenecekTutar
-        FROM [TR-EDOCS].[dbo].[PUR_INVH]
-        WHERE faturaNo = :invoiceNo
-      ]]>
-    </Query>
-
-  </Backend>
+   </Backend>
 
   <!-- ============================= -->
   <!-- FRONTEND ELEMENTS             -->

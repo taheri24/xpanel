@@ -18,8 +18,18 @@ import {
 import { apiService, Receipt } from '../services/api.config'
 
 type Order = 'asc' | 'desc'
+interface Props{
+  invoiceRef:string;
+  setReceiptRef:Function;
+}
 
-export default function ReceiptsTable() {
+function getValue(obj:any,key:string){
+  const results= Object.entries(obj).filter(([fieldName='']=['',''])=>((fieldName as string).toLowerCase()==key.toLowerCase() )).map(([_,val])=>val)
+  if(results.length>0) return results[0];
+  return null;
+}
+
+export default function ReceiptsTable(p:Props) {
   const theme = useTheme()
   const [data, setData] = useState<Receipt[]>([])
   const [loading, setLoading] = useState(true)
@@ -38,7 +48,7 @@ export default function ReceiptsTable() {
     setLoading(true)
     setError(null)
     try {
-      const receipts = await apiService.getReceipts()
+      const receipts = await apiService.getReceipts(p.invoiceRef)
       setData(receipts)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch receipts')
@@ -95,11 +105,12 @@ export default function ReceiptsTable() {
         </Alert>
       )}
       <Box sx={{ mb: 2 }}>
+        
         <TextField
           placeholder="Search receipts..."
           variant="outlined"
           size="small"
-          value={searchTerm}
+          value={searchTerm} 
           onChange={(e) => {
             setSearchTerm(e.target.value)
             setPage(0)
@@ -107,6 +118,7 @@ export default function ReceiptsTable() {
           sx={{ width: '100%', maxWidth: 300 }}
           disabled={loading}
         />
+           
       </Box>
       {loading && (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
@@ -149,14 +161,18 @@ export default function ReceiptsTable() {
                   Receipt Date
                 </TableSortLabel>
               </TableCell>
+              {['Note1','Note2','Note3','Note4','Note5'].map(fld=> <TableCell align="right" sx={{ color: theme.palette.text.primary }}>{fld} </TableCell>)}
+                
             </TableRow>
           </TableHead>
           <TableBody>
             {displayedData.map((row, index) => (
-              <TableRow key={index} sx={{ '&:hover': { backgroundColor: theme.palette.mode === 'light' ? '#eeeeee' : '#3a3a3a' } }}>
+              <TableRow onClick={e=>p.setReceiptRef  instanceof Function && p.setReceiptRef(getValue(row,'ref'))} key={index} sx={{ '&:hover': { backgroundColor: theme.palette.mode === 'light' ? '#eeeeee' : '#3a3a3a' } }}>
                 <TableCell sx={{ color: theme.palette.text.primary }}>{row.PTHNUM_0}</TableCell>
                 <TableCell sx={{ color: theme.palette.text.primary }}>{row.BPSNDE_0}</TableCell>
                 <TableCell sx={{ color: theme.palette.text.primary }}>{row.RCPDAT_0}</TableCell>
+                {['Note1','Note2','Note3','Note4','Note5'].map(fld=> <TableCell align="right" sx={{ color: theme.palette.text.secondary }}>{ (getValue(row,fld))} </TableCell>)}
+                
               </TableRow>
             ))}
           </TableBody>

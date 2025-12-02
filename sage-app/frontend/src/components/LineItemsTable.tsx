@@ -18,8 +18,15 @@ import {
 import { apiService, LineItem } from '../services/api.config'
 
 type Order = 'asc' | 'desc'
-
-export default function LineItemsTable() {
+interface Props{
+  receiptRef:string;
+}
+function getValue(obj:any,key:string){
+  const results= Object.entries(obj).filter(([fieldName='']=['',''])=>((fieldName as string).toLowerCase()==key.toLowerCase() )).map(([_,val])=>val)
+  if(results.length>0) return results[0];
+  return null;
+}
+export default function LineItemsTable(p:Props) {
   const theme = useTheme()
   const [data, setData] = useState<LineItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -38,7 +45,7 @@ export default function LineItemsTable() {
     setLoading(true)
     setError(null)
     try {
-      const lineItems = await apiService.getLineItems()
+      const lineItems = await apiService.getLineItems(p.receiptRef)
       setData(lineItems)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch line items')
@@ -163,15 +170,19 @@ export default function LineItemsTable() {
                   Source
                 </TableSortLabel>
               </TableCell>
+              {['Note1','Note2','Note3','Note4','Note5'].map(fld=> <TableCell align="right" sx={{  color: theme.palette.text.primary,fontWeight:'bold' }}>{fld} </TableCell>)}
+          
             </TableRow>
           </TableHead>
           <TableBody>
             {displayedData.map((row, index) => (
               <TableRow key={index} sx={{ '&:hover': { backgroundColor: theme.palette.mode === 'light' ? '#eeeeee' : '#3a3a3a' } }}>
-                <TableCell sx={{ color: theme.palette.text.primary }}>{row.ITMREF_0}</TableCell>
-                <TableCell sx={{ color: theme.palette.text.primary }}>{row.ITMDES_0}</TableCell>
-                <TableCell align="right" sx={{ color: '#ccc' }}>{row.QTYSTU_0}</TableCell>
-                <TableCell sx={{ color: theme.palette.text.primary }}>{row.loc}</TableCell>
+                <TableCell sx={{ color: theme.palette.text.primary }}>{row.saticiUrunKodu}</TableCell>
+                <TableCell sx={{ color: theme.palette.text.primary }}>{row.urunAdi}</TableCell>
+                <TableCell align="right" sx={{ color: '#ccc' }}>{row.miktar}</TableCell>
+                <TableCell sx={{ color: theme.palette.text.primary }}>{row.Recived_Invoice_Portal}</TableCell>
+                {['Note1','Note2','Note3','Note4','Note5'].map(fld=> <TableCell align="right" sx={{ color: theme.palette.text.secondary }}>{ (getValue(row,fld))} </TableCell>)}
+              
               </TableRow>
             ))}
           </TableBody>
@@ -188,6 +199,7 @@ export default function LineItemsTable() {
             sx={{ backgroundColor: theme.palette.background.paper, color: theme.palette.text.primary }}
           />
         </>
+        
       )}
     </Box>
   )

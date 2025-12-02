@@ -7,10 +7,13 @@ help: ## Show this help message
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-15s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 run: ## Run the application
-	go run main.go
+	go run .
 
 build: ## Build the backend only
 	go build -o bin/api .
+
+build-win: ## Build the backend only
+	GOOS=windows GOARCH=amd64 go build -ldflags  "-s -w" -gcflags="all=-N -l" -o bin/xserver.exe .
 
 build-frontend: ## Build the frontend
 	@echo "Building frontend..."
