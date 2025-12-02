@@ -58,6 +58,7 @@ func NewRouter(r moduleSystems) *gin.Engine {
 		{
 			xs.GET("", r.XFeatureHandler.ListFeatures)
 			xs.GET("/:name", r.XFeatureHandler.GetFeature)
+			xs.GET("/:name/checksum", r.XFeatureHandler.GetFeatureChecksum)
 			xs.GET("/:name/backend", r.XFeatureHandler.GetBackendInfo)
 			xs.GET("/:name/frontend", r.XFeatureHandler.GetFrontendElements)
 			xs.GET("/:name/mappings", r.XFeatureHandler.ResolveMappings)

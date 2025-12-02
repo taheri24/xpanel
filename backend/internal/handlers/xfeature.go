@@ -1,8 +1,12 @@
 package handlers
 
 import (
+	"crypto/md5"
+	"encoding/hex"
+	"io"
 	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/taheri24/xpanel/backend/internal/database"
@@ -63,6 +67,44 @@ func (h *XFeatureHandler) GetFeature(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+// @Summary Get feature checksum
+// @Description Calculate the MD5 checksum of a feature's XML definition file
+// @Tags xfeatures
+// @Accept  json
+// @Produce  json
+// @Param name path string true "Feature name"
+// @Success 200 {object} map[string]interface{} "Feature checksum"
+// @Failure 404 {object} map[string]interface{} "Feature file not found"
+// @Failure 500 {object} map[string]interface{} "Checksum calculation failed"
+// @Router /api/v1/xfeatures/{name}/checksum [get]
+func (h *XFeatureHandler) GetFeatureChecksum(c *gin.Context) {
+	featureName := c.Param("name")
+	filePath := getFeatureFilePath(featureName, h.cfg.Feature.XFeatureFileLocation)
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		slog.Warn("Failed to open feature file for checksum", "feature", featureName, "error", err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Feature file not found"})
+		return
+	}
+	defer file.Close()
+
+	hasher := md5.New()
+	if _, err := io.Copy(hasher, file); err != nil {
+		slog.Error("Failed to calculate feature checksum", "feature", featureName, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to calculate checksum"})
+		return
+	}
+
+	checksum := hex.EncodeToString(hasher.Sum(nil))
+
+	c.JSON(http.StatusOK, gin.H{
+		"feature":   featureName,
+		"checksum":  checksum,
+		"algorithm": "md5",
+	})
 }
 
 // @Summary Execute a feature query
