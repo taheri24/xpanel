@@ -1,0 +1,456 @@
+# XFeature Schema - llms.txt
+
+> Context documentation for LLMs working with the XFeature XML Schema Definition
+
+## Overview
+
+The `feature-schema.xsd` defines the **XFeature** specification - a declarative XML schema for defining full-stack application features. This schema enables developers to describe complete CRUD operations, including backend database queries and frontend UI components, in a single unified XML document.
+
+## Purpose
+
+XFeature provides a domain-specific language (DSL) for:
+- **Backend Definition**: Database queries (SELECT, INSERT, UPDATE, DELETE)
+- **Frontend Definition**: Forms and data tables with rich UI components
+- **Data Mapping**: Linking backend data to frontend representations
+- **Code Generation**: Serving as input for code generators that produce backend and frontend code
+
+## Schema Structure
+
+```
+Feature (root)
+├── Backend
+│   ├── Query (SELECT operations)
+│   └── ActionQuery (INSERT/UPDATE/DELETE)
+├── Frontend
+│   ├── Form (Create/Edit/View/Delete/Search modes)
+│   │   ├── Field (input controls)
+│   │   ├── Button (actions)
+│   │   └── Message (user feedback)
+│   └── DataTable (data display)
+│       └── Column (table columns)
+└── Mapping (data type mappings)
+    ├── ListQuery (for dropdowns/selects)
+    └── Options (static options)
+```
+
+## Root Element: Feature
+
+**Attributes:**
+- `Name` (required): Feature identifier (e.g., "UserManagement")
+- `Version` (required): Schema version (e.g., "1.0")
+
+**Contains:**
+- One `Backend` element
+- One `Frontend` element
+- Zero or more `Mapping` elements
+
+## Backend Section
+
+### Query Element
+Defines SELECT operations for data retrieval.
+
+**Attributes:**
+- `Id` (required): Unique identifier for referencing (e.g., "GetUsers")
+- `Type` (required): Must be "Select"
+- `MockDataSet` (optional): Reference to mock data for testing
+- `Description` (optional): Human-readable description
+
+**Content:** SQL SELECT statement
+
+**Example Context:**
+```xml
+<Query Id="GetUserById" Type="Select" Description="Fetch user by ID">
+  SELECT id, username, email FROM users WHERE id = @id
+</Query>
+```
+
+### ActionQuery Element
+Defines data modification operations.
+
+**Attributes:**
+- `Id` (required): Unique identifier
+- `Type` (required): One of "Insert", "Update", "Delete"
+- `MockDataSet` (optional): Mock data reference
+- `Description` (optional): Description
+
+**Content:** SQL INSERT/UPDATE/DELETE statement
+
+**Example Context:**
+```xml
+<ActionQuery Id="CreateUser" Type="Insert">
+  INSERT INTO users (username, email) VALUES (@username, @email)
+</ActionQuery>
+```
+
+## Frontend Section
+
+### Form Element
+Defines interactive forms for CRUD operations.
+
+**Attributes:**
+- `Id` (required): Unique form identifier
+- `Mode` (required): One of "Create", "Edit", "View", "Delete", "Search"
+- `Dialog` (required): Boolean - render as dialog/modal
+- `Title` (required): Form title displayed to users
+- `ActionRef` (optional): References an ActionQuery Id
+- `QueryRef` (optional): References a Query Id for pre-populating data
+
+**Contains:** Field, Button, Message elements
+
+**Mode Semantics:**
+- **Create**: Empty form for new records
+- **Edit**: Pre-populated form for updates (requires QueryRef)
+- **View**: Read-only display (readonly fields)
+- **Delete**: Confirmation form
+- **Search**: Filter/search interface
+
+### Field Element
+Defines form input controls.
+
+**Attributes:**
+- `Name` (required): Field name (maps to backend parameters)
+- `Label` (optional): Display label
+- `Type` (required): Input type - "Text", "Email", "Password", "Tel", "Number", "Date", "DateTime", "Time", "Textarea", "Select", "Checkbox", "Radio", "Hidden", "File"
+- `Required` (optional, default: false): Boolean validation
+- `Readonly` (optional, default: false): Boolean edit control
+- `Placeholder` (optional): Input placeholder text
+- `Validation` (optional): Validation rules/regex
+- `Format` (optional): Display format pattern
+- `DefaultValue` (optional): Pre-filled value
+
+**Contains:** Zero or more `Option` elements (for Select/Radio/Checkbox types)
+
+**Type Selection Guide:**
+- Use "Email" for email validation
+- Use "Tel" for phone numbers
+- Use "Select" with Options for dropdowns
+- Use "Hidden" for technical fields (IDs, tokens)
+- Use "Textarea" for multi-line text
+
+### Option Element
+Defines choices for Select/Radio/Checkbox fields.
+
+**Attributes:**
+- `Value` (required): Submitted value
+- `Label` (required): Display text
+
+### Button Element
+Defines form actions.
+
+**Attributes:**
+- `Type` (required): "Submit", "Cancel", "Reset", "Close", "Confirm"
+- `Label` (required): Button text
+- `Style` (required): "Primary", "Secondary", "Success", "Danger", "Warning", "Info"
+- `ActionRef` (optional): References ActionQuery for Submit/Confirm buttons
+
+**Style Conventions:**
+- Primary: Main action (Submit, Save)
+- Secondary: Alternative actions
+- Success: Confirmation actions
+- Danger: Destructive actions (Delete)
+- Warning: Caution-required actions
+- Info: Informational actions
+
+### Message Element
+Displays user feedback messages.
+
+**Attributes:**
+- `Type` (required): "Info", "Success", "Warning", "Error"
+
+**Content:** Message text
+
+### DataTable Element
+Defines tabular data display with pagination and sorting.
+
+**Attributes:**
+- `Id` (required): Unique table identifier
+- `QueryRef` (required): References Query Id for data source
+- `Title` (required): Table heading
+- `Pagination` (optional, default: true): Enable pagination
+- `PageSize` (optional, default: 20): Items per page
+- `Sortable` (optional, default: true): Enable column sorting
+- `Filterable` (optional, default: false): Enable filtering
+- `Searchable` (optional, default: false): Enable search box
+- `FormActions` (optional): Space-separated Form Ids for row actions (e.g., "EditUser DeleteUser")
+
+**Contains:** One or more `Column` elements
+
+### Column Element
+Defines table column configuration.
+
+**Attributes:**
+- `Name` (required): Field name from query result
+- `Label` (required): Column header
+- `Type` (optional, default: "Text"): "Text", "Number", "Date", "DateTime", "Boolean", "Currency", "Percentage", "Link", "Badge", "Image"
+- `Sortable` (optional, default: true): Enable sorting
+- `Filterable` (optional, default: false): Enable filtering
+- `Width` (optional): CSS width value
+- `Format` (optional): Display format (e.g., "yyyy-MM-dd" for dates)
+- `Align` (optional, default: "Left"): "Left", "Center", "Right"
+
+**Type Formatting:**
+- Currency: Formats as monetary value
+- Percentage: Appends % symbol
+- Boolean: Renders as Yes/No or icons
+- Link: Renders as clickable hyperlink
+- Badge: Renders as styled badge/chip
+
+## Mapping Section
+
+### Mapping Element
+Defines reusable data type mappings for dropdowns and type conversions.
+
+**Attributes:**
+- `Name` (required): Mapping identifier (e.g., "StatusType")
+- `DataType` (required): Backend data type (e.g., "int", "string")
+- `Label` (required): Human-readable label
+
+**Contains:** Either `ListQuery` OR `Options`
+
+**Use Cases:**
+- Enum-like mappings (status codes, categories)
+- Foreign key lookups (user roles, departments)
+- Static value lists
+
+### ListQuery Element
+Defines a query to populate mapping options dynamically.
+
+**Attributes:**
+- `Id` (required): Unique query identifier
+- `Type` (required): Must be "Select"
+- `Description` (optional): Description
+
+**Content:** SQL SELECT returning value/label pairs
+
+**Expected Result Columns:**
+- First column: Value
+- Second column: Label
+
+### Options Element
+Contains static option definitions.
+
+**Contains:** One or more `Option` elements
+
+## Design Patterns
+
+### 1. Query Referencing
+Queries and ActionQueries are defined once and referenced by Id:
+- Forms use `QueryRef` to load data (Edit/View modes)
+- Forms use `ActionRef` to submit data
+- DataTables use `QueryRef` to fetch data
+- Buttons use `ActionRef` for actions
+
+### 2. Parameter Binding
+Backend queries use `@parameterName` syntax for parameter placeholders that map to:
+- Form Field `Name` attributes
+- URL query parameters
+- DataTable filter values
+
+### 3. Form-Table Integration
+DataTables link to Forms via `FormActions`:
+- Each action button appears as a row action
+- Clicking passes row data to the referenced Form
+- Enables inline CRUD operations
+
+### 4. Mock Data Strategy
+Use `MockDataSet` attribute to reference test data:
+- Enables frontend development without backend
+- Facilitates testing and demos
+- References external mock data files
+
+## Validation Rules
+
+### Required Attributes
+The schema enforces required attributes at XML validation time:
+- Feature: Name, Version
+- Query: Id, Type
+- Form: Id, Mode, Dialog, Title
+- Field: Name, Type
+- DataTable: Id, QueryRef, Title
+
+### Enumeration Constraints
+Many attributes have restricted value sets enforced by schema:
+- Query Type: Only "Select"
+- ActionQuery Type: "Insert", "Update", "Delete"
+- Form Mode: "Create", "Edit", "View", "Delete", "Search"
+- Field Type: 13 input types
+- Button Type: 5 action types
+- Button Style: 6 style variants
+- Column Align: "Left", "Center", "Right"
+
+### Cardinality Rules
+- Feature: Exactly 1 Backend, 1 Frontend, 0+ Mappings
+- Backend: 0+ Query or ActionQuery (mixed)
+- Frontend: 0+ Form or DataTable (mixed)
+- Form: 0+ Field, Button, Message (mixed)
+- DataTable: 0+ Column
+- Field: 0+ Option (for Select/Radio/Checkbox)
+
+## Best Practices
+
+### 1. Naming Conventions
+- **Query Ids**: Use verb-noun format (GetUsers, FindUserById)
+- **ActionQuery Ids**: Use verb-noun format (CreateUser, UpdateUser, DeleteUser)
+- **Form Ids**: Use noun-mode format (UserForm_Create, UserForm_Edit)
+- **DataTable Ids**: Use noun-plural format (UsersTable, ProductsTable)
+- **Field Names**: Use database column names or camelCase
+- **Mapping Names**: Use PascalCase type names (UserStatus, ProductCategory)
+
+### 2. Query Design
+- Keep queries focused and single-purpose
+- Use meaningful parameter names (@userId, not @p1)
+- Add descriptions for complex queries
+- Consider performance (pagination, indexing)
+
+### 3. Form Design
+- Match Field Names to backend parameter names exactly
+- Use appropriate Field Types for validation
+- Provide helpful Placeholder text
+- Mark Required fields appropriately
+- Use readonly mode for View forms
+- Always include Cancel/Close buttons
+
+### 4. DataTable Design
+- Define all relevant columns, not just key fields
+- Use appropriate Column Types for formatting
+- Set reasonable PageSize (10-50 items)
+- Use FormActions for common operations
+- Consider Width for long content columns
+- Use Align for numeric columns (Right)
+
+### 5. Mapping Strategy
+- Create Mappings for repeated lookups
+- Use ListQuery for dynamic data (user lists, categories)
+- Use Options for static enums (status codes, priorities)
+- Reference Mappings by Name in Field validations
+
+## Common Workflows
+
+### Basic CRUD Feature
+1. Define backend queries: GetAll, GetById, Create, Update, Delete
+2. Create DataTable with GetAll QueryRef
+3. Create Forms for each mode (Create, Edit, View, Delete)
+4. Link Forms to ActionQueries via ActionRef
+5. Link DataTable to Forms via FormActions
+
+### Master-Detail Pattern
+1. Define master Query (list view)
+2. Define detail Query (single record)
+3. Create master DataTable
+4. Create detail Form with QueryRef to detail Query
+5. Link via FormActions
+
+### Search-Filter Pattern
+1. Define parameterized Query with search criteria
+2. Create Form with Mode="Search"
+3. Create DataTable with QueryRef to search Query
+4. Set DataTable Searchable/Filterable attributes
+
+## File Location Context
+
+**Schema Location:** `specs/xfeature/feature-schema.xsd`
+
+**Related Files:**
+- Feature XML instances: `specs/xfeature/*.xml` (validate against this schema)
+- Mock data files: Referenced by MockDataSet attributes
+- Generated code: Backend and frontend implementations
+
+## Usage for LLMs
+
+When working with XFeature files:
+
+1. **Validation**: Always validate XML against this schema
+2. **Reference Resolution**: Ensure QueryRef, ActionRef match defined Id values
+3. **Type Consistency**: Match Field Types to backend data types
+4. **Completeness**: Verify Forms have appropriate Buttons and Messages
+5. **Accessibility**: Check Label attributes for all user-facing elements
+
+## Version Information
+
+**Schema Version:** 1.0 (inferred from namespace)
+**XML Schema Version:** 1.0
+**Namespace:** None (elementFormDefault="qualified", no targetNamespace)
+
+## Key Insights for Code Generation
+
+### Backend Generation Hints
+- Extract Query/ActionQuery elements to generate data access layer
+- Use Id as method/function names
+- Parse SQL for parameter extraction
+- Implement parameter binding from @param syntax
+- Generate mock data handlers from MockDataSet references
+
+### Frontend Generation Hints
+- Generate React/Vue/Angular components from Form definitions
+- Map Field Type to UI component libraries
+- Implement client-side validation from Required, Validation attributes
+- Generate table components from DataTable definitions
+- Create routing for Form Mode states
+- Implement AJAX calls to backend using Ref attributes
+
+### Type System Mapping
+Suggested mappings for code generation:
+
+**Field Types → Frontend Components:**
+- Text, Email, Tel → text input
+- Password → password input
+- Number → number input with spinners
+- Date, DateTime, Time → date/time pickers
+- Textarea → multi-line text area
+- Select → dropdown/combobox
+- Checkbox, Radio → checkbox/radio button group
+- Hidden → hidden input field
+- File → file upload widget
+
+**Column Types → Display Components:**
+- Text → plain text
+- Number → formatted number (locale-aware)
+- Date, DateTime → formatted date/time
+- Boolean → checkbox/icon/badge
+- Currency → money formatter with symbol
+- Percentage → number with % suffix
+- Link → anchor tag
+- Badge → colored badge/chip
+- Image → img tag with thumbnail
+
+**SQL Types → Backend Types (suggested):**
+- @string parameters → string/varchar
+- @id, @number parameters → int/bigint
+- @date parameters → date/datetime
+- @bool parameters → boolean/bit
+
+---
+
+## Quick Reference Card
+
+### Essential Elements
+
+| Element | Required Attrs | Purpose |
+|---------|---------------|---------|
+| Feature | Name, Version | Root container |
+| Query | Id, Type | Data retrieval |
+| ActionQuery | Id, Type | Data modification |
+| Form | Id, Mode, Dialog, Title | User input interface |
+| Field | Name, Type | Input control |
+| Button | Type, Label, Style | User action |
+| DataTable | Id, QueryRef, Title | Data display |
+| Column | Name, Label | Table column |
+| Mapping | Name, DataType, Label | Type mapping |
+
+### Enumeration Values Quick Lookup
+
+**Query Type:** Select
+**ActionQuery Type:** Insert, Update, Delete
+**Form Mode:** Create, Edit, View, Delete, Search
+**Button Type:** Submit, Cancel, Reset, Close, Confirm
+**Button Style:** Primary, Secondary, Success, Danger, Warning, Info
+**Field Type:** Text, Email, Password, Tel, Number, Date, DateTime, Time, Textarea, Select, Checkbox, Radio, Hidden, File
+**Column Type:** Text, Number, Date, DateTime, Boolean, Currency, Percentage, Link, Badge, Image
+**Message Type:** Info, Success, Warning, Error
+**Column Align:** Left, Center, Right
+
+---
+
+**Last Updated:** 2025-12-02
+**Schema File:** specs/xfeature/feature-schema.xsd
+**Format:** llms.txt v1.0
