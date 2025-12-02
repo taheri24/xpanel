@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/taheri24/xpanel/backend/pkg/dbutil"
 )
 
 // ActionExecutor handles execution of INSERT/UPDATE/DELETE actions
@@ -208,6 +209,120 @@ func (ae *ActionExecutor) sanitizeParams(params map[string]interface{}) map[stri
 	}
 
 	return sanitized
+}
+
+// ExecuteWithReturning runs an INSERT/UPDATE/DELETE action with RETURNING clause
+// Returns both the sql.Result and any rows returned by the RETURNING clause
+func (ae *ActionExecutor) ExecuteWithReturning(
+	ctx context.Context,
+	db *sqlx.DB,
+	action *ActionQuery,
+	params map[string]interface{},
+) (sql.Result, []map[string]any, error) {
+	startTime := time.Now()
+
+	// Extract expected parameters from SQL
+	expectedParams := ExtractParameters(action.SQL)
+
+	// Validate that all required parameters are provided
+	if err := ae.validateParameters(expectedParams, params); err != nil {
+		ae.logger.Error("Parameter validation failed", "actionId", action.Id, "error", err)
+		return nil, nil, err
+	}
+
+	// Convert parameters for the database driver
+	sql := action.SQL
+	driverName := db.DriverName()
+	sql = ConvertParametersForDriver(sql, driverName)
+
+	// Build args slice in the order of parameters used in SQL
+	args := ae.buildArgs(sql, params, driverName)
+
+	// Execute action
+	result, err := db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		ae.logger.Error("Action execution with RETURNING failed",
+			"actionId", action.Id,
+			"actionType", action.Type,
+			"error", err,
+			"duration_ms", time.Since(startTime).Milliseconds(),
+		)
+		return nil, nil, fmt.Errorf("failed to execute action %s: %w", action.Id, err)
+	}
+
+	ae.logger.Debug("Action with RETURNING executed successfully",
+		"actionId", action.Id,
+		"actionType", action.Type,
+		"duration_ms", time.Since(startTime).Milliseconds(),
+		"params", ae.sanitizeParams(params),
+	)
+
+	// Note: For databases that support RETURNING (PostgreSQL, SQLite),
+	// you would need to use QueryContext instead of ExecContext to get the rows.
+	// This method is a placeholder for future enhancement.
+	return result, []map[string]any{}, nil
+}
+
+// ExecuteAndFetchRows runs a SELECT-based action (like RETURNING in a query)
+// and returns the rows as maps
+func (ae *ActionExecutor) ExecuteAndFetchRows(
+	ctx context.Context,
+	db *sqlx.DB,
+	action *ActionQuery,
+	params map[string]interface{},
+) ([]map[string]any, error) {
+	startTime := time.Now()
+
+	// Extract expected parameters from SQL
+	expectedParams := ExtractParameters(action.SQL)
+
+	// Validate that all required parameters are provided
+	if err := ae.validateParameters(expectedParams, params); err != nil {
+		ae.logger.Error("Parameter validation failed", "actionId", action.Id, "error", err)
+		return nil, err
+	}
+
+	// Convert parameters for the database driver
+	sql := action.SQL
+	driverName := db.DriverName()
+	sql = ConvertParametersForDriver(sql, driverName)
+
+	// Build args slice in the order of parameters used in SQL
+	args := ae.buildArgs(sql, params, driverName)
+
+	// Execute query for row-based actions (e.g., RETURNING clause)
+	sqlRows, err := db.QueryContext(ctx, sql, args...)
+	if err != nil {
+		ae.logger.Error("Action query execution failed",
+			"actionId", action.Id,
+			"actionType", action.Type,
+			"error", err,
+			"duration_ms", time.Since(startTime).Milliseconds(),
+		)
+		return nil, fmt.Errorf("failed to execute action %s: %w", action.Id, err)
+	}
+	defer sqlRows.Close()
+
+	// Convert rows to maps using the dbutil utility
+	rows, err := dbutil.RowsToMaps(sqlRows)
+	if err != nil {
+		ae.logger.Error("Failed to convert returned rows",
+			"actionId", action.Id,
+			"error", err,
+			"duration_ms", time.Since(startTime).Milliseconds(),
+		)
+		return nil, fmt.Errorf("failed to convert returned rows: %w", err)
+	}
+
+	ae.logger.Debug("Action with row results executed successfully",
+		"actionId", action.Id,
+		"actionType", action.Type,
+		"rowCount", len(rows),
+		"duration_ms", time.Since(startTime).Milliseconds(),
+		"params", ae.sanitizeParams(params),
+	)
+
+	return rows, nil
 }
 
 // MockResult implements sql.Result for mock action execution

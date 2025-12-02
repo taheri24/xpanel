@@ -17,6 +17,7 @@ import (
 	"github.com/taheri24/xpanel/backend/internal/router"
 	"github.com/taheri24/xpanel/backend/internal/server"
 	"github.com/taheri24/xpanel/backend/pkg/config"
+	"github.com/taheri24/xpanel/backend/pkg/dbutil"
 	_ "github.com/taheri24/xpanel/backend/docs"
 	"go.uber.org/fx"
 )
@@ -31,6 +32,9 @@ func main() {
 
 		// Provide database
 		database.Module,
+
+		// Provide database utilities
+		dbutil.Module,
 
 		// Provide repositories
 		models.Module,
