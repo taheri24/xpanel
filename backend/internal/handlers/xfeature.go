@@ -114,7 +114,7 @@ func (h *XFeatureHandler) ExecuteQuery(c *gin.Context) {
 	}
 
 	// Execute the query
-	queryExecutor := xfeature.NewQueryExecutorWithLocation(slog.Default(), h.cfg.Feature.MockFileLocation)
+	queryExecutor := xfeature.NewQueryExecutorWithLocation(slog.Default(), h.cfg.Feature.MockDataSetLocation)
 	results, err := queryExecutor.Execute(c.Request.Context(), h.db.DB, query, params)
 	if err != nil {
 		slog.Error("Query execution failed", "feature", featureName, "query", queryID, "error", err)
@@ -128,7 +128,7 @@ func (h *XFeatureHandler) ExecuteQuery(c *gin.Context) {
 		"query":       queryID,
 		"resultCount": len(results),
 		"results":     results,
-		"mockFile":    queryExecutor.LastMockFile,
+		"mockDataSet": queryExecutor.LastMockDataSet,
 	})
 }
 
@@ -177,7 +177,7 @@ func (h *XFeatureHandler) ExecuteAction(c *gin.Context) {
 	}
 
 	// Execute the action
-	actionExecutor := xfeature.NewActionExecutorWithLocation(slog.Default(), h.cfg.Feature.MockFileLocation)
+	actionExecutor := xfeature.NewActionExecutorWithLocation(slog.Default(), h.cfg.Feature.MockDataSetLocation)
 	result, err := actionExecutor.Execute(c.Request.Context(), h.db.DB, action, params)
 	if err != nil {
 		slog.Error("Action execution failed", "feature", featureName, "action", actionID, "error", err)

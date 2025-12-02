@@ -9,7 +9,7 @@
   <Backend>
 
     <!-- SELECT QUERIES: Data retrieval operations -->
-    <Query Id="ListLineItems" Type="Select" Description="Retrieve all line items from Sage and Portal invoices" MockFile2="mock-line-items.json">
+    <Query Id="ListLineItems" Type="Select" Description="Retrieve all line items from Sage and Portal invoices" MockDataSet2="mock-line-items.json">
       <![CDATA[
          
         SELECT

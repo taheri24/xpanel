@@ -174,15 +174,15 @@ swag init -g main.go
 
 XFeature enables declarative definition of database queries and actions through XML configuration files. Features are located in `specs/xfeature/` directory.
 
-### MockFile Support
+### MockDataSet Support
 
-The MockFile attribute allows you to serve mock JSON data instead of executing actual database queries or actions. This is useful for:
+The MockDataSet attribute allows you to serve mock JSON data instead of executing actual database queries or actions. This is useful for:
 
 - **Development**: Work with the frontend before the database is ready
 - **Testing**: Provide consistent test data without database setup
 - **Mocking**: Create realistic mock responses for different scenarios
 
-### Defining Queries with MockFile
+### Defining Queries with MockDataSet
 
 Create an XML feature file at `specs/xfeature/feature-name.xml`:
 
@@ -191,7 +191,7 @@ Create an XML feature file at `specs/xfeature/feature-name.xml`:
 <Feature Name="users-feature" Version="1.0">
   <Backend>
     <!-- Query with mock data -->
-    <Query Id="GetUsers" Type="Select" MockFile="./mocks/users.json">
+    <Query Id="GetUsers" Type="Select" MockDataSet="./mocks/users.json">
       SELECT id, name, email FROM users
     </Query>
 
@@ -227,17 +227,17 @@ Create a JSON file containing an array of objects (one per row):
 ]
 ```
 
-### Defining Actions with MockFile
+### Defining Actions with MockDataSet
 
 Actions (INSERT/UPDATE/DELETE) also support mock responses:
 
 ```xml
 <Backend>
-  <ActionQuery Id="CreateUser" Type="Insert" MockFile="./mocks/create-user.json">
+  <ActionQuery Id="CreateUser" Type="Insert" MockDataSet="./mocks/create-user.json">
     INSERT INTO users (name, email) VALUES (:name, :email)
   </ActionQuery>
 
-  <ActionQuery Id="UpdateUser" Type="Update" MockFile="./mocks/update-user.json">
+  <ActionQuery Id="UpdateUser" Type="Update" MockDataSet="./mocks/update-user.json">
     UPDATE users SET name = :name, email = :email WHERE id = :id
   </ActionQuery>
 </Backend>
@@ -265,18 +265,18 @@ Create a JSON file with action result metadata:
 
 ### Fallback Behavior
 
-If a MockFile is specified but doesn't exist or can't be read, the system automatically falls back to the actual database query/action with a warning log. This ensures graceful degradation:
+If a MockDataSet is specified but doesn't exist or can't be read, the system automatically falls back to the actual database query/action with a warning log. This ensures graceful degradation:
 
 ```
-WARN Mock file error, falling back to database query queryId=GetUsers mockFile=./mocks/users.json error=...
+WARN Mock data set error, falling back to database query queryId=GetUsers mockDataSet=./mocks/users.json error=...
 ```
 
-### Using MockFile in Development
+### Using MockDataSet in Development
 
 1. **Create mock JSON files** alongside your feature definitions
-2. **Set MockFile attribute** on queries/actions you want to mock
+2. **Set MockDataSet attribute** on queries/actions you want to mock
 3. **Test API endpoints** without database dependencies
-4. **Switch to real database** by removing MockFile attributes or deleting mock files
+4. **Switch to real database** by removing MockDataSet attributes or deleting mock files
 
 The system handles the transition seamlessly without code changes.
 

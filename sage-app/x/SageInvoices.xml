@@ -9,7 +9,7 @@
   <Backend>
 
     <!-- SELECT QUERIES: Data retrieval operations -->
-    <Query Id="ListInvoices" Type="Select" Description="Retrieve all purchase invoices with tax and payment details" MockFile2="mock-invoices.json">
+    <Query Id="ListInvoices" Type="Select" Description="Retrieve all purchase invoices with tax and payment details" MockDataSet2="mock-invoices.json">
       <![CDATA[
         SELECT
           faturaNo ref,
