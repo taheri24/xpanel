@@ -15,9 +15,9 @@ import (
 
 // QueryExecutor handles execution of SELECT queries
 type QueryExecutor struct {
-	logger           *slog.Logger
-	mockFileLocation string
-	LastMockFile     string
+	logger              *slog.Logger
+	mockDataSetLocation string
+	LastMockDataSet     string
 }
 
 // NewQueryExecutor creates a new query executor
@@ -25,18 +25,18 @@ func NewQueryExecutor(logger *slog.Logger) *QueryExecutor {
 	if logger == nil {
 		logger = slog.Default()
 	}
-	return &QueryExecutor{logger: logger, mockFileLocation: "specs/mock/"}
+	return &QueryExecutor{logger: logger, mockDataSetLocation: "specs/mock/"}
 }
 
-// NewQueryExecutorWithLocation creates a new query executor with a custom mock file location
-func NewQueryExecutorWithLocation(logger *slog.Logger, mockFileLocation string) *QueryExecutor {
+// NewQueryExecutorWithLocation creates a new query executor with a custom mock data set location
+func NewQueryExecutorWithLocation(logger *slog.Logger, mockDataSetLocation string) *QueryExecutor {
 	if logger == nil {
 		logger = slog.Default()
 	}
-	if mockFileLocation == "" {
-		mockFileLocation = "specs/mock/"
+	if mockDataSetLocation == "" {
+		mockDataSetLocation = "specs/mock/"
 	}
-	return &QueryExecutor{logger: logger, mockFileLocation: mockFileLocation}
+	return &QueryExecutor{logger: logger, mockDataSetLocation: mockDataSetLocation}
 }
 
 // Execute runs a SELECT query and returns results as slice of maps
@@ -47,21 +47,21 @@ func (qe *QueryExecutor) Execute(
 	params map[string]interface{},
 ) ([]map[string]interface{}, error) {
 	startTime := time.Now()
-	qe.LastMockFile = ""
-	// Check if MockFile is specified and exists
-	if query.MockFile != "" {
-		if mockData, err := qe.loadMockFile(query.MockFile); err == nil {
+	qe.LastMockDataSet = ""
+	// Check if MockDataSet is specified and exists
+	if query.MockDataSet != "" {
+		if mockData, err := qe.loadMockDataSet(query.MockDataSet); err == nil {
 			qe.logger.Debug("Mock data loaded successfully",
 				"queryId", query.Id,
-				"mockFile", query.MockFile,
+				"mockDataSet", query.MockDataSet,
 				"rowCount", len(mockData),
 				"duration_ms", time.Since(startTime).Milliseconds(),
 			)
 			return mockData, nil
 		} else if os.IsExist(os.ErrNotExist) || !os.IsNotExist(err) {
-			qe.logger.Warn("Mock file error, falling back to database query",
+			qe.logger.Warn("Mock data set error, falling back to database query",
 				"queryId", query.Id,
-				"mockFile", query.MockFile,
+				"mockDataSet", query.MockDataSet,
 				"error", err,
 			)
 		}
@@ -202,13 +202,13 @@ func (qe *QueryExecutor) buildArgs(sql string, params map[string]interface{}, dr
 	return sql, args
 }
 
-// loadMockFile loads mock data from a JSON file
-func (qe *QueryExecutor) loadMockFile(filePath string) ([]map[string]interface{}, error) {
+// loadMockDataSet loads mock data from a JSON file
+func (qe *QueryExecutor) loadMockDataSet(filePath string) ([]map[string]interface{}, error) {
 	// If the path doesn't contain path separators, use the configured location
 	if !strings.Contains(filePath, "/") && !strings.Contains(filePath, "\\") {
-		filePath = qe.mockFileLocation + filePath
+		filePath = qe.mockDataSetLocation + filePath
 	}
-	qe.LastMockFile = filePath
+	qe.LastMockDataSet = filePath
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read mock file %s: %w", filePath, err)

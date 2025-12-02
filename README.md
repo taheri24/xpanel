@@ -175,7 +175,7 @@ VITE_API_BASE_URL=http://localhost:8080/api/v1
 - `POST /api/v1/xfeatures/{name}/actions/{actionId}` - Execute an INSERT/UPDATE/DELETE action
 - `GET /api/v1/xfeatures/{name}/mappings` - Resolve feature mappings
 
-**XFeature supports mock data** via the optional `MockFile` attribute. Define mock JSON files to test API endpoints without database dependencies. See [backend/README.md](backend/README.md#xfeature-system) for detailed documentation.
+**XFeature supports mock data** via the optional `MockDataSet` attribute. Define mock JSON files to test API endpoints without database dependencies. See [backend/README.md](backend/README.md#xfeature-system) for detailed documentation.
 
 ## Testing
 
@@ -298,10 +298,10 @@ For issues and questions:
 ## Changelog
 
 ### 2025-12-01
-- **Feature**: Added MockFile attribute to XFeature Query and ActionQuery elements
+- **Feature**: Added MockDataSet attribute to XFeature Query and ActionQuery elements
 - **Backend**: Implemented mock data support in QueryExecutor and ActionExecutor
-- **Schema**: Updated feature-schema.xsd to include optional MockFile attribute
-- **Documentation**: Added comprehensive XFeature MockFile usage guide
+- **Schema**: Updated feature-schema.xsd to include optional MockDataSet attribute
+- **Documentation**: Added comprehensive XFeature MockDataSet usage guide
 
 ### 2025-11-25
 - Initial project setup

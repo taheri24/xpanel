@@ -32,7 +32,7 @@ type DatabaseConfig struct {
 
 type FeatureConfig struct {
 	XFeatureFileLocation string
-	MockFileLocation     string
+	MockDataSetLocation  string
 }
 
 func Load() (*Config, error) {
@@ -57,7 +57,7 @@ func Load() (*Config, error) {
 		},
 		Feature: FeatureConfig{
 			XFeatureFileLocation: getEnv("XFEATURE_FILE_LOCATION", "specs/xfeature/"),
-			MockFileLocation:     getEnv("MOCK_FILE_LOCATION", "specs/mock/"),
+			MockDataSetLocation:  getEnv("MOCK_DATA_SET_LOCATION", "specs/mock/"),
 		},
 	}
 

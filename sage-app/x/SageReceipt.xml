@@ -9,7 +9,7 @@
   <Backend>
 
     <!-- SELECT QUERIES: Data retrieval operations -->
-    <Query Id="ListReceipts" Type="Select" Description="Retrieve all Sage receipt records" MockFile2="mock-receipts.json">
+    <Query Id="ListReceipts" Type="Select" Description="Retrieve all Sage receipt records" MockDataSet2="mock-receipts.json">
       <![CDATA[
         SELECT
           PTHNUM_0,

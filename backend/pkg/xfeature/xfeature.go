@@ -15,12 +15,12 @@ import (
 
 // XFeature represents the entire XML feature definition
 type XFeature struct {
-	Name                 string              `xml:"Name,attr" json:"name"`
-	Version              string              `xml:"Version,attr" json:"version"`
-	Backend              Backend             `xml:"Backend" json:"backend"`
-	Frontend             Frontend            `xml:"Frontend" json:"frontend"`
-	Mappings             []*Mapping `xml:"Mapping" json:"mappings"`
-	Logger               *slog.Logger        `json:"-"`
+	Name     string       `xml:"Name,attr" json:"name"`
+	Version  string       `xml:"Version,attr" json:"version"`
+	Backend  Backend      `xml:"Backend" json:"backend"`
+	Frontend Frontend     `xml:"Frontend" json:"frontend"`
+	Mappings []*Mapping   `xml:"Mapping" json:"mappings"`
+	Logger   *slog.Logger `json:"-"`
 }
 
 // Backend contains all backend queries and actions
@@ -40,7 +40,7 @@ type Query struct {
 	Id          string   `xml:"Id,attr" json:"id"`
 	Type        string   `xml:"Type,attr" json:"type"`
 	Description string   `xml:"Description,attr" json:"description"`
-	MockFile    string   `xml:"MockFile,attr" json:"mockFile"`
+	MockDataSet string   `xml:"MockDataSet,attr" json:"mockDataSet"`
 	SQL         string   `xml:",chardata" json:"sql"`
 	Parameters  []string `json:"parameters"`
 }
@@ -50,7 +50,7 @@ type ActionQuery struct {
 	Id          string   `xml:"Id,attr" json:"id"`
 	Type        string   `xml:"Type,attr" json:"type"`
 	Description string   `xml:"Description,attr" json:"description"`
-	MockFile    string   `xml:"MockFile,attr" json:"mockFile"`
+	MockDataSet string   `xml:"MockDataSet,attr" json:"mockDataSet"`
 	SQL         string   `xml:",chardata" json:"sql"`
 	Parameters  []string `json:"parameters"`
 }

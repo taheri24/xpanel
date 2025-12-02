@@ -16,8 +16,8 @@ import (
 
 // ActionExecutor handles execution of INSERT/UPDATE/DELETE actions
 type ActionExecutor struct {
-	logger           *slog.Logger
-	mockFileLocation string
+	logger              *slog.Logger
+	mockDataSetLocation string
 }
 
 // NewActionExecutor creates a new action executor
@@ -25,18 +25,18 @@ func NewActionExecutor(logger *slog.Logger) *ActionExecutor {
 	if logger == nil {
 		logger = slog.Default()
 	}
-	return &ActionExecutor{logger: logger, mockFileLocation: "specs/mock/"}
+	return &ActionExecutor{logger: logger, mockDataSetLocation: "specs/mock/"}
 }
 
-// NewActionExecutorWithLocation creates a new action executor with a custom mock file location
-func NewActionExecutorWithLocation(logger *slog.Logger, mockFileLocation string) *ActionExecutor {
+// NewActionExecutorWithLocation creates a new action executor with a custom mock data set location
+func NewActionExecutorWithLocation(logger *slog.Logger, mockDataSetLocation string) *ActionExecutor {
 	if logger == nil {
 		logger = slog.Default()
 	}
-	if mockFileLocation == "" {
-		mockFileLocation = "specs/mock/"
+	if mockDataSetLocation == "" {
+		mockDataSetLocation = "specs/mock/"
 	}
-	return &ActionExecutor{logger: logger, mockFileLocation: mockFileLocation}
+	return &ActionExecutor{logger: logger, mockDataSetLocation: mockDataSetLocation}
 }
 
 // Execute runs an INSERT/UPDATE/DELETE action
@@ -48,21 +48,21 @@ func (ae *ActionExecutor) Execute(
 ) (sql.Result, error) {
 	startTime := time.Now()
 
-	// Check if MockFile is specified and exists
-	if action.MockFile != "" {
-		if mockResult, err := ae.loadMockFile(action.MockFile); err == nil {
+	// Check if MockDataSet is specified and exists
+	if action.MockDataSet != "" {
+		if mockResult, err := ae.loadMockDataSet(action.MockDataSet); err == nil {
 			rowsAffected, _ := mockResult.RowsAffected()
 			ae.logger.Debug("Mock action executed successfully",
 				"actionId", action.Id,
-				"mockFile", action.MockFile,
+				"mockDataSet", action.MockDataSet,
 				"rowsAffected", rowsAffected,
 				"duration_ms", time.Since(startTime).Milliseconds(),
 			)
 			return mockResult, nil
 		} else if !os.IsNotExist(err) {
-			ae.logger.Warn("Mock file error, falling back to database action",
+			ae.logger.Warn("Mock data set error, falling back to database action",
 				"actionId", action.Id,
-				"mockFile", action.MockFile,
+				"mockDataSet", action.MockDataSet,
 				"error", err,
 			)
 		}
@@ -230,11 +230,11 @@ type MockActionResponse struct {
 	LastInsertId int64 `json:"lastInsertId"`
 }
 
-// loadMockFile loads mock action response from a JSON file
-func (ae *ActionExecutor) loadMockFile(filePath string) (*MockResult, error) {
+// loadMockDataSet loads mock action response from a JSON file
+func (ae *ActionExecutor) loadMockDataSet(filePath string) (*MockResult, error) {
 	// If the path doesn't contain path separators, use the configured location
 	if !strings.Contains(filePath, "/") && !strings.Contains(filePath, "\\") {
-		filePath = ae.mockFileLocation + filePath
+		filePath = ae.mockDataSetLocation + filePath
 	}
 
 	data, err := os.ReadFile(filePath)
