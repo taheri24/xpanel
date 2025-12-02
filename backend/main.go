@@ -11,6 +11,7 @@ package main
 import (
 	"net/http"
 
+	_ "github.com/taheri24/xpanel/backend/docs"
 	"github.com/taheri24/xpanel/backend/internal/database"
 	"github.com/taheri24/xpanel/backend/internal/handlers"
 	"github.com/taheri24/xpanel/backend/internal/models"
@@ -18,7 +19,6 @@ import (
 	"github.com/taheri24/xpanel/backend/internal/server"
 	"github.com/taheri24/xpanel/backend/pkg/config"
 	"github.com/taheri24/xpanel/backend/pkg/dbutil"
-	_ "github.com/taheri24/xpanel/backend/docs"
 	"go.uber.org/fx"
 )
 
@@ -41,6 +41,7 @@ func main() {
 
 		// Provide handlers
 		handlers.HealthModule,
+		handlers.ChecksumModule,
 		handlers.UserModule,
 		handlers.XFeatureModule,
 
