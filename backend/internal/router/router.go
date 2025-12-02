@@ -16,6 +16,7 @@ type moduleSystems struct {
 
 	Config          *config.Config
 	HealthHandler   *handlers.HealthHandler
+	ChecksumHandler *handlers.ChecksumHandler
 	UserHandler     *handlers.UserHandler
 	XFeatureHandler *handlers.XFeatureHandler
 }
@@ -44,6 +45,8 @@ func NewRouter(r moduleSystems) *gin.Engine {
 	// API v1 routes
 	v1 := router.Group("/api/v1")
 	{
+		v1.GET("/checksums", r.ChecksumHandler.GetChecksums)
+
 		users := v1.Group("/users")
 		{
 			users.GET("", r.UserHandler.GetAll)
@@ -58,6 +61,7 @@ func NewRouter(r moduleSystems) *gin.Engine {
 		{
 			xs.GET("", r.XFeatureHandler.ListFeatures)
 			xs.GET("/:name", r.XFeatureHandler.GetFeature)
+			xs.GET("/:name/checksum", r.XFeatureHandler.GetFeatureChecksum)
 			xs.GET("/:name/backend", r.XFeatureHandler.GetBackendInfo)
 			xs.GET("/:name/frontend", r.XFeatureHandler.GetFrontendElements)
 			xs.GET("/:name/mappings", r.XFeatureHandler.ResolveMappings)
