@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/taheri24/xpanel/backend/pkg/dbutil"
 )
 
 // QueryExecutor handles execution of SELECT queries
@@ -85,7 +86,7 @@ func (qe *QueryExecutor) Execute(
 	sql, args := qe.buildArgs(sql, params, driverName)
 	slog.Info("prequery", "args", args, "params", params, "sql", sql)
 	// Execute query
-	rows, err := db.QueryxContext(ctx, sql, args...)
+	sqlRows, err := db.QueryContext(ctx, sql, args...)
 	if err != nil {
 		qe.logger.Error("Query execution failed",
 			"queryId", query.Id,
@@ -94,36 +95,17 @@ func (qe *QueryExecutor) Execute(
 		)
 		return nil, fmt.Errorf("failed to execute query %s: %w", query.Id, err)
 	}
-	defer rows.Close()
+	defer sqlRows.Close()
 
-	// Scan rows into maps
-	var results []map[string]interface{}
-	for rows.Next() {
-		rowMap := make(map[string]interface{})
-		if err := rows.MapScan(rowMap); err != nil {
-			qe.logger.Error("Failed to scan row",
-				"queryId", query.Id,
-				"error", err,
-			)
-			return nil, fmt.Errorf("failed to scan row: %w", err)
-		}
-
-		// Convert []byte values to strings for JSON serialization
-		for key, value := range rowMap {
-			if b, ok := value.([]byte); ok {
-				rowMap[key] = string(b)
-			}
-		}
-
-		results = append(results, rowMap)
-	}
-
-	if err := rows.Err(); err != nil {
-		qe.logger.Error("Error iterating rows",
+	// Convert rows to maps using the utility function
+	results, err := dbutil.RowsToMaps(sqlRows)
+	if err != nil {
+		qe.logger.Error("Failed to convert rows",
 			"queryId", query.Id,
 			"error", err,
+			"duration_ms", time.Since(startTime).Milliseconds(),
 		)
-		return nil, fmt.Errorf("error iterating rows: %w", err)
+		return nil, fmt.Errorf("failed to convert rows: %w", err)
 	}
 
 	qe.logger.Debug("Query executed successfully",
