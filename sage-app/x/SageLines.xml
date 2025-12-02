@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Feature Name="SageLines" Version="1.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="feature-schema.xsd">
+
+  <!-- ============================= -->
+  <!-- BACKEND ELEMENTS              -->
+  <!-- ============================= -->
+  <Backend>
+
+    <!-- SELECT QUERIES: Data retrieval operations -->
+    <Query Id="ListLineItems" Type="Select" Description="Retrieve all line items from Sage and Portal invoices" MockFile2="mock-line-items.json">
+      <![CDATA[
+         
+        SELECT
+          saticiUrunKodu,
+          urunAdi,
+          miktar,
+          '' AS  Recived_Invoice_Portal
+        FROM [TR-EDOCS].[dbo].[_PORTALD]
+      WHERE @ref>''
+      ]]>
+    </Query>
+ 
+
+  </Backend>
+
+  <!-- ============================= -->
+  <!-- FRONTEND ELEMENTS             -->
+  <!-- ============================= -->
+  <Frontend>
+
+    <!-- DATA TABLES: Display data in tabular format -->
+    <DataTable Id="LineItemsTable" QueryRef="ListLineItems" Title="Invoice Line Items"
+               Pagination="true" PageSize="25" Sortable="true" Searchable="true">
+      <Column Name="ITMREF_0" Label="Product Code" Type="Text" Sortable="true" Width="150px"/>
+      <Column Name="ITMDES_0" Label="Product Description" Type="Text" Sortable="true"/>
+      <Column Name="QTYSTU_0" Label="Quantity" Type="Number" Sortable="true" Width="100px" Align="Right"/>
+      <Column Name="loc" Label="Source" Type="Text" Sortable="true" Width="150px" Align="Center"/>
+    </DataTable>
+
+  </Frontend>
+
+</Feature>

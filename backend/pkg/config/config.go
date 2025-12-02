@@ -27,6 +27,7 @@ type DatabaseConfig struct {
 	User     string
 	Password string
 	Database string
+	DSN      string
 }
 
 type FeatureConfig struct {
@@ -52,6 +53,7 @@ func Load() (*Config, error) {
 			User:     getEnv("DB_USER", "sa"),
 			Password: getEnv("DB_PASSWORD", ""),
 			Database: getEnv("DB_NAME", "xpanel"),
+			DSN:      getEnv("DATABASE_URL", ""),
 		},
 		Feature: FeatureConfig{
 			XFeatureFileLocation: getEnv("XFEATURE_FILE_LOCATION", "specs/xfeature/"),
@@ -68,8 +70,11 @@ func Load() (*Config, error) {
 }
 
 func (c *DatabaseConfig) ConnectionString() string {
+	if len(c.DSN) > 0 {
+		return c.DSN
+	}
 	return fmt.Sprintf(
-		"sqlserver://%s:%s@%s:%s?database=%s",
+		"sqlserver://%s:%s@%s:%s?database=%s&encrypt=disable&trustServerCertificate=true",
 		c.User,
 		c.Password,
 		c.Host,

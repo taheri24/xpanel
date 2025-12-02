@@ -25,24 +25,7 @@
         LIMIT :limit OFFSET :offset
       ]]>
     </Query>
-    
-    <Query Id="GetUserDetails" Type="Select" Description="Retrieve single user by ID">
-      <![CDATA[
-        SELECT 
-          user_id,
-          username,
-          email,
-          first_name,
-          last_name,
-          role,
-          status,
-          phone,
-          created_at
-        FROM users
-        WHERE user_id = :user_id
-      ]]>
-    </Query>
-    
+     
     <Query Id="SearchUsers" Type="Select" Description="Search users by keyword">
       <![CDATA[
         SELECT 

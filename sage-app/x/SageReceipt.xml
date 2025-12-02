@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Feature Name="SageReceipt" Version="1.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="feature-schema.xsd">
+
+  <!-- ============================= -->
+  <!-- BACKEND ELEMENTS              -->
+  <!-- ============================= -->
+  <Backend>
+
+    <!-- SELECT QUERIES: Data retrieval operations -->
+    <Query Id="ListReceipts" Type="Select" Description="Retrieve all Sage receipt records" MockFile2="mock-receipts.json">
+      <![CDATA[
+        SELECT
+          PTHNUM_0,
+          BPSNDE_0,
+          @ref AS RCPDAT_0
+        FROM [TR-EDOCS].[dbo].[sagedbLIVEPRECEIPTD]
+        
+       WHERE BPSNDE_0 = @ref 
+        ORDER BY RCPDAT_0 DESC
+      ]]>
+    </Query>
+   </Backend>
+
+  <!-- ============================= -->
+  <!-- FRONTEND ELEMENTS             -->
+  <!-- ============================= -->
+  <Frontend>
+
+    <!-- DATA TABLES: Display data in tabular format -->
+    <DataTable Id="ReceiptsTable" QueryRef="ListReceipts" Title="Sage Receipt Records"
+               Pagination="true" PageSize="20" Sortable="true" Searchable="true">
+      <Column Name="PTHNUM_0" Label="Receipt Number" Type="Text" Sortable="true" Width="150px"/>
+      <Column Name="BPSNDE_0" Label="Invoice Number" Type="Text" Sortable="true" Width="150px"/>
+      <Column Name="RCPDAT_0" Label="Receipt Date" Type="Date" Sortable="true" Width="130px"/>
+    </DataTable>
+
+  </Frontend>
+
+</Feature>

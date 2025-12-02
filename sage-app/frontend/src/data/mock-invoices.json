@@ -1,0 +1,57 @@
+[
+  {
+    "satici_vergiNo": "1234567890",
+    "faturaNo": "INV-001",
+    "faturaTarihi": "2024-11-01",
+    "faturaTuru": "Standard",
+    "faturaTipi": "Purchase",
+    "paraBirimi": "TRY",
+    "Toplam": 1000.00,
+    "vergi": 180.00,
+    "odenecekTutar": 1180.00
+  },
+  {
+    "satici_vergiNo": "0987654321",
+    "faturaNo": "INV-002",
+    "faturaTarihi": "2024-11-02",
+    "faturaTuru": "Credit",
+    "faturaTipi": "Purchase",
+    "paraBirimi": "TRY",
+    "Toplam": 2500.00,
+    "vergi": 450.00,
+    "odenecekTutar": 2950.00
+  },
+  {
+    "satici_vergiNo": "1122334455",
+    "faturaNo": "INV-003",
+    "faturaTarihi": "2024-11-03",
+    "faturaTuru": "Debit",
+    "faturaTipi": "Purchase",
+    "paraBirimi": "USD",
+    "Toplam": 5000.00,
+    "vergi": 800.00,
+    "odenecekTutar": 5800.00
+  },
+  {
+    "satici_vergiNo": "5566778899",
+    "faturaNo": "INV-004",
+    "faturaTarihi": "2024-11-04",
+    "faturaTuru": "Standard",
+    "faturaTipi": "Purchase",
+    "paraBirimi": "EUR",
+    "Toplam": 3250.00,
+    "vergi": 585.00,
+    "odenecekTutar": 3835.00
+  },
+  {
+    "satici_vergiNo": "9988776655",
+    "faturaNo": "INV-005",
+    "faturaTarihi": "2024-11-05",
+    "faturaTuru": "Credit",
+    "faturaTipi": "Purchase",
+    "paraBirimi": "TRY",
+    "Toplam": 1500.00,
+    "vergi": 270.00,
+    "odenecekTutar": 1770.00
+  }
+]
