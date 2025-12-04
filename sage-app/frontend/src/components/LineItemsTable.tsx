@@ -28,9 +28,9 @@ type Order = 'asc' | 'desc'
 interface Props{
   receiptRef:string;
 }
-function getValue(obj:any,key:string){
+function getValue(obj:any,key:string):React.ReactNode{
   const results= Object.entries(obj).filter(([fieldName='']=['',''])=>((fieldName as string).toLowerCase()==key.toLowerCase() )).map(([_,val])=>val)
-  if(results.length>0) return results[0];
+  if(results?.length>0) return results[0] as any;
   return null;
 }
 export default function LineItemsTable(p:Props) {

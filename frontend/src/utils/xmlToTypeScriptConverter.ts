@@ -8,40 +8,21 @@
  */
 
 import { XMLParser } from 'fast-xml-parser';
-import { XFeature, BackendInfo, FrontendInfo, Query, ActionQuery, DataTable, Column, Form, Button, Mapping, Parameter, Message } from '../types/xfeature';
+import type { XFeature, BackendInfo, FrontendInfo, Query, ActionQuery, DataTable, Column, Form, Button, Mapping, Parameter, Message } from '../types/xfeature';
 
-interface ParsedFeature {
-  Feature: {
-    '$': {
-      Name: string;
-      Version: string;
-    };
-    Backend?: {
-      Query?: any;
-      ActionQuery?: any;
-    };
-    Frontend?: {
-      DataTable?: any;
-      Form?: any;
-    };
-    Mapping?: any;
-  };
-}
-
+export type XFeatureRawString=string; 
 /**
  * FULL IMPLEMENTATION: Converts XML string to XFeature interface
  * Uses fast-xml-parser library for robust XML parsing
  */
-export function convertXmlToXFeature(xmlString: string): XFeature {
+export function convertXmlToXFeature(xmlString: XFeatureRawString): XFeature {
   try {
     // Configure XML parser with standard attribute prefix
     const parser = new XMLParser({
       ignoreAttributes: false,
       attributeNamePrefix: '@_',
       textNodeName: '#text',
-      parseTagValue: false,
-      cdataTagName: '#cdata',
-      cdataPositionChar: '@@',
+      parseTagValue: false
     });
 
     // Parse XML string
@@ -133,22 +114,7 @@ function parseFrontend(frontendElement: any): FrontendInfo {
   return result;
 }
 
-/**
- * Helper: Extract attributes from element
- */
-function getAttributes(element: any): Record<string, string> {
-  if (element && typeof element === 'object' && !Array.isArray(element)) {
-    const attrs: Record<string, string> = {};
-    for (const [key, value] of Object.entries(element)) {
-      if (key !== '#text' && !key.startsWith('$')) {
-        continue;
-      }
-    }
-    return attrs;
-  }
-  return {};
-}
-
+ 
 /**
  * Helper: Extract CDATA/text content from element
  */
