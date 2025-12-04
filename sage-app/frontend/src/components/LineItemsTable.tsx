@@ -13,8 +13,15 @@ import {
   TextField,
   CircularProgress,
   Alert,
-  useTheme
+  useTheme,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  IconButton
 } from '@mui/material'
+import EditIcon from '@mui/icons-material/Edit'
 import { apiService, LineItem } from '../services/api.config'
 
 type Order = 'asc' | 'desc'
@@ -36,6 +43,9 @@ export default function LineItemsTable(p:Props) {
   const [order, setOrder] = useState<Order>('asc')
   const [orderBy, setOrderBy] = useState<string>('ITMREF_0')
   const [searchTerm, setSearchTerm] = useState('')
+  const [openEditDialog, setOpenEditDialog] = useState(false)
+  const [selectedRow, setSelectedRow] = useState<LineItem | null>(null)
+  const [editFormData, setEditFormData] = useState<Partial<LineItem>>({})
 
   useEffect(() => {
     fetchLineItems()
@@ -68,6 +78,40 @@ export default function LineItemsTable(p:Props) {
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(parseInt(event.target.value, 10))
     setPage(0)
+  }
+
+  const handleOpenEditDialog = (row: LineItem) => {
+    setSelectedRow(row)
+    setEditFormData(row)
+    setOpenEditDialog(true)
+  }
+
+  const handleCloseEditDialog = () => {
+    setOpenEditDialog(false)
+    setSelectedRow(null)
+    setEditFormData({})
+  }
+
+  const handleEditFormChange = (field: keyof LineItem, value: any) => {
+    setEditFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const logEditSubmission = (rowData: Partial<LineItem>) => {
+    const timestamp = new Date().toISOString()
+    const logEntry = {
+      action: 'LINE_ITEM_EDIT',
+      timestamp,
+      originalData: selectedRow,
+      editedData: rowData,
+      receiptRef: p.receiptRef
+    }
+    console.log('Edit Submission Log:', logEntry)
+    return logEntry
+  }
+
+  const handleSaveEdit = () => {
+    logEditSubmission(editFormData)
+    handleCloseEditDialog()
   }
 
   const filteredData = data.filter(item =>
@@ -171,7 +215,8 @@ export default function LineItemsTable(p:Props) {
                 </TableSortLabel>
               </TableCell>
               {['Note1','Note2','Note3','Note4','Note5'].map(fld=> <TableCell align="right" sx={{  color: theme.palette.text.primary,fontWeight:'bold' }}>{fld} </TableCell>)}
-          
+              <TableCell sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>Actions</TableCell>
+
             </TableRow>
           </TableHead>
           <TableBody>
@@ -182,7 +227,16 @@ export default function LineItemsTable(p:Props) {
                 <TableCell align="right" sx={{ color: '#ccc' }}>{row.miktar}</TableCell>
                 <TableCell sx={{ color: theme.palette.text.primary }}>{row.Recived_Invoice_Portal}</TableCell>
                 {['Note1','Note2','Note3','Note4','Note5'].map(fld=> <TableCell align="right" sx={{ color: theme.palette.text.secondary }}>{ (getValue(row,fld))} </TableCell>)}
-              
+                <TableCell align="center">
+                  <IconButton
+                    size="small"
+                    onClick={() => handleOpenEditDialog(row)}
+                    sx={{ color: theme.palette.primary.main }}
+                    title="Edit row"
+                  >
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -199,8 +253,61 @@ export default function LineItemsTable(p:Props) {
             sx={{ backgroundColor: theme.palette.background.paper, color: theme.palette.text.primary }}
           />
         </>
-        
+
       )}
+
+      <Dialog open={openEditDialog} onClose={handleCloseEditDialog} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#f5f5f5', color: theme.palette.text.primary }}>
+          Edit Line Item
+        </DialogTitle>
+        <DialogContent sx={{ backgroundColor: theme.palette.background.paper, mt: 2 }}>
+          {selectedRow && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <TextField
+                label="Product Code"
+                value={editFormData.saticiUrunKodu || ''}
+                onChange={(e) => handleEditFormChange('saticiUrunKodu', e.target.value)}
+                fullWidth
+                variant="outlined"
+                size="small"
+              />
+              <TextField
+                label="Product Description"
+                value={editFormData.urunAdi || ''}
+                onChange={(e) => handleEditFormChange('urunAdi', e.target.value)}
+                fullWidth
+                variant="outlined"
+                size="small"
+              />
+              <TextField
+                label="Quantity"
+                type="number"
+                value={editFormData.miktar || ''}
+                onChange={(e) => handleEditFormChange('miktar', e.target.value)}
+                fullWidth
+                variant="outlined"
+                size="small"
+              />
+              <TextField
+                label="Source"
+                value={editFormData.Recived_Invoice_Portal || ''}
+                onChange={(e) => handleEditFormChange('Recived_Invoice_Portal', e.target.value)}
+                fullWidth
+                variant="outlined"
+                size="small"
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#f5f5f5', p: 2 }}>
+          <Button onClick={handleCloseEditDialog} color="inherit">
+            Cancel
+          </Button>
+          <Button onClick={handleSaveEdit} variant="contained" color="primary">
+            Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }
