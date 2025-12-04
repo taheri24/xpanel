@@ -7,95 +7,180 @@
  * const result = convertXmlToXFeature(xmlString);
  */
 
+import { XMLParser } from 'fast-xml-parser';
 import { XFeature, BackendInfo, FrontendInfo, Query, ActionQuery, DataTable, Column, Form, Button, Mapping, Parameter, Message } from '../types/xfeature';
 
-interface RawXMLFeature {
-  Feature?: {
-    $: {
-      Name?: string;
-      Version?: string;
+interface ParsedFeature {
+  Feature: {
+    '$': {
+      Name: string;
+      Version: string;
     };
     Backend?: {
-      Query?: any[];
-      ActionQuery?: any[];
+      Query?: any;
+      ActionQuery?: any;
     };
     Frontend?: {
-      DataTable?: any[];
-      Form?: any[];
+      DataTable?: any;
+      Form?: any;
     };
-    Mapping?: any[];
+    Mapping?: any;
   };
 }
 
 /**
- * PROTOTYPE: Converts XML string to XFeature interface
- * This is a basic implementation for testing
+ * FULL IMPLEMENTATION: Converts XML string to XFeature interface
+ * Uses fast-xml-parser library for robust XML parsing
  */
 export function convertXmlToXFeature(xmlString: string): XFeature {
-  // NOTE: This is a prototype. In production, we'll use fast-xml-parser library
-  // For now, this demonstrates the structure and expected output
-
-  const result: XFeature = {
-    name: '',
-    version: '',
-    backend: {
-      queries: [],
-      actionQueries: [],
-    },
-    frontend: {
-      dataTables: [],
-      forms: [],
-    },
-    mappings: [],
-  };
-
   try {
-    // TODO: Parse XML string
-    // TODO: Extract Feature attributes (Name, Version)
-    // TODO: Parse Backend section (Query, ActionQuery)
-    // TODO: Parse Frontend section (DataTable, Form)
-    // TODO: Parse Mapping section
+    // Configure XML parser with standard attribute prefix
+    const parser = new XMLParser({
+      ignoreAttributes: false,
+      attributeNamePrefix: '@_',
+      textNodeName: '#text',
+      parseTagValue: false,
+      cdataTagName: '#cdata',
+      cdataPositionChar: '@@',
+    });
 
-    return result;
+    // Parse XML string
+    const parsed = parser.parse(xmlString) as any;
+    const featureElement = parsed.Feature;
+
+    if (!featureElement) {
+      throw new Error('Invalid XML: Feature element not found');
+    }
+
+    // Extract Feature attributes (prefixed with @_)
+    const featureName = featureElement['@_Name'] || featureElement.Name || '';
+    const featureVersion = featureElement['@_Version'] || featureElement.Version || '';
+
+    // Parse Backend section
+    const backend = parseBackend(featureElement.Backend);
+
+    // Parse Frontend section
+    const frontend = parseFrontend(featureElement.Frontend);
+
+    // Parse Mapping section
+    const mappings = parseMapping(featureElement.Mapping);
+
+    return {
+      name: featureName,
+      version: featureVersion,
+      backend,
+      frontend,
+      mappings,
+    };
   } catch (error) {
     throw new Error(`Failed to convert XML to XFeature: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
 /**
- * Helper: Extract SQL content from CDATA
+ * Helper: Parse Backend section with Queries and ActionQueries
  */
-function extractSqlContent(element: any): string {
-  if (typeof element === 'string') {
-    return element.trim();
+function parseBackend(backendElement: any): BackendInfo {
+  const result: BackendInfo = {
+    queries: [],
+    actionQueries: [],
+  };
+
+  if (!backendElement) {
+    return result;
   }
-  if (element?._text) {
-    return element._text.trim();
+
+  // Parse Query elements
+  if (backendElement.Query) {
+    const queries = Array.isArray(backendElement.Query) ? backendElement.Query : [backendElement.Query];
+    result.queries = queries.map(parseQuery);
   }
-  return '';
+
+  // Parse ActionQuery elements
+  if (backendElement.ActionQuery) {
+    const actionQueries = Array.isArray(backendElement.ActionQuery) ? backendElement.ActionQuery : [backendElement.ActionQuery];
+    result.actionQueries = actionQueries.map(parseActionQuery);
+  }
+
+  return result;
+}
+
+/**
+ * Helper: Parse Frontend section with DataTables and Forms
+ */
+function parseFrontend(frontendElement: any): FrontendInfo {
+  const result: FrontendInfo = {
+    dataTables: [],
+    forms: [],
+  };
+
+  if (!frontendElement) {
+    return result;
+  }
+
+  // Parse DataTable elements
+  if (frontendElement.DataTable) {
+    const dataTables = Array.isArray(frontendElement.DataTable) ? frontendElement.DataTable : [frontendElement.DataTable];
+    result.dataTables = dataTables.map(parseDataTable);
+  }
+
+  // Parse Form elements
+  if (frontendElement.Form) {
+    const forms = Array.isArray(frontendElement.Form) ? frontendElement.Form : [frontendElement.Form];
+    result.forms = forms.map(parseForm);
+  }
+
+  return result;
 }
 
 /**
  * Helper: Extract attributes from element
  */
 function getAttributes(element: any): Record<string, string> {
-  if (element?.$ && typeof element.$ === 'object') {
-    return element.$;
+  if (element && typeof element === 'object' && !Array.isArray(element)) {
+    const attrs: Record<string, string> = {};
+    for (const [key, value] of Object.entries(element)) {
+      if (key !== '#text' && !key.startsWith('$')) {
+        continue;
+      }
+    }
+    return attrs;
   }
   return {};
+}
+
+/**
+ * Helper: Extract CDATA/text content from element
+ */
+function extractContent(element: any): string {
+  if (typeof element === 'string') {
+    return element.trim();
+  }
+  if (element && typeof element === 'object') {
+    if (element['#text']) {
+      return element['#text'].trim();
+    }
+  }
+  return '';
+}
+
+/**
+ * Helper: Get attribute value with @_ prefix
+ */
+function getAttr(element: any, attrName: string): string | undefined {
+  return element[`@_${attrName}`];
 }
 
 /**
  * Helper: Parse Query element
  */
 function parseQuery(element: any): Query {
-  const attrs = getAttributes(element);
   return {
-    id: attrs.Id || '',
+    id: getAttr(element, 'Id') || '',
     type: 'Select',
-    description: attrs.Description,
-    sql: extractSqlContent(element),
-    parameters: [],
+    description: getAttr(element, 'Description'),
+    sql: extractContent(element),
+    parameters: extractParameters(extractContent(element)),
   };
 }
 
@@ -103,30 +188,41 @@ function parseQuery(element: any): Query {
  * Helper: Parse ActionQuery element
  */
 function parseActionQuery(element: any): ActionQuery {
-  const attrs = getAttributes(element);
   return {
-    id: attrs.Id || '',
-    type: (attrs.Type || 'Insert') as 'Insert' | 'Update' | 'Delete',
-    description: attrs.Description,
-    sql: extractSqlContent(element),
-    parameters: [],
+    id: getAttr(element, 'Id') || '',
+    type: (getAttr(element, 'Type') || 'Insert') as 'Insert' | 'Update' | 'Delete',
+    description: getAttr(element, 'Description'),
+    sql: extractContent(element),
+    parameters: extractParameters(extractContent(element)),
   };
+}
+
+/**
+ * Helper: Extract SQL parameters from SQL string (e.g., :paramName)
+ */
+function extractParameters(sql: string): Parameter[] {
+  const paramPattern = /:(\w+)/g;
+  const matches = sql.match(paramPattern) || [];
+  const uniqueParams = Array.from(new Set(matches.map(m => m.substring(1))));
+
+  return uniqueParams.map(name => ({
+    name,
+  }));
 }
 
 /**
  * Helper: Parse Column element
  */
 function parseColumn(element: any): Column {
-  const attrs = getAttributes(element);
   return {
-    name: attrs.Name || '',
-    label: attrs.Label || '',
-    type: (attrs.Type || 'Text') as any,
-    sortable: attrs.Sortable === 'true',
-    filterable: attrs.Filterable === 'true',
-    width: attrs.Width,
-    format: attrs.Format,
-    align: (attrs.Align || 'left') as 'left' | 'center' | 'right',
+    name: getAttr(element, 'Name') || '',
+    label: getAttr(element, 'Label') || '',
+    type: (getAttr(element, 'Type') || 'Text') as any,
+    sortable: getAttr(element, 'Sortable') === 'true',
+    filterable: getAttr(element, 'Filterable') === 'true',
+    width: getAttr(element, 'Width'),
+    format: getAttr(element, 'Format'),
+    align: (getAttr(element, 'Align') || 'left') as 'left' | 'center' | 'right',
   };
 }
 
@@ -134,25 +230,35 @@ function parseColumn(element: any): Column {
  * Helper: Parse DataTable element
  */
 function parseDataTable(element: any): DataTable {
-  const attrs = getAttributes(element);
-  const columns: Column[] = Array.isArray(element.Column)
-    ? element.Column.map(parseColumn)
-    : element.Column
-    ? [parseColumn(element.Column)]
-    : [];
+  const columns: Column[] = [];
+
+  if (element.Column) {
+    const columnElements = Array.isArray(element.Column) ? element.Column : [element.Column];
+    columns.push(...columnElements.map(parseColumn));
+  }
 
   return {
-    id: attrs.Id || '',
-    queryRef: attrs.QueryRef || '',
-    title: attrs.Title,
-    description: attrs.Description,
-    pagination: attrs.Pagination === 'true',
-    pageSize: attrs.PageSize ? parseInt(attrs.PageSize, 10) : undefined,
-    sortable: attrs.Sortable === 'true',
-    filterable: attrs.Filterable === 'true',
-    searchable: attrs.Searchable === 'true',
+    id: getAttr(element, 'Id') || '',
+    queryRef: getAttr(element, 'QueryRef') || '',
+    title: getAttr(element, 'Title'),
+    description: getAttr(element, 'Description'),
+    pagination: getAttr(element, 'Pagination') === 'true',
+    pageSize: getAttr(element, 'PageSize') ? parseInt(getAttr(element, 'PageSize')!, 10) : undefined,
+    sortable: getAttr(element, 'Sortable') === 'true',
+    filterable: getAttr(element, 'Filterable') === 'true',
+    searchable: getAttr(element, 'Searchable') === 'true',
     columns,
-    formActions: attrs.FormActions,
+    formActions: getAttr(element, 'FormActions'),
+  };
+}
+
+/**
+ * Helper: Parse Option element
+ */
+function parseOption(element: any): { label: string; value: string } {
+  return {
+    label: getAttr(element, 'Label') || '',
+    value: getAttr(element, 'Value') || '',
   };
 }
 
@@ -160,88 +266,91 @@ function parseDataTable(element: any): DataTable {
  * Helper: Parse Form element
  */
 function parseForm(element: any): Form {
-  const attrs = getAttributes(element);
-  const fields: any[] = Array.isArray(element.Field)
-    ? element.Field
-    : element.Field
-    ? [element.Field]
-    : [];
+  const fields: any[] = [];
+  const buttons: Button[] = [];
+  const messages: Message[] = [];
 
-  const buttons: Button[] = Array.isArray(element.Button)
-    ? element.Button.map((btn: any) => {
-        const btnAttrs = getAttributes(btn);
-        return {
-          id: btnAttrs.Id,
-          type: btnAttrs.Type as any,
-          label: btnAttrs.Label,
-          style: btnAttrs.Style as any,
-          disabled: btnAttrs.Disabled === 'true',
-        };
-      })
-    : element.Button
-    ? [{
-        id: element.Button.$.Id,
-        type: element.Button.$.Type as any,
-        label: element.Button.$.Label,
-        style: element.Button.$.Style as any,
-        disabled: element.Button.$.Disabled === 'true',
-      }]
-    : [];
+  // Parse Field elements
+  if (element.Field) {
+    const fieldElements = Array.isArray(element.Field) ? element.Field : [element.Field];
+    fields.push(...fieldElements.map((field: any) => ({
+      name: getAttr(field, 'Name') || '',
+      dataType: getAttr(field, 'Type') || 'Text',
+      label: getAttr(field, 'Label') || '',
+      required: getAttr(field, 'Required') === 'true',
+      disabled: getAttr(field, 'Disabled') === 'true',
+      placeholder: getAttr(field, 'Placeholder'),
+      readonly: getAttr(field, 'Readonly') === 'true',
+      helperText: getAttr(field, 'HelperText'),
+    })));
+  }
 
-  const messages: Message[] = Array.isArray(element.Message)
-    ? element.Message.map((msg: any) => {
-        const msgAttrs = getAttributes(msg);
-        return {
-          type: msgAttrs.Type as any,
-          content: typeof msg === 'string' ? msg : msg._text || '',
-          visible: msgAttrs.Visible !== 'false',
-        };
-      })
-    : element.Message
-    ? [{
-        type: element.Message.$.Type as any,
-        content: typeof element.Message === 'string' ? element.Message : element.Message._text || '',
-        visible: element.Message.$.Visible !== 'false',
-      }]
-    : [];
+  // Parse Button elements
+  if (element.Button) {
+    const buttonElements = Array.isArray(element.Button) ? element.Button : [element.Button];
+    buttons.push(...buttonElements.map((btn: any) => ({
+      id: getAttr(btn, 'Id'),
+      type: (getAttr(btn, 'Type') || 'Submit') as any,
+      label: getAttr(btn, 'Label'),
+      style: getAttr(btn, 'Style') as any,
+      disabled: getAttr(btn, 'Disabled') === 'true',
+    })));
+  }
+
+  // Parse Message elements
+  if (element.Message) {
+    const messageElements = Array.isArray(element.Message) ? element.Message : [element.Message];
+    messages.push(...messageElements.map((msg: any) => ({
+      type: (getAttr(msg, 'Type') || 'Info') as any,
+      content: extractContent(msg),
+      visible: getAttr(msg, 'Visible') !== 'false',
+    })));
+  }
 
   return {
-    id: attrs.Id || '',
-    mode: (attrs.Mode || 'Create') as any,
-    title: attrs.Title,
-    description: attrs.Description,
-    actionRef: attrs.ActionRef,
-    queryRef: attrs.QueryRef,
-    dialog: attrs.Dialog === 'true',
-    fields: fields.map((f: any) => {
-      const fieldAttrs = getAttributes(f);
-      return {
-        name: fieldAttrs.Name || '',
-        dataType: fieldAttrs.Type || 'Text',
-        label: fieldAttrs.Label || '',
-        required: fieldAttrs.Required === 'true',
-        placeholder: fieldAttrs.Placeholder,
-      };
-    }),
+    id: getAttr(element, 'Id') || '',
+    mode: (getAttr(element, 'Mode') || 'Create') as any,
+    title: getAttr(element, 'Title'),
+    description: getAttr(element, 'Description'),
+    actionRef: getAttr(element, 'ActionRef'),
+    queryRef: getAttr(element, 'QueryRef'),
+    dialog: getAttr(element, 'Dialog') === 'true',
+    fields,
     buttons,
     messages,
   };
 }
 
 /**
- * Helper: Parse Mapping element
+ * Helper: Parse Mapping elements
  */
-function parseMapping(element: any): Mapping {
-  const attrs = getAttributes(element);
-  return {
-    name: attrs.Name || '',
-    dataType: attrs.DataType || '',
-    label: attrs.Label || '',
-    required: attrs.Required === 'true',
-    disabled: attrs.Disabled === 'true',
-    placeholder: attrs.Placeholder,
-    readonly: attrs.Readonly === 'true',
-    helperText: attrs.HelperText,
-    rows: attrs.Rows ? parseInt(attrs.Rows, 10) : undefined,
-  };
+function parseMapping(mappingElements: any): Mapping[] {
+  if (!mappingElements) {
+    return [];
+  }
+
+  const mappings = Array.isArray(mappingElements) ? mappingElements : [mappingElements];
+
+  return mappings.map((mapping: any) => ({
+    name: getAttr(mapping, 'Name') || '',
+    dataType: getAttr(mapping, 'DataType') || '',
+    label: getAttr(mapping, 'Label') || '',
+    listQuery: mapping.ListQuery ? {
+      id: getAttr(mapping.ListQuery, 'Id') || '',
+      type: 'Select' as const,
+      description: getAttr(mapping.ListQuery, 'Description'),
+      sql: extractContent(mapping.ListQuery),
+    } : undefined,
+    options: mapping.Options ? {
+      items: Array.isArray(mapping.Options.Option)
+        ? mapping.Options.Option.map(parseOption)
+        : [parseOption(mapping.Options.Option)],
+    } : undefined,
+    required: getAttr(mapping, 'Required') === 'true',
+    disabled: getAttr(mapping, 'Disabled') === 'true',
+    placeholder: getAttr(mapping, 'Placeholder'),
+    readonly: getAttr(mapping, 'Readonly') === 'true',
+    helperText: getAttr(mapping, 'HelperText'),
+    rows: getAttr(mapping, 'Rows') ? parseInt(getAttr(mapping, 'Rows')!, 10) : undefined,
+  }));
 }
