@@ -1,50 +1,50 @@
 [
   {
-    "ITMREF_0": "ITEM-001",
-    "ITMDES_0": "Office Supplies",
-    "QTYSTU_0": 100,
-    "loc": "Recipt_Sage"
+    "saticiUrunKodu": "ITEM-001",
+    "urunAdi": "Office Supplies",
+    "miktar": 100,
+    "Recived_Invoice_Portal": "Recipt_Sage"
   },
   {
-    "ITMREF_0": "ITEM-002",
-    "ITMDES_0": "Electronic Equipment",
-    "QTYSTU_0": 5,
-    "loc": "Recipt_Sage"
+    "saticiUrunKodu": "ITEM-002",
+    "urunAdi": "Electronic Equipment",
+    "miktar": 5,
+    "Recived_Invoice_Portal": "Recipt_Sage"
   },
   {
-    "ITMREF_0": "ITEM-003",
-    "ITMDES_0": "Consulting Services",
-    "QTYSTU_0": 40,
-    "loc": "Recived_Invoice_Portal"
+    "saticiUrunKodu": "ITEM-003",
+    "urunAdi": "Consulting Services",
+    "miktar": 40,
+    "Recived_Invoice_Portal": "Recived_Invoice_Portal"
   },
   {
-    "ITMREF_0": "ITEM-004",
-    "ITMDES_0": "Software Licenses",
-    "QTYSTU_0": 25,
-    "loc": "Recipt_Sage"
+    "saticiUrunKodu": "ITEM-004",
+    "urunAdi": "Software Licenses",
+    "miktar": 25,
+    "Recived_Invoice_Portal": "Recipt_Sage"
   },
   {
-    "ITMREF_0": "ITEM-005",
-    "ITMDES_0": "Hardware Components",
-    "QTYSTU_0": 15,
-    "loc": "Recived_Invoice_Portal"
+    "saticiUrunKodu": "ITEM-005",
+    "urunAdi": "Hardware Components",
+    "miktar": 15,
+    "Recived_Invoice_Portal": "Recived_Invoice_Portal"
   },
   {
-    "ITMREF_0": "ITEM-006",
-    "ITMDES_0": "Furniture",
-    "QTYSTU_0": 8,
-    "loc": "Recipt_Sage"
+    "saticiUrunKodu": "ITEM-006",
+    "urunAdi": "Furniture",
+    "miktar": 8,
+    "Recived_Invoice_Portal": "Recipt_Sage"
   },
   {
-    "ITMREF_0": "ITEM-007",
-    "ITMDES_0": "Printing Services",
-    "QTYSTU_0": 500,
-    "loc": "Recived_Invoice_Portal"
+    "saticiUrunKodu": "ITEM-007",
+    "urunAdi": "Printing Services",
+    "miktar": 500,
+    "Recived_Invoice_Portal": "Recived_Invoice_Portal"
   },
   {
-    "ITMREF_0": "ITEM-008",
-    "ITMDES_0": "Travel & Accommodation",
-    "QTYSTU_0": 3,
-    "loc": "Recipt_Sage"
+    "saticiUrunKodu": "ITEM-008",
+    "urunAdi": "Travel & Accommodation",
+    "miktar": 3,
+    "Recived_Invoice_Portal": "Recipt_Sage"
   }
 ]
