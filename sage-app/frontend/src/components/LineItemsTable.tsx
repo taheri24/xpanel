@@ -1,14 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  TablePagination,
-  TableSortLabel,
   Box,
   TextField,
   CircularProgress,
@@ -21,27 +12,52 @@ import {
   Button,
   IconButton
 } from '@mui/material'
+import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import EditIcon from '@mui/icons-material/Edit'
 import { apiService, LineItem } from '../services/api.config'
 
-type Order = 'asc' | 'desc'
 interface Props{
   receiptRef:string;
 }
+
 function getValue(obj:any,key:string):React.ReactNode{
   const results= Object.entries(obj).filter(([fieldName='']=['',''])=>((fieldName as string).toLowerCase()==key.toLowerCase() )).map(([_,val])=>val)
   if(results?.length>0) return results[0] as any;
   return null;
 }
+
+const columns: GridColDef[] = [
+  { field: 'saticiUrunKodu', headerName: 'Product Code', width: 150, sortable: true },
+  { field: 'urunAdi', headerName: 'Product Description', width: 200, sortable: true },
+  { field: 'miktar', headerName: 'Quantity', width: 100, sortable: true, type: 'number', align: 'right', headerAlign: 'right' },
+  { field: 'Recived_Invoice_Portal', headerName: 'Source', width: 150, sortable: true },
+  { field: 'Note1', headerName: 'Note1', width: 100, sortable: false },
+  { field: 'Note2', headerName: 'Note2', width: 100, sortable: false },
+  { field: 'Note3', headerName: 'Note3', width: 100, sortable: false },
+  { field: 'Note4', headerName: 'Note4', width: 100, sortable: false },
+  { field: 'Note5', headerName: 'Note5', width: 100, sortable: false },
+  {
+    field: 'actions',
+    headerName: 'Actions',
+    width: 80,
+    sortable: false,
+    renderCell: (params) => (
+      <IconButton
+        size="small"
+        sx={{ color: 'primary.main' }}
+        title="Edit row"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <EditIcon fontSize="small" />
+      </IconButton>
+    ),
+  },
+]
 export default function LineItemsTable(p:Props) {
   const theme = useTheme()
   const [data, setData] = useState<LineItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(10)
-  const [order, setOrder] = useState<Order>('asc')
-  const [orderBy, setOrderBy] = useState<string>('ITMREF_0')
   const [searchTerm, setSearchTerm] = useState('')
   const [openEditDialog, setOpenEditDialog] = useState(false)
   const [selectedRow, setSelectedRow] = useState<LineItem | null>(null)
@@ -63,21 +79,6 @@ export default function LineItemsTable(p:Props) {
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleRequestSort = (property: string) => {
-    const isAsc = orderBy === property && order === 'asc'
-    setOrder(isAsc ? 'desc' : 'asc')
-    setOrderBy(property)
-  }
-
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage)
-  }
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10))
-    setPage(0)
   }
 
   const handleOpenEditDialog = (row: LineItem) => {
@@ -118,24 +119,7 @@ export default function LineItemsTable(p:Props) {
     Object.values(item).some(val =>
       String(val).toLowerCase().includes(searchTerm.toLowerCase())
     )
-  )
-
-  const sortedData = [...filteredData].sort((a, b) => {
-    const aVal = a[orderBy as keyof LineItem]
-    const bVal = b[orderBy as keyof LineItem]
-
-    if (typeof aVal === 'number' && typeof bVal === 'number') {
-      return order === 'asc' ? aVal - bVal : bVal - aVal
-    }
-
-    const aStr = String(aVal).toLowerCase()
-    const bStr = String(bVal).toLowerCase()
-    return order === 'asc'
-      ? aStr.localeCompare(bStr)
-      : bStr.localeCompare(aStr)
-  })
-
-  const displayedData = sortedData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+  ).map((item, index) => ({ ...item, id: index }))
 
   return (
     <Box>
@@ -157,7 +141,6 @@ export default function LineItemsTable(p:Props) {
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value)
-            setPage(0)
           }}
           sx={{ width: '100%', maxWidth: 300 }}
           disabled={loading}
@@ -169,91 +152,31 @@ export default function LineItemsTable(p:Props) {
         </Box>
       )}
       {!loading && (
-        <>
-          <TableContainer component={Paper} sx={{ backgroundColor: theme.palette.background.paper }}>
-        <Table sx={{ minWidth: 750 }}>
-          <TableHead>
-            <TableRow sx={{ backgroundColor: theme.palette.mode === 'light' ? '#f5f5f5' : '#2a2a2a' }}>
-              <TableCell sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>
-                <TableSortLabel
-                  active={orderBy === 'ITMREF_0'}
-                  direction={orderBy === 'ITMREF_0' ? order : 'asc'}
-                  onClick={() => handleRequestSort('ITMREF_0')}
-                  sx={{ color: theme.palette.text.primary }}
-                >
-                  Product Code
-                </TableSortLabel>
-              </TableCell>
-              <TableCell sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>
-                <TableSortLabel
-                  active={orderBy === 'ITMDES_0'}
-                  direction={orderBy === 'ITMDES_0' ? order : 'asc'}
-                  onClick={() => handleRequestSort('ITMDES_0')}
-                  sx={{ color: theme.palette.text.primary }}
-                >
-                  Product Description
-                </TableSortLabel>
-              </TableCell>
-              <TableCell align="right" sx={{ color: '#fff', fontWeight: 'bold' }}>
-                <TableSortLabel
-                  active={orderBy === 'QTYSTU_0'}
-                  direction={orderBy === 'QTYSTU_0' ? order : 'asc'}
-                  onClick={() => handleRequestSort('QTYSTU_0')}
-                  sx={{ color: theme.palette.text.primary }}
-                >
-                  Quantity
-                </TableSortLabel>
-              </TableCell>
-              <TableCell sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>
-                <TableSortLabel
-                  active={orderBy === 'loc'}
-                  direction={orderBy === 'loc' ? order : 'asc'}
-                  onClick={() => handleRequestSort('loc')}
-                  sx={{ color: theme.palette.text.primary }}
-                >
-                  Source
-                </TableSortLabel>
-              </TableCell>
-              {['Note1','Note2','Note3','Note4','Note5'].map(fld=> <TableCell align="right" sx={{  color: theme.palette.text.primary,fontWeight:'bold' }}>{fld} </TableCell>)}
-              <TableCell sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>Actions</TableCell>
-
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {displayedData.map((row, index) => (
-              <TableRow key={index} sx={{ '&:hover': { backgroundColor: theme.palette.mode === 'light' ? '#eeeeee' : '#3a3a3a' } }}>
-                <TableCell sx={{ color: theme.palette.text.primary }}>{row.saticiUrunKodu}</TableCell>
-                <TableCell sx={{ color: theme.palette.text.primary }}>{row.urunAdi}</TableCell>
-                <TableCell align="right" sx={{ color: '#ccc' }}>{row.miktar}</TableCell>
-                <TableCell sx={{ color: theme.palette.text.primary }}>{row.Recived_Invoice_Portal}</TableCell>
-                {['Note1','Note2','Note3','Note4','Note5'].map(fld=> <TableCell align="right" sx={{ color: theme.palette.text.secondary }}>{ (getValue(row,fld))} </TableCell>)}
-                <TableCell align="center">
-                  <IconButton
-                    size="small"
-                    onClick={() => handleOpenEditDialog(row)}
-                    sx={{ color: theme.palette.primary.main }}
-                    title="Edit row"
-                  >
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-          </Table>
-          </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={filteredData.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            sx={{ backgroundColor: theme.palette.background.paper, color: theme.palette.text.primary }}
+        <Box sx={{ height: 400, width: '100%' }}>
+          <DataGrid
+            rows={filteredData}
+            columns={columns}
+            pageSizeOptions={[5, 10, 25]}
+            initialState={{
+              pagination: {
+                paginationModel: {
+                  pageSize: 10,
+                },
+              },
+            }}
+            onRowClick={(params) => handleOpenEditDialog(params.row)}
+            sx={{
+              backgroundColor: theme.palette.background.paper,
+              color: theme.palette.text.primary,
+              '& .MuiDataGrid-columnHeader': {
+                backgroundColor: theme.palette.mode === 'light' ? '#f5f5f5' : '#2a2a2a',
+              },
+              '& .MuiDataGrid-row:hover': {
+                backgroundColor: theme.palette.mode === 'light' ? '#eeeeee' : '#3a3a3a',
+              },
+            }}
           />
-        </>
-
+        </Box>
       )}
 
       <Dialog open={openEditDialog} onClose={handleCloseEditDialog} maxWidth="sm" fullWidth>
