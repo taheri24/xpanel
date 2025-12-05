@@ -426,7 +426,6 @@ describe('XML to TypeScript Converter - Basic Tests', () => {
 
     expect(result.backend.queries[0].parameters).toBeDefined();
     const sql = result.backend.queries[0].sql;
-    console.log({sql})
     expect(sql).toContain('status');
     expect(sql).toContain('role');
     expect(sql).toContain('startDate');
