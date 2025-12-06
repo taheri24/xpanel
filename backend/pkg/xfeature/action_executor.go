@@ -88,7 +88,7 @@ func (ae *ActionExecutor) Execute(
 	args := ae.buildArgs(sql, params, driverName)
 
 	// Log colored SQL for debugging
-	ae.logColoredSQL("Action prepared", sql, action.Type)
+	ae.logColoredSQL(fmt.Sprintf("%s/%s", action.Parent, action.Id), sql, action.Type)
 
 	// Execute action
 	result, err := db.ExecContext(ctx, sql, args...)
@@ -243,7 +243,7 @@ func (ae *ActionExecutor) ExecuteWithReturning(
 	args := ae.buildArgs(sql, params, driverName)
 
 	// Log colored SQL for debugging
-	ae.logColoredSQL("Action with RETURNING prepared", sql, action.Type)
+	ae.logColoredSQL(fmt.Sprintf("RETURNING %s/%s", action.Parent, action.Id), sql, action.Type)
 
 	// Execute action
 	result, err := db.ExecContext(ctx, sql, args...)
@@ -298,7 +298,7 @@ func (ae *ActionExecutor) ExecuteAndFetchRows(
 	args := ae.buildArgs(sql, params, driverName)
 
 	// Log colored SQL for debugging
-	ae.logColoredSQL("Action query prepared", sql, action.Type)
+	ae.logColoredSQL(fmt.Sprintf("ACTION %s/%s", action.Parent, action.Id), sql, action.Type)
 
 	// Execute query for row-based actions (e.g., RETURNING clause)
 	sqlRows, err := db.QueryContext(ctx, sql, args...)
