@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"os"
@@ -37,17 +38,19 @@ func (ch *CommandHandler) Execute(args []string) error {
 		return fmt.Errorf("unknown command: %s", command)
 	}
 
-	if len(args) < 3 {
-		return ch.printUsage()
-	}
-
-	action := strings.ToUpper(args[2])
 	env := NewEnvManager(ch.envPath)
 
 	// Load existing .env file
 	if err := env.Load(); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("error loading .env file: %w", err)
 	}
+
+	// Interactive mode if no action provided
+	if len(args) < 3 {
+		return ch.handleInteractiveMode(env)
+	}
+
+	action := strings.ToUpper(args[2])
 
 	switch action {
 	case "ADD":
@@ -65,6 +68,59 @@ func (ch *CommandHandler) Execute(args []string) error {
 	default:
 		return fmt.Errorf("unknown action: %s", args[2])
 	}
+}
+
+func (ch *CommandHandler) handleInteractiveMode(env *EnvManager) error {
+	// Show LIST first
+	if err := ch.handleList(env); err != nil {
+		return err
+	}
+
+	fmt.Println()
+	fmt.Print("Enter KEY=VALUE (or press Ctrl+C to exit): ")
+
+	// Read from stdin
+	scanner := bufio.NewScanner(os.Stdin)
+	if !scanner.Scan() {
+		return nil
+	}
+
+	input := strings.TrimSpace(scanner.Text())
+	if input == "" {
+		return nil
+	}
+
+	// Split by "=" separator
+	parts := strings.SplitN(input, "=", 2)
+	if len(parts) != 2 {
+		return fmt.Errorf("invalid format: expected KEY=VALUE, got '%s'", input)
+	}
+
+	key := strings.TrimSpace(parts[0])
+	value := strings.TrimSpace(parts[1])
+
+	if key == "" {
+		return fmt.Errorf("key cannot be empty")
+	}
+
+	// UPSERT the key-value pair
+	_, exists := env.List()[key]
+
+	if err := env.Add(key, value); err != nil {
+		return err
+	}
+
+	if err := env.Save(); err != nil {
+		return err
+	}
+
+	if exists {
+		fmt.Printf("✓ Updated: %s=%s\n", key, value)
+	} else {
+		fmt.Printf("✓ Added: %s=%s\n", key, value)
+	}
+
+	return nil
 }
 
 func (ch *CommandHandler) handleAdd(env *EnvManager, args []string, flagSet *flag.FlagSet) error {
@@ -228,6 +284,9 @@ Actions (case-insensitive):
   LIST                   List all environment variables
   SHOW <key>             Show a specific environment variable
 
+Interactive Mode:
+  exepath env            Enter interactive mode (shows LIST, then prompts for KEY=VALUE input)
+
 Examples:
   exepath env ADD DB_HOST localhost
   exepath env DELETE OLD_VAR
@@ -235,6 +294,7 @@ Examples:
   exepath env UPSERT API_KEY secret123
   exepath env LIST
   exepath env SHOW SERVER_PORT
+  exepath env             (Interactive mode)
 
 `)
 	return flag.ErrHelp
