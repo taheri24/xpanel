@@ -10,6 +10,14 @@ import (
 	"strings"
 )
 
+// ANSI color codes
+const (
+	colorGreen  = "\033[32m"
+	colorCyan   = "\033[36m"
+	colorYellow = "\033[33m"
+	colorReset  = "\033[0m"
+)
+
 // CommandHandler handles CLI commands
 type CommandHandler struct {
 	envPath string
@@ -263,7 +271,7 @@ func (ch *CommandHandler) handleList(env *EnvManager) error {
 	fmt.Println("Environment Variables:")
 	fmt.Println("======================")
 	for _, key := range keys {
-		fmt.Printf("%s=%s\n", key, entries[key])
+		fmt.Printf("%s%s%s%s=%s%s%s\n", colorGreen, key, colorReset, colorCyan, colorYellow, entries[key], colorReset)
 	}
 	fmt.Printf("\nTotal: %d variables\n", len(entries))
 	return nil
