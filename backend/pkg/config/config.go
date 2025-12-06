@@ -31,8 +31,9 @@ type DatabaseConfig struct {
 }
 
 type FeatureConfig struct {
-	XFeatureFileLocation string
-	MockDataSetLocation  string
+	XFeatureFileLocation  string
+	MockDataSetLocation   string
+	CaptureMockDataSet    bool
 }
 
 func Load() (*Config, error) {
@@ -58,6 +59,7 @@ func Load() (*Config, error) {
 		Feature: FeatureConfig{
 			XFeatureFileLocation: getEnv("XFEATURE_FILE_LOCATION", "specs/xfeature/"),
 			MockDataSetLocation:  getEnv("MOCK_DATA_SET_LOCATION", "specs/mock/"),
+			CaptureMockDataSet:   getBoolEnv("CAPTURE_MOCK_DATASET", false),
 		},
 	}
 
@@ -88,6 +90,14 @@ func getEnv(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+func getBoolEnv(key string, defaultValue bool) bool {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	return value == "true" || value == "1" || value == "yes" || value == "True"
 }
 
 // Module exports the config module for fx
