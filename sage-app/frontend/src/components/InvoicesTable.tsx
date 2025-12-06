@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import {
   Box,
   TextField,
@@ -7,7 +7,7 @@ import {
   useTheme
 } from '@mui/material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
-import { apiService, Invoice } from '../services/api.config'
+import { Invoice } from '../services/api.config'
 
 const formatValue=(s:number | string)=>{
   if (typeof s=='string'){
@@ -24,8 +24,12 @@ function getValue(obj:any,key:string){
   return null;
 }
 
-interface Props{
-  setRef:Function;
+interface Props {
+  data: Invoice[]
+  loading: boolean
+  error: string | null
+  onRetry: () => void
+  setRef: Function
 }
 
 const columns: GridColDef[] = [
@@ -43,30 +47,9 @@ const columns: GridColDef[] = [
   { field: 'Note4', headerName: 'Note4', width: 100, sortable: false },
   { field: 'Note5', headerName: 'Note5', width: 100, sortable: false },
 ]
-export default function InvoicesTable({setRef}:Props) {
+export default function InvoicesTable({ data, loading, error, onRetry, setRef }: Props) {
   const theme = useTheme()
-  const [data, setData] = useState<Invoice[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-
-  useEffect(() => {
-    fetchInvoices()
-  }, [])
-
-  const fetchInvoices = async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const invoices = await apiService.getInvoices()
-      setData(invoices)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch invoices')
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const filteredData = data.filter(invoice =>
     Object.values(invoice).some(val =>
@@ -80,7 +63,7 @@ export default function InvoicesTable({setRef}:Props) {
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
           <Box sx={{ mt: 1 }}>
-            <button onClick={fetchInvoices} style={{ cursor: 'pointer' }}>
+            <button onClick={onRetry} style={{ cursor: 'pointer' }}>
               Retry
             </button>
           </Box>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import {
   Box,
   TextField,
@@ -14,10 +14,13 @@ import {
 } from '@mui/material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import EditIcon from '@mui/icons-material/Edit'
-import { apiService, LineItem } from '../services/api.config'
+import { LineItem } from '../services/api.config'
 
-interface Props{
-  receiptRef:string;
+interface Props {
+  data: LineItem[]
+  loading: boolean
+  error: string | null
+  onRetry: () => void
 }
 
 function getValue(obj:any,key:string):React.ReactNode{
@@ -53,33 +56,12 @@ const columns: GridColDef[] = [
     ),
   },
 ]
-export default function LineItemsTable(p:Props) {
+export default function LineItemsTable({ data, loading, error, onRetry }: Props) {
   const theme = useTheme()
-  const [data, setData] = useState<LineItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [openEditDialog, setOpenEditDialog] = useState(false)
   const [selectedRow, setSelectedRow] = useState<LineItem | null>(null)
   const [editFormData, setEditFormData] = useState<Partial<LineItem>>({})
-
-  useEffect(() => {
-    fetchLineItems()
-  }, [])
-
-  const fetchLineItems = async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const lineItems = await apiService.getLineItems(p.receiptRef)
-      setData(lineItems)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch line items')
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleOpenEditDialog = (row: LineItem) => {
     setSelectedRow(row)
@@ -103,8 +85,7 @@ export default function LineItemsTable(p:Props) {
       action: 'LINE_ITEM_EDIT',
       timestamp,
       originalData: selectedRow,
-      editedData: rowData,
-      receiptRef: p.receiptRef
+      editedData: rowData
     }
     console.log('Edit Submission Log:', logEntry)
     return logEntry
@@ -127,7 +108,7 @@ export default function LineItemsTable(p:Props) {
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
           <Box sx={{ mt: 1 }}>
-            <button onClick={fetchLineItems} style={{ cursor: 'pointer' }}>
+            <button onClick={onRetry} style={{ cursor: 'pointer' }}>
               Retry
             </button>
           </Box>

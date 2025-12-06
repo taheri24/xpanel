@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import {
   Box,
   TextField,
@@ -7,11 +7,14 @@ import {
   useTheme
 } from '@mui/material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
-import { apiService, Receipt } from '../services/api.config'
+import { Receipt } from '../services/api.config'
 
-interface Props{
-  invoiceRef:string;
-  setReceiptRef:Function;
+interface Props {
+  data: Receipt[]
+  loading: boolean
+  error: string | null
+  onRetry: () => void
+  setReceiptRef: Function
 }
 
 function getValue(obj:any,key:string){
@@ -31,30 +34,9 @@ const columns: GridColDef[] = [
   { field: 'Note5', headerName: 'Note5', width: 100, sortable: false },
 ]
 
-export default function ReceiptsTable(p:Props) {
+export default function ReceiptsTable({ data, loading, error, onRetry, setReceiptRef }: Props) {
   const theme = useTheme()
-  const [data, setData] = useState<Receipt[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-
-  useEffect(() => {
-    fetchReceipts()
-  }, [])
-
-  const fetchReceipts = async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const receipts = await apiService.getReceipts(p.invoiceRef)
-      setData(receipts)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch receipts')
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const filteredData = data.filter(receipt =>
     Object.values(receipt).some(val =>
@@ -68,26 +50,24 @@ export default function ReceiptsTable(p:Props) {
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
           <Box sx={{ mt: 1 }}>
-            <button onClick={fetchReceipts} style={{ cursor: 'pointer' }}>
+            <button onClick={onRetry} style={{ cursor: 'pointer' }}>
               Retry
             </button>
           </Box>
         </Alert>
       )}
       <Box sx={{ mb: 2 }}>
-        
         <TextField
           placeholder="Search receipts..."
           variant="outlined"
           size="small"
-          value={searchTerm} 
+          value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value)
           }}
           sx={{ width: '100%', maxWidth: 300 }}
           disabled={loading}
         />
-           
       </Box>
       {loading && (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
@@ -107,7 +87,7 @@ export default function ReceiptsTable(p:Props) {
                 },
               },
             }}
-            onRowClick={(params) => p.setReceiptRef instanceof Function && p.setReceiptRef(getValue(params.row, 'ref'))}
+            onRowClick={(params) => setReceiptRef instanceof Function && setReceiptRef(getValue(params.row, 'ref'))}
             sx={{
               backgroundColor: theme.palette.background.paper,
               color: theme.palette.text.primary,
