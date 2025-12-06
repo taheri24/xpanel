@@ -155,6 +155,20 @@ func colorizeSQL(sql string, style Style) string {
 			continue
 		}
 
+
+	// Handle parameters (@param or :param format)
+	if (runes[i] == '@' || runes[i] == ':') && i+1 < len(runes) && (unicode.IsLetter(runes[i+1]) || runes[i+1] == '_') {
+		start := i
+		i++ // Skip @ or :
+		for i < len(runes) && (unicode.IsLetter(runes[i]) || unicode.IsDigit(runes[i]) || runes[i] == '_') {
+			i++
+		}
+		result.WriteString(string(style.Parameter))
+		result.WriteString(string(runes[start:i]))
+		result.WriteString(string(style.Reset))
+		continue
+	}
+
 		// Handle numbers
 		if unicode.IsDigit(runes[i]) {
 			start := i

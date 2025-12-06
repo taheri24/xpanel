@@ -17,18 +17,20 @@ const (
 	ColorOperator  ColorCode = "\033[38;5;226m"  // Yellow for operators
 	ColorComment   ColorCode = "\033[38;5;8m"    // Gray for comments
 	ColorFunction  ColorCode = "\033[38;5;135m"  // Magenta for functions
+	ColorParameter ColorCode = "\033[38;5;51m"   // Cyan for parameters (@param, :param)
 	ColorReset     ColorCode = "\033[0m"         // Reset to default
 )
 
 // Style defines color configuration
 type Style struct {
-	Keyword  ColorCode
-	String   ColorCode
-	Number   ColorCode
-	Operator ColorCode
-	Comment  ColorCode
-	Function ColorCode
-	Reset    ColorCode
+	Keyword   ColorCode
+	String    ColorCode
+	Number    ColorCode
+	Operator  ColorCode
+	Comment   ColorCode
+	Function  ColorCode
+	Parameter ColorCode
+	Reset     ColorCode
 }
 
 // Config controls colorizer behavior
@@ -45,13 +47,14 @@ var (
 		UseVT100:    true,
 		WindowsMode: runtime.GOOS == "windows",
 		Style: Style{
-			Keyword:  ColorKeyword,
-			String:   ColorString,
-			Number:   ColorNumber,
-			Operator: ColorOperator,
-			Comment:  ColorComment,
-			Function: ColorFunction,
-			Reset:    ColorReset,
+			Keyword:   ColorKeyword,
+			String:    ColorString,
+			Number:    ColorNumber,
+			Operator:  ColorOperator,
+			Comment:   ColorComment,
+			Function:  ColorFunction,
+			Parameter: ColorParameter,
+			Reset:     ColorReset,
 		},
 	}
 )

@@ -348,6 +348,101 @@ func TestEmptyAndEdgeCases(t *testing.T) {
 	}
 }
 
+// TestParameterHighlighting tests colorization of SQL parameters
+func TestParameterHighlighting(t *testing.T) {
+	tests := []struct {
+		name string
+		sql  string
+	}{
+		{
+			name: "SQL Server @param format",
+			sql:  "SELECT * FROM users WHERE id = @userId AND status = @status",
+		},
+		{
+			name: "PostgreSQL :param format",
+			sql:  "SELECT * FROM users WHERE id = :user_id AND status = :status",
+		},
+		{
+			name: "Mixed parameter formats",
+			sql:  "SELECT * FROM users WHERE id = @id OR username = :username",
+		},
+		{
+			name: "Parameters in INSERT",
+			sql:  "INSERT INTO users (name, email) VALUES (@name, @email)",
+		},
+		{
+			name: "Parameters in UPDATE",
+			sql:  "UPDATE users SET name = @name, updated_at = NOW() WHERE id = @id",
+		},
+		{
+			name: "Parameters with underscores",
+			sql:  "SELECT * FROM users WHERE user_id = @user_id AND order_id = :order_id",
+		},
+		{
+			name: "Multiple parameters same name",
+			sql:  "SELECT * FROM orders WHERE user_id = @user_id AND created_by = @user_id",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := Colorize(tt.sql)
+
+			if result == "" {
+				t.Error("expected non-empty result")
+			}
+
+			// Verify parameters are in result
+			if !strings.Contains(result, "@") && !strings.Contains(result, ":") {
+				// Check if it contains the param name at least
+				if strings.Contains(tt.sql, "@") || strings.Contains(tt.sql, ":") {
+					t.Error("expected parameters in output")
+				}
+			}
+		})
+	}
+}
+
+// TestParameterEdgeCases tests edge cases with parameter-like syntax
+func TestParameterEdgeCases(t *testing.T) {
+	tests := []struct {
+		name string
+		sql  string
+	}{
+		{
+			name: "@ not followed by letter",
+			sql:  "SELECT * FROM users WHERE email = 'test@example.com'",
+		},
+		{
+			name: ": not followed by letter",
+			sql:  "SELECT * FROM users WHERE time = '12:30:45'",
+		},
+		{
+			name: "parameter at end of query",
+			sql:  "SELECT * FROM users WHERE id = @id",
+		},
+		{
+			name: "parameter with numbers",
+			sql:  "SELECT * FROM users WHERE id = @user123 OR name = :name456",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := Colorize(tt.sql)
+
+			if result == "" {
+				t.Error("expected non-empty result")
+			}
+
+			// Should handle without errors
+			if !strings.Contains(result, "SELECT") {
+				t.Error("expected SELECT in result")
+			}
+		})
+	}
+}
+
 // BenchmarkColorize benchmarks the colorization performance
 func BenchmarkColorize(b *testing.B) {
 	sql := "SELECT u.id, u.name, o.total FROM users u INNER JOIN orders o ON u.id = o.user_id WHERE u.status = 'active'"

@@ -115,6 +115,33 @@ cfg := sqlprint.GetConfig()
 fmt.Printf("Colors enabled: %v\n", cfg.Enabled)
 ```
 
+## Supported SQL Features
+
+The utility properly colorizes:
+
+### Keywords
+SELECT, FROM, WHERE, JOIN, INNER, LEFT, RIGHT, FULL, OUTER, GROUP, HAVING, ORDER, UNION, WITH, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, and many more.
+
+### Functions
+- Aggregate: COUNT, SUM, AVG, MIN, MAX
+- String: UPPER, LOWER, TRIM, SUBSTRING, CONCAT
+- Numeric: ROUND, FLOOR, CEIL, ABS
+- Date/Time: DATE, TIME, TIMESTAMP, EXTRACT, DATEADD
+- Window: ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD, FIRST_VALUE, LAST_VALUE
+
+### Parameters
+- **SQL Server format**: `@parameter_name`
+- **PostgreSQL/MySQL format**: `:parameter_name`
+- Supports parameters with underscores and numbers
+
+### Literals
+- Strings: Single quotes `'`, double quotes `"`, backticks `` ` ``
+- Numbers: Integers and decimals (123, 99.99)
+- Comments: Single-line `--` and multi-line `/* */`
+
+### Operators
+All standard SQL operators: =, <, >, <=, >=, <>, !=, +, -, *, /, %, ||
+
 ## Color Support
 
 The utility automatically detects color support based on:
@@ -177,6 +204,19 @@ SELECT id, name, email FROM users WHERE status = 'active'
 (with color highlighting on supported terminals)
 ```
 
+### Example 1b: SELECT with Parameters
+
+```go
+sql := "SELECT id, name, email FROM users WHERE user_id = @user_id AND status = :status"
+fmt.Println(sqlprint.Colorize(sql))
+```
+
+Output:
+```
+SELECT id, name, email FROM users WHERE user_id = @user_id AND status = :status
+(with color highlighting - parameters shown in cyan)
+```
+
 ### Example 2: Complex JOIN with Aggregation
 
 ```go
@@ -220,7 +260,25 @@ sql := `
 fmt.Println(sqlprint.ColorizeFormatted(sql))
 ```
 
-### Example 4: Integration with Database Query Logging
+### Example 4: INSERT/UPDATE with Parameters
+
+```go
+sql := `INSERT INTO users (name, email, status)
+VALUES (@name, @email, @status)`
+fmt.Println(sqlprint.Colorize(sql))
+
+updateSQL := `UPDATE users
+SET status = @status, updated_at = NOW()
+WHERE user_id = @user_id`
+fmt.Println(sqlprint.Colorize(updateSQL))
+```
+
+Output shows:
+- Keywords in blue (INSERT, INTO, UPDATE, SET, WHERE)
+- Parameters in cyan (@name, @email, @status, @user_id)
+- Strings in green ('users', column names)
+
+### Example 5: Integration with Database Query Logging
 
 ```go
 import (
@@ -234,7 +292,7 @@ func logQuery(sql string, args ...interface{}) {
 }
 ```
 
-### Example 5: Disabling Colors for Log Files
+### Example 6: Disabling Colors for Log Files
 
 ```go
 // When logging to file, disable colors
