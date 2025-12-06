@@ -9,7 +9,9 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 
 	_ "github.com/taheri24/xpanel/backend/docs"
 	"github.com/taheri24/xpanel/backend/internal/database"
@@ -17,12 +19,25 @@ import (
 	"github.com/taheri24/xpanel/backend/internal/models"
 	"github.com/taheri24/xpanel/backend/internal/router"
 	"github.com/taheri24/xpanel/backend/internal/server"
+	"github.com/taheri24/xpanel/backend/pkg/cli"
 	"github.com/taheri24/xpanel/backend/pkg/config"
 	"github.com/taheri24/xpanel/backend/pkg/dbutil"
 	"go.uber.org/fx"
 )
 
 func main() {
+	// Check if CLI command is provided
+	if len(os.Args) > 1 && os.Args[1] == "env" {
+		// Handle CLI commands
+		envPath := ".env"
+		handler := cli.NewCommandHandler(envPath)
+		if err := handler.Execute(os.Args); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
+
 	// Set the embedded FS for the router
 	router.FS = FS
 
