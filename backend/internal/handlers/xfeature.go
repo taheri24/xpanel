@@ -156,7 +156,11 @@ func (h *XFeatureHandler) ExecuteQuery(c *gin.Context) {
 	}
 
 	// Execute the query
-	queryExecutor := xfeature.NewQueryExecutorWithLocation(slog.Default(), h.cfg.Feature.MockDataSetLocation)
+	queryExecutor := xfeature.NewQueryExecutorWithConfig(
+		slog.Default(),
+		h.cfg.Feature.MockDataSetLocation,
+		h.cfg.Feature.CaptureMockDataSet,
+	)
 	results, err := queryExecutor.Execute(c.Request.Context(), h.db.DB, query, params)
 	if err != nil {
 		slog.Error("Query execution failed", "feature", featureName, "query", queryID, "error", err)

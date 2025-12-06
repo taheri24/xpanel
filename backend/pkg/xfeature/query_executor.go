@@ -19,6 +19,7 @@ import (
 type QueryExecutor struct {
 	logger              *slog.Logger
 	mockDataSetLocation string
+	captureEnabled      bool
 	LastMockDataSet     string
 }
 
@@ -38,7 +39,22 @@ func NewQueryExecutorWithLocation(logger *slog.Logger, mockDataSetLocation strin
 	if mockDataSetLocation == "" {
 		mockDataSetLocation = "specs/mock/"
 	}
-	return &QueryExecutor{logger: logger, mockDataSetLocation: mockDataSetLocation}
+	return &QueryExecutor{logger: logger, mockDataSetLocation: mockDataSetLocation, captureEnabled: false}
+}
+
+// NewQueryExecutorWithConfig creates a new query executor with config options
+func NewQueryExecutorWithConfig(logger *slog.Logger, mockDataSetLocation string, captureEnabled bool) *QueryExecutor {
+	if logger == nil {
+		logger = slog.Default()
+	}
+	if mockDataSetLocation == "" {
+		mockDataSetLocation = "specs/mock/"
+	}
+	return &QueryExecutor{
+		logger:              logger,
+		mockDataSetLocation: mockDataSetLocation,
+		captureEnabled:      captureEnabled,
+	}
 }
 
 // Execute runs a SELECT query and returns results as slice of maps
@@ -119,6 +135,17 @@ func (qe *QueryExecutor) Execute(
 		"params", params,
 		"args", args,
 	)
+
+	// Capture mock dataset if enabled
+	if qe.captureEnabled && len(results) > 0 {
+		if err := qe.saveMockDataSet(query.Id, results); err != nil {
+			qe.logger.Warn("Failed to capture mock dataset",
+				"queryId", query.Id,
+				"error", err,
+			)
+			// Continue execution even if capture fails, don't return error
+		}
+	}
 
 	return results, nil
 }
@@ -206,6 +233,51 @@ func (qe *QueryExecutor) loadMockDataSet(filePath string) ([]map[string]interfac
 	}
 
 	return mockData, nil
+}
+
+// saveMockDataSet saves query results as mock data to a JSON file
+func (qe *QueryExecutor) saveMockDataSet(queryId string, results []map[string]interface{}) error {
+	// Ensure the mock data set location directory exists
+	if err := os.MkdirAll(qe.mockDataSetLocation, 0755); err != nil {
+		qe.logger.Error("Failed to create mock data set directory",
+			"location", qe.mockDataSetLocation,
+			"error", err,
+		)
+		return fmt.Errorf("failed to create directory %s: %w", qe.mockDataSetLocation, err)
+	}
+
+	// Generate filename: queryId_timestamp.json
+	timestamp := time.Now().Format("20060102_150405")
+	fileName := fmt.Sprintf("%s_%s.json", queryId, timestamp)
+	filePath := qe.mockDataSetLocation + fileName
+
+	// Marshal results to JSON with indentation for readability
+	data, err := json.MarshalIndent(results, "", "  ")
+	if err != nil {
+		qe.logger.Error("Failed to marshal results to JSON",
+			"queryId", queryId,
+			"error", err,
+		)
+		return fmt.Errorf("failed to marshal results: %w", err)
+	}
+
+	// Write to file
+	if err := os.WriteFile(filePath, data, 0644); err != nil {
+		qe.logger.Error("Failed to write mock data set file",
+			"queryId", queryId,
+			"filePath", filePath,
+			"error", err,
+		)
+		return fmt.Errorf("failed to write file %s: %w", filePath, err)
+	}
+
+	qe.logger.Info("Mock data set captured successfully",
+		"queryId", queryId,
+		"filePath", filePath,
+		"rowCount", len(results),
+	)
+
+	return nil
 }
 
 // logColoredSQL logs SQL with syntax highlighting using the sqlprint utility
