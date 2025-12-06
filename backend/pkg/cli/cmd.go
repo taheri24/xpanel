@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 )
 
@@ -133,6 +134,15 @@ func (ch *CommandHandler) handleUpdate(env *EnvManager, args []string, flagSet *
 
 func (ch *CommandHandler) handleList(env *EnvManager) error {
 	entries := env.List()
+
+	// Get file info
+	fileInfo, err := os.Stat(env.GetFilePath())
+	if err == nil {
+		absPath, _ := filepath.Abs(env.GetFilePath())
+		fmt.Printf(".env File: %s\n", absPath)
+		fmt.Printf("Size: %d bytes\n", fileInfo.Size())
+		fmt.Println()
+	}
 
 	if len(entries) == 0 {
 		fmt.Println("No environment variables found.")

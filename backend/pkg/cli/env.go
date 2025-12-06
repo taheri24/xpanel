@@ -20,6 +20,11 @@ func NewEnvManager(filePath string) *EnvManager {
 	}
 }
 
+// GetFilePath returns the file path
+func (em *EnvManager) GetFilePath() string {
+	return em.filePath
+}
+
 // Load reads the .env file and populates entries
 func (em *EnvManager) Load() error {
 	content, err := os.ReadFile(em.filePath)
