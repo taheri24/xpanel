@@ -47,6 +47,8 @@ func (ch *CommandHandler) Execute(args []string) error {
 		return ch.handleEnvCommand(args, flagSet)
 	case "unzip":
 		return ch.handleUnzipCommand(args, flagSet)
+	case "download":
+		return ch.handleDownloadCommand(args, flagSet)
 	default:
 		return fmt.Errorf("unknown command: %s", command)
 	}
@@ -119,6 +121,44 @@ func (ch *CommandHandler) handleUnzip(zipFile, target string) error {
 
 	absPath, _ := filepath.Abs(target)
 	fmt.Printf("✓ Extracted: %s -> %s\n", zipFile, absPath)
+	return nil
+}
+
+// handleDownloadCommand processes download-specific commands
+func (ch *CommandHandler) handleDownloadCommand(args []string, flagSet *flag.FlagSet) error {
+	// Define flags with defaults
+	downloadURL := flagSet.String("url", "", "URL to download from")
+	target := flagSet.String("target", "", "target file path (optional, extracted from URL if not provided)")
+
+	// Parse remaining arguments
+	flagSet.Parse(args[2:])
+	remaining := flagSet.Args()
+
+	// Override with positional arguments if provided
+	if len(remaining) > 0 {
+		*downloadURL = remaining[0]
+	}
+	if len(remaining) > 1 {
+		*target = remaining[1]
+	}
+
+	if *downloadURL == "" {
+		return fmt.Errorf("URL is required\nUsage: exepath download <url> [target]")
+	}
+
+	return ch.handleDownload(*downloadURL, *target)
+}
+
+// handleDownload performs the download operation
+func (ch *CommandHandler) handleDownload(downloadURL, target string) error {
+	dm := NewDownloadManager(downloadURL, target)
+
+	if err := dm.Download(); err != nil {
+		return fmt.Errorf("download failed: %w", err)
+	}
+
+	absPath, _ := filepath.Abs(dm.GetTarget())
+	fmt.Printf("✓ Downloaded: %s -> %s\n", downloadURL, absPath)
 	return nil
 }
 
@@ -416,6 +456,24 @@ ZIP FILE EXTRACTION:
       exepath unzip                                     (uses defaults: update.zip -> ./tmp-update)
       exepath unzip -zipfile=app.zip -target=./build   (using flags)
       exepath unzip app.zip ./extracted                 (using positional arguments)
+
+URL DOWNLOAD:
+  exepath download <url> [target]
+
+    Arguments:
+      <url>             URL to download from (required)
+      [target]          Target file path (optional, filename extracted from URL if not provided)
+
+    Options:
+      -url <url>        URL to download from (as flag)
+      -target <path>    Target file path (as flag)
+
+    Positional arguments override flags.
+
+    Examples:
+      exepath download https://example.com/file.zip                    (downloads to ./file.zip)
+      exepath download https://example.com/archive.tar.gz ./myfile     (downloads to ./myfile)
+      exepath download -url=https://example.com/file.bin -target=out   (using flags)
 
 `)
 	return flag.ErrHelp
