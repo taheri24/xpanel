@@ -13,6 +13,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/taheri24/xpanel/backend/pkg/dbutil"
+	"github.com/taheri24/xpanel/backend/pkg/sqlprint"
 )
 
 // ActionExecutor handles execution of INSERT/UPDATE/DELETE actions
@@ -85,6 +86,9 @@ func (ae *ActionExecutor) Execute(
 
 	// Build args slice in the order of parameters used in SQL
 	args := ae.buildArgs(sql, params, driverName)
+
+	// Log colored SQL for debugging
+	ae.logColoredSQL("Action prepared", sql, action.Type)
 
 	// Execute action
 	result, err := db.ExecContext(ctx, sql, args...)
@@ -238,6 +242,9 @@ func (ae *ActionExecutor) ExecuteWithReturning(
 	// Build args slice in the order of parameters used in SQL
 	args := ae.buildArgs(sql, params, driverName)
 
+	// Log colored SQL for debugging
+	ae.logColoredSQL("Action with RETURNING prepared", sql, action.Type)
+
 	// Execute action
 	result, err := db.ExecContext(ctx, sql, args...)
 	if err != nil {
@@ -289,6 +296,9 @@ func (ae *ActionExecutor) ExecuteAndFetchRows(
 
 	// Build args slice in the order of parameters used in SQL
 	args := ae.buildArgs(sql, params, driverName)
+
+	// Log colored SQL for debugging
+	ae.logColoredSQL("Action query prepared", sql, action.Type)
 
 	// Execute query for row-based actions (e.g., RETURNING clause)
 	sqlRows, err := db.QueryContext(ctx, sql, args...)
@@ -366,4 +376,23 @@ func (ae *ActionExecutor) loadMockDataSet(filePath string) (*MockResult, error) 
 		rowsAffected: mockResponse.RowsAffected,
 		lastInsertId: mockResponse.LastInsertId,
 	}, nil
+}
+
+// logColoredSQL logs SQL with syntax highlighting using the sqlprint utility
+func (ae *ActionExecutor) logColoredSQL(message string, sql string, actionType string) {
+	if sql == "" {
+		return
+	}
+
+	// Get colored SQL - colors will be auto-detected based on terminal capabilities
+	coloredSQL := sqlprint.Colorize(sql)
+
+	// Log with Debug level to make it visible in debug output
+	ae.logger.Debug(message, "actionType", actionType, "sql", coloredSQL)
+
+	// Also print to stdout for immediate visual feedback (optional, can be disabled)
+	// This helps developers see colorized SQL during development
+	if os.Getenv("DEBUG_SQL") == "1" {
+		fmt.Printf("\n=== %s (%s) ===\n%s\n", message, actionType, coloredSQL)
+	}
 }

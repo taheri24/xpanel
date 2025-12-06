@@ -12,6 +12,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/taheri24/xpanel/backend/pkg/dbutil"
+	"github.com/taheri24/xpanel/backend/pkg/sqlprint"
 )
 
 // QueryExecutor handles execution of SELECT queries
@@ -84,7 +85,10 @@ func (qe *QueryExecutor) Execute(
 
 	// Build args slice in the order of parameters used in SQL
 	sql, args := qe.buildArgs(sql, params, driverName)
-	slog.Info("prequery", "args", args, "params", params, "sql", sql)
+
+	// Log colored SQL for debugging
+	qe.logColoredSQL("Query prepared", sql)
+
 	// Execute query
 	sqlRows, err := db.QueryContext(ctx, sql, args...)
 	if err != nil {
@@ -202,4 +206,23 @@ func (qe *QueryExecutor) loadMockDataSet(filePath string) ([]map[string]interfac
 	}
 
 	return mockData, nil
+}
+
+// logColoredSQL logs SQL with syntax highlighting using the sqlprint utility
+func (qe *QueryExecutor) logColoredSQL(message string, sql string) {
+	if sql == "" {
+		return
+	}
+
+	// Get colored SQL - colors will be auto-detected based on terminal capabilities
+	coloredSQL := sqlprint.Colorize(sql)
+
+	// Log with Info level to make it visible in debug output
+	qe.logger.Debug(message, "sql", coloredSQL)
+
+	// Also print to stdout for immediate visual feedback (optional, can be disabled)
+	// This helps developers see colorized SQL during development
+	if os.Getenv("DEBUG_SQL") == "1" {
+		fmt.Printf("\n=== %s ===\n%s\n", message, coloredSQL)
+	}
 }
