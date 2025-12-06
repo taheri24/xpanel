@@ -202,6 +202,7 @@ function AppContent() {
           <TabPanel value={tabValue} index={2}>
             <LineItemsTable
               data={lineItems}
+              data2={lineItems}
               loading={lineItemsLoading}
               error={lineItemsError}
               onRetry={fetchLineItems}
