@@ -216,13 +216,5 @@ func (qe *QueryExecutor) logColoredSQL(message string, sql string) {
 
 	// Get colored SQL - colors will be auto-detected based on terminal capabilities
 	coloredSQL := sqlprint.Colorize(sql)
-
-	// Log with Info level to make it visible in debug output
-	qe.logger.Debug(message, "sql", coloredSQL)
-
-	// Also print to stdout for immediate visual feedback (optional, can be disabled)
-	// This helps developers see colorized SQL during development
-	if os.Getenv("DEBUG_SQL") == "1" {
-		fmt.Printf("\n=== %s ===\n%s\n", message, coloredSQL)
-	}
+	fmt.Printf("\n\r=== %s (%s) ===\n\r%s\n\r", message, "SELECTING", coloredSQL)
 }

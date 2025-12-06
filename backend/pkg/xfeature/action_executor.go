@@ -386,13 +386,6 @@ func (ae *ActionExecutor) logColoredSQL(message string, sql string, actionType s
 
 	// Get colored SQL - colors will be auto-detected based on terminal capabilities
 	coloredSQL := sqlprint.Colorize(sql)
+	fmt.Printf("\n\r=== %s (%s) ===\n\r%s\n\r", message, actionType, coloredSQL)
 
-	// Log with Debug level to make it visible in debug output
-	ae.logger.Debug(message, "actionType", actionType, "sql", coloredSQL)
-
-	// Also print to stdout for immediate visual feedback (optional, can be disabled)
-	// This helps developers see colorized SQL during development
-	if os.Getenv("DEBUG_SQL") == "1" {
-		fmt.Printf("\n=== %s (%s) ===\n%s\n", message, actionType, coloredSQL)
-	}
 }
