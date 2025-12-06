@@ -18,6 +18,7 @@ import { LineItem } from '../services/api.config'
 
 interface Props {
   data: LineItem[]
+  data2?: LineItem[]
   loading: boolean
   error: string | null
   onRetry: () => void
@@ -29,13 +30,15 @@ function getValue(obj:any,key:string):React.ReactNode{
   return null;
 }
 
-export default function LineItemsTable({ data, loading, error, onRetry }: Props) {
+export default function LineItemsTable({ data, data2 = [], loading, error, onRetry }: Props) {
 
   const theme = useTheme()
   const [searchTerm, setSearchTerm] = useState('')
   const [openEditDialog, setOpenEditDialog] = useState(false)
   const [selectedRow, setSelectedRow] = useState<LineItem | null>(null)
   const [editFormData, setEditFormData] = useState<Partial<LineItem>>({})
+  const [selectedRow1, setSelectedRow1] = useState<number | null>(null)
+  const [selectedRow2, setSelectedRow2] = useState<number | null>(null)
 
   const columns: GridColDef[] = [
     {
@@ -97,12 +100,42 @@ export default function LineItemsTable({ data, loading, error, onRetry }: Props)
     return logEntry
   }
 
+  const logPairingAction = (row1: LineItem | null, row2: LineItem | null) => {
+    const timestamp = new Date().toISOString()
+    const logEntry = {
+      action: 'ROW_PAIRING',
+      timestamp,
+      pairedRows: {
+        datagrid1: row1,
+        datagrid2: row2
+      }
+    }
+    console.log('Row Pairing Log:', logEntry)
+    return logEntry
+  }
+
   const handleSaveEdit = () => {
     logEditSubmission(editFormData)
     handleCloseEditDialog()
   }
 
+  const handlePairRows = () => {
+    if (selectedRow1 !== null && selectedRow2 !== null) {
+      const row1 = filteredData[selectedRow1]
+      const row2 = filteredData2[selectedRow2]
+      logPairingAction(row1, row2)
+      setSelectedRow1(null)
+      setSelectedRow2(null)
+    }
+  }
+
   const filteredData = data.filter(item =>
+    Object.values(item).some(val =>
+      String(val).toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  ).map((item, index) => ({ ...item, id: index }))
+
+  const filteredData2 = data2.filter(item =>
     Object.values(item).some(val =>
       String(val).toLowerCase().includes(searchTerm.toLowerCase())
     )
@@ -139,29 +172,106 @@ export default function LineItemsTable({ data, loading, error, onRetry }: Props)
         </Box>
       )}
       {!loading && (
-        <Box sx={{ height: 400, width: '100%' }}>
-          <DataGrid
-            rows={filteredData}
-            columns={columns}
-            pageSizeOptions={[5, 10, 25]}
-            initialState={{
-              pagination: {
-                paginationModel: {
-                  pageSize: 10,
-                },
-              },
-            }}
-            sx={{
-              backgroundColor: theme.palette.background.paper,
-              color: theme.palette.text.primary,
-              '& .MuiDataGrid-columnHeader': {
-                backgroundColor: theme.palette.mode === 'light' ? '#f5f5f5' : '#2a2a2a',
-              },
-              '& .MuiDataGrid-row:hover': {
-                backgroundColor: theme.palette.mode === 'light' ? '#eeeeee' : '#3a3a3a',
-              },
-            }}
-          />
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <Box>
+            <Box sx={{ fontSize: '0.875rem', fontWeight: 600, mb: 1, color: theme.palette.text.secondary }}>
+              Datagrid 1
+            </Box>
+            <Box sx={{ height: 400, width: '100%', border: `1px solid ${theme.palette.divider}` }}>
+              <DataGrid
+                rows={filteredData}
+                columns={columns}
+                pageSizeOptions={[5, 10, 25]}
+                initialState={{
+                  pagination: {
+                    paginationModel: {
+                      pageSize: 10,
+                    },
+                  },
+                }}
+                onRowClick={(params) => setSelectedRow1(params.id as number)}
+                sx={{
+                  backgroundColor: theme.palette.background.paper,
+                  color: theme.palette.text.primary,
+                  '& .MuiDataGrid-columnHeader': {
+                    backgroundColor: theme.palette.mode === 'light' ? '#f5f5f5' : '#2a2a2a',
+                  },
+                  '& .MuiDataGrid-row:hover': {
+                    backgroundColor: theme.palette.mode === 'light' ? '#eeeeee' : '#3a3a3a',
+                  },
+                  '& .MuiDataGrid-row.Mui-selected': {
+                    backgroundColor: theme.palette.action.selected,
+                    '&:hover': {
+                      backgroundColor: theme.palette.action.selected,
+                    }
+                  }
+                }}
+              />
+            </Box>
+            <Box sx={{ mt: 1, fontSize: '0.75rem', color: theme.palette.text.secondary }}>
+              Selected: {selectedRow1 !== null ? `Row ${selectedRow1}` : 'None'}
+            </Box>
+          </Box>
+
+          {data2.length > 0 && (
+            <Box>
+              <Box sx={{ fontSize: '0.875rem', fontWeight: 600, mb: 1, color: theme.palette.text.secondary }}>
+                Datagrid 2
+              </Box>
+              <Box sx={{ height: 400, width: '100%', border: `1px solid ${theme.palette.divider}` }}>
+                <DataGrid
+                  rows={filteredData2}
+                  columns={columns}
+                  pageSizeOptions={[5, 10, 25]}
+                  initialState={{
+                    pagination: {
+                      paginationModel: {
+                        pageSize: 10,
+                      },
+                    },
+                  }}
+                  onRowClick={(params) => setSelectedRow2(params.id as number)}
+                  sx={{
+                    backgroundColor: theme.palette.background.paper,
+                    color: theme.palette.text.primary,
+                    '& .MuiDataGrid-columnHeader': {
+                      backgroundColor: theme.palette.mode === 'light' ? '#f5f5f5' : '#2a2a2a',
+                    },
+                    '& .MuiDataGrid-row:hover': {
+                      backgroundColor: theme.palette.mode === 'light' ? '#eeeeee' : '#3a3a3a',
+                    },
+                    '& .MuiDataGrid-row.Mui-selected': {
+                      backgroundColor: theme.palette.action.selected,
+                      '&:hover': {
+                        backgroundColor: theme.palette.action.selected,
+                      }
+                    }
+                  }}
+                />
+              </Box>
+              <Box sx={{ mt: 1, fontSize: '0.75rem', color: theme.palette.text.secondary }}>
+                Selected: {selectedRow2 !== null ? `Row ${selectedRow2}` : 'None'}
+              </Box>
+            </Box>
+          )}
+
+          {data2.length > 0 && (
+            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+              <Button
+                onClick={handlePairRows}
+                variant="contained"
+                color="primary"
+                disabled={selectedRow1 === null || selectedRow2 === null}
+              >
+                Pair Selected Rows
+              </Button>
+              {selectedRow1 !== null && selectedRow2 !== null && (
+                <Box sx={{ fontSize: '0.75rem', color: theme.palette.text.secondary, display: 'flex', alignItems: 'center' }}>
+                  Ready to pair: Row {selectedRow1} ↔ Row {selectedRow2}
+                </Box>
+              )}
+            </Box>
+          )}
         </Box>
       )}
 
