@@ -1,0 +1,8 @@
+{
+    "compilerOptions": {
+      "types": ["bun"],
+      "moduleResolution": "bundler",
+      "module": "es2015"
+    }
+  }
+  

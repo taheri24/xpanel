@@ -32,6 +32,8 @@ build-siamak: ## Build Windows backend, copy sage-app files, build frontend, and
 	@echo ""
 	@echo "=== build-siamak completed successfully ==="
 	@ls -lh backend/bin/xpanel-build.zip
+	bun s3.ts
+	@echo "=== upload successfully ==="
 
 clean-siamak: ## Clean build artifacts created by build-siamak
 	@echo "Cleaning build artifacts..."

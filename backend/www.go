@@ -11,7 +11,7 @@ import (
 var FS fs.FS
 
 func isDirectory(pathName string) bool {
-	s, err := os.Stat("www")
+	s, err := os.Stat(pathName)
 	return err == nil && s.IsDir()
 }
 
