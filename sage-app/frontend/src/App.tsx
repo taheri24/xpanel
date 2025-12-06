@@ -13,6 +13,7 @@ import {
 } from '@mui/material'
 import { Brightness4, Brightness7 } from '@mui/icons-material'
 import { useTheme } from './context/ThemeProvider'
+import { apiService, Invoice, Receipt, LineItem } from './services/api.config'
 import InvoicesTable from './components/InvoicesTable'
 import ReceiptsTable from './components/ReceiptsTable'
 import LineItemsTable from './components/LineItemsTable'
@@ -48,14 +49,90 @@ function AppContent() {
   const { mode, toggleTheme } = useTheme();
   const muiTheme = useMuiTheme()
 
+  // Tab and selection state
+  const [invoiceRef, setInvoiceRef] = useState('');
+  const [receiptRef, setReceiptRef] = useState('');
+
+  // Invoices data state
+  const [invoices, setInvoices] = useState<Invoice[]>([])
+  const [invoicesLoading, setInvoicesLoading] = useState(true)
+  const [invoicesError, setInvoicesError] = useState<string | null>(null)
+
+  // Receipts data state
+  const [receipts, setReceipts] = useState<Receipt[]>([])
+  const [receiptsLoading, setReceiptsLoading] = useState(true)
+  const [receiptsError, setReceiptsError] = useState<string | null>(null)
+
+  // Line items data state
+  const [lineItems, setLineItems] = useState<LineItem[]>([])
+  const [lineItemsLoading, setLineItemsLoading] = useState(true)
+  const [lineItemsError, setLineItemsError] = useState<string | null>(null)
+
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue)
   }
-  const [invoiceRef,setInvoiceRef]= useState('');
-  const [receiptRef,setReceiptRef]= useState('');
-  
-   
-  
+
+  // Fetch invoices on component mount
+  useEffect(() => {
+    fetchInvoices()
+  }, [])
+
+  const fetchInvoices = async () => {
+    setInvoicesLoading(true)
+    setInvoicesError(null)
+    try {
+      const data = await apiService.getInvoices()
+      setInvoices(data)
+    } catch (err) {
+      setInvoicesError(err instanceof Error ? err.message : 'Failed to fetch invoices')
+      console.error(err)
+    } finally {
+      setInvoicesLoading(false)
+    }
+  }
+
+  // Fetch receipts when invoiceRef changes
+  useEffect(() => {
+    if (invoiceRef) {
+      fetchReceipts()
+    }
+  }, [invoiceRef])
+
+  const fetchReceipts = async () => {
+    setReceiptsLoading(true)
+    setReceiptsError(null)
+    try {
+      const data = await apiService.getReceipts(invoiceRef)
+      setReceipts(data)
+    } catch (err) {
+      setReceiptsError(err instanceof Error ? err.message : 'Failed to fetch receipts')
+      console.error(err)
+    } finally {
+      setReceiptsLoading(false)
+    }
+  }
+
+  // Fetch line items when receiptRef changes
+  useEffect(() => {
+    if (receiptRef) {
+      fetchLineItems()
+    }
+  }, [receiptRef])
+
+  const fetchLineItems = async () => {
+    setLineItemsLoading(true)
+    setLineItemsError(null)
+    try {
+      const data = await apiService.getLineItems(receiptRef)
+      setLineItems(data)
+    } catch (err) {
+      setLineItemsError(err instanceof Error ? err.message : 'Failed to fetch line items')
+      console.error(err)
+    } finally {
+      setLineItemsLoading(false)
+    }
+  }
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppBar position="static">
@@ -103,15 +180,32 @@ function AppContent() {
           </Tabs>
 
           <TabPanel value={tabValue} index={0}>
-            <InvoicesTable setRef={setInvoiceRef} />
+            <InvoicesTable
+              data={invoices}
+              loading={invoicesLoading}
+              error={invoicesError}
+              onRetry={fetchInvoices}
+              setRef={setInvoiceRef}
+            />
           </TabPanel>
 
-          <TabPanel value={tabValue} index={1} key={invoiceRef}>
-            <ReceiptsTable setReceiptRef={setReceiptRef} invoiceRef={invoiceRef} />
+          <TabPanel value={tabValue} index={1}>
+            <ReceiptsTable
+              data={receipts}
+              loading={receiptsLoading}
+              error={receiptsError}
+              onRetry={fetchReceipts}
+              setReceiptRef={setReceiptRef}
+            />
           </TabPanel>
 
-          <TabPanel value={tabValue} key={receiptRef} index={2}>
-            <LineItemsTable receiptRef={receiptRef} />
+          <TabPanel value={tabValue} index={2}>
+            <LineItemsTable
+              data={lineItems}
+              loading={lineItemsLoading}
+              error={lineItemsError}
+              onRetry={fetchLineItems}
+            />
           </TabPanel>
         </Paper>
       </Container>

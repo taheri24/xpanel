@@ -37,6 +37,7 @@ type Frontend struct {
 
 // Query represents a SELECT operation
 type Query struct {
+	Parent      string   `xml:"-" json:"-"`
 	Id          string   `xml:"Id,attr" json:"id"`
 	Type        string   `xml:"Type,attr" json:"type"`
 	Description string   `xml:"Description,attr" json:"description"`
@@ -47,6 +48,7 @@ type Query struct {
 
 // ActionQuery represents an INSERT/UPDATE/DELETE operation
 type ActionQuery struct {
+	Parent      string   `xml:"-" json:"-"`
 	Id          string   `xml:"Id,attr" json:"id"`
 	Type        string   `xml:"Type,attr" json:"type"`
 	Description string   `xml:"Description,attr" json:"description"`
@@ -195,6 +197,7 @@ func (xf *XFeature) LoadFromFile(path string) error {
 func (xf *XFeature) GetQuery(id string) (*Query, error) {
 	for _, query := range xf.Backend.Queries {
 		if query.Id == id {
+			query.Parent = xf.Name
 			return query, nil
 		}
 	}
@@ -205,6 +208,7 @@ func (xf *XFeature) GetQuery(id string) (*Query, error) {
 func (xf *XFeature) GetActionQuery(id string) (*ActionQuery, error) {
 	for _, action := range xf.Backend.ActionQueries {
 		if action.Id == id {
+			action.Parent = xf.Name
 			return action, nil
 		}
 	}
@@ -364,6 +368,7 @@ func (xf *XFeature) ExecuteListQueryToOptions(ctx context.Context, db *sqlx.DB, 
 
 	executor := NewQueryExecutor(xf.Logger)
 	query := &Query{
+		Parent:      xf.Name,
 		Id:          listQuery.Id,
 		Type:        listQuery.Type,
 		Description: listQuery.Description,

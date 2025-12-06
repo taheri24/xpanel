@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import {
   Box,
   TextField,
@@ -14,10 +14,13 @@ import {
 } from '@mui/material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import EditIcon from '@mui/icons-material/Edit'
-import { apiService, LineItem } from '../services/api.config'
+import { LineItem } from '../services/api.config'
 
-interface Props{
-  receiptRef:string;
+interface Props {
+  data: LineItem[]
+  loading: boolean
+  error: string | null
+  onRetry: () => void
 }
 
 function getValue(obj:any,key:string):React.ReactNode{
@@ -26,61 +29,46 @@ function getValue(obj:any,key:string):React.ReactNode{
   return null;
 }
 
-const columns: GridColDef[] = [
-  { field: 'saticiUrunKodu', headerName: 'Product Code', width: 150, sortable: true },
-  { field: 'urunAdi', headerName: 'Product Description', width: 200, sortable: true },
-  { field: 'miktar', headerName: 'Quantity', width: 100, sortable: true, type: 'number', align: 'right', headerAlign: 'right' },
-  { field: 'Recived_Invoice_Portal', headerName: 'Source', width: 150, sortable: true },
-  { field: 'Note1', headerName: 'Note1', width: 100, sortable: false },
-  { field: 'Note2', headerName: 'Note2', width: 100, sortable: false },
-  { field: 'Note3', headerName: 'Note3', width: 100, sortable: false },
-  { field: 'Note4', headerName: 'Note4', width: 100, sortable: false },
-  { field: 'Note5', headerName: 'Note5', width: 100, sortable: false },
-  {
-    field: 'actions',
-    headerName: 'Actions',
-    width: 80,
-    sortable: false,
-    renderCell: (params) => (
-      <IconButton
-        size="small"
-        sx={{ color: 'primary.main' }}
-        title="Edit row"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <EditIcon fontSize="small" />
-      </IconButton>
-    ),
-  },
-]
-export default function LineItemsTable(p:Props) {
+export default function LineItemsTable({ data, loading, error, onRetry }: Props) {
+
   const theme = useTheme()
-  const [data, setData] = useState<LineItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [openEditDialog, setOpenEditDialog] = useState(false)
   const [selectedRow, setSelectedRow] = useState<LineItem | null>(null)
   const [editFormData, setEditFormData] = useState<Partial<LineItem>>({})
 
-  useEffect(() => {
-    fetchLineItems()
-  }, [])
-
-  const fetchLineItems = async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const lineItems = await apiService.getLineItems(p.receiptRef)
-      setData(lineItems)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch line items')
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
+  const columns: GridColDef[] = [
+    {
+      field: 'actions',
+      headerName: 'Actions',
+      width: 80,
+      sortable: false,
+      renderCell: (params) => (
+        <IconButton
+          size="small"
+          sx={{ color: 'primary.main' }}
+          title="Edit row"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleOpenEditDialog(params.row);
+            
+          }}
+        >
+          <EditIcon fontSize="small" />
+        </IconButton>
+      ),
+    },
+    { field: 'saticiUrunKodu', headerName: 'Product Code', width: 150, sortable: true },
+    { field: 'urunAdi', headerName: 'Product Description', width: 200, sortable: true },
+    { field: 'miktar', headerName: 'Quantity', width: 100, sortable: true, type: 'number', align: 'right', headerAlign: 'right' },
+    { field: 'Recived_Invoice_Portal', headerName: 'Source', width: 150, sortable: true },
+    { field: 'Note1', headerName: 'Note1', width: 100, sortable: false },
+    { field: 'Note2', headerName: 'Note2', width: 100, sortable: false },
+    { field: 'Note3', headerName: 'Note3', width: 100, sortable: false },
+    { field: 'Note4', headerName: 'Note4', width: 100, sortable: false },
+    { field: 'Note5', headerName: 'Note5', width: 100, sortable: false },
+    
+  ]
   const handleOpenEditDialog = (row: LineItem) => {
     setSelectedRow(row)
     setEditFormData(row)
@@ -103,8 +91,7 @@ export default function LineItemsTable(p:Props) {
       action: 'LINE_ITEM_EDIT',
       timestamp,
       originalData: selectedRow,
-      editedData: rowData,
-      receiptRef: p.receiptRef
+      editedData: rowData
     }
     console.log('Edit Submission Log:', logEntry)
     return logEntry
@@ -127,7 +114,7 @@ export default function LineItemsTable(p:Props) {
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
           <Box sx={{ mt: 1 }}>
-            <button onClick={fetchLineItems} style={{ cursor: 'pointer' }}>
+            <button onClick={onRetry} style={{ cursor: 'pointer' }}>
               Retry
             </button>
           </Box>
@@ -164,7 +151,6 @@ export default function LineItemsTable(p:Props) {
                 },
               },
             }}
-            onRowClick={(params) => handleOpenEditDialog(params.row)}
             sx={{
               backgroundColor: theme.palette.background.paper,
               color: theme.palette.text.primary,

@@ -87,7 +87,7 @@ func (qe *QueryExecutor) Execute(
 	sql, args := qe.buildArgs(sql, params, driverName)
 
 	// Log colored SQL for debugging
-	qe.logColoredSQL("Query prepared", sql)
+	qe.logColoredSQL(fmt.Sprintf("%s/%s", query.Parent, query.Id), sql)
 
 	// Execute query
 	sqlRows, err := db.QueryContext(ctx, sql, args...)
@@ -216,5 +216,6 @@ func (qe *QueryExecutor) logColoredSQL(message string, sql string) {
 
 	// Get colored SQL - colors will be auto-detected based on terminal capabilities
 	coloredSQL := sqlprint.Colorize(sql)
+
 	fmt.Printf("\n\r=== %s (%s) ===\n\r%s\n\r", message, "SELECTING", coloredSQL)
 }
