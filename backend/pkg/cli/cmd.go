@@ -71,6 +71,8 @@ func (ch *CommandHandler) Execute(args []string) error {
 		return ch.handleUpsert(env, args[3:], flagSet)
 	case "LIST":
 		return ch.handleList(env)
+	case "SLIST":
+		return ch.handleSimpleList(env)
 	case "SHOW":
 		return ch.handleShow(env, args[3:], flagSet)
 	default:
@@ -277,6 +279,39 @@ func (ch *CommandHandler) handleList(env *EnvManager) error {
 	return nil
 }
 
+func (ch *CommandHandler) handleSimpleList(env *EnvManager) error {
+	entries := env.List()
+
+	// Get file info
+	fileInfo, err := os.Stat(env.GetFilePath())
+	if err == nil {
+		absPath, _ := filepath.Abs(env.GetFilePath())
+		fmt.Printf(".env File: %s\n", absPath)
+		fmt.Printf("Size: %d bytes\n", fileInfo.Size())
+		fmt.Println()
+	}
+
+	if len(entries) == 0 {
+		fmt.Println("No environment variables found.")
+		return nil
+	}
+
+	// Sort keys for consistent output
+	keys := make([]string, 0, len(entries))
+	for key := range entries {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	fmt.Println("Environment Variables:")
+	fmt.Println("======================")
+	for _, key := range keys {
+		fmt.Printf("%s=%s\n", key, entries[key])
+	}
+	fmt.Printf("\nTotal: %d variables\n", len(entries))
+	return nil
+}
+
 func (ch *CommandHandler) handleShow(env *EnvManager, args []string, flagSet *flag.FlagSet) error {
 	flagSet.Parse(args)
 	remaining := flagSet.Args()
@@ -304,7 +339,8 @@ Actions (case-insensitive):
   DELETE <key>           Delete an environment variable
   UPDATE <key> <value>   Update an existing environment variable
   UPSERT <key> <value>   Add or update an environment variable
-  LIST                   List all environment variables
+  LIST                   List all environment variables (with colored output)
+  SLIST                  Simple list without colors
   SHOW <key>             Show a specific environment variable
 
 Interactive Mode:
@@ -316,6 +352,7 @@ Examples:
   exepath env UPDATE SERVER_PORT 8081
   exepath env UPSERT API_KEY secret123
   exepath env LIST
+  exepath env SLIST
   exepath env SHOW SERVER_PORT
   exepath env             (Interactive mode)
 
