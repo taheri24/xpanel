@@ -29,40 +29,46 @@ function getValue(obj:any,key:string):React.ReactNode{
   return null;
 }
 
-const columns: GridColDef[] = [
-  { field: 'saticiUrunKodu', headerName: 'Product Code', width: 150, sortable: true },
-  { field: 'urunAdi', headerName: 'Product Description', width: 200, sortable: true },
-  { field: 'miktar', headerName: 'Quantity', width: 100, sortable: true, type: 'number', align: 'right', headerAlign: 'right' },
-  { field: 'Recived_Invoice_Portal', headerName: 'Source', width: 150, sortable: true },
-  { field: 'Note1', headerName: 'Note1', width: 100, sortable: false },
-  { field: 'Note2', headerName: 'Note2', width: 100, sortable: false },
-  { field: 'Note3', headerName: 'Note3', width: 100, sortable: false },
-  { field: 'Note4', headerName: 'Note4', width: 100, sortable: false },
-  { field: 'Note5', headerName: 'Note5', width: 100, sortable: false },
-  {
-    field: 'actions',
-    headerName: 'Actions',
-    width: 80,
-    sortable: false,
-    renderCell: (params) => (
-      <IconButton
-        size="small"
-        sx={{ color: 'primary.main' }}
-        title="Edit row"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <EditIcon fontSize="small" />
-      </IconButton>
-    ),
-  },
-]
 export default function LineItemsTable({ data, loading, error, onRetry }: Props) {
+
   const theme = useTheme()
   const [searchTerm, setSearchTerm] = useState('')
   const [openEditDialog, setOpenEditDialog] = useState(false)
   const [selectedRow, setSelectedRow] = useState<LineItem | null>(null)
   const [editFormData, setEditFormData] = useState<Partial<LineItem>>({})
 
+  const columns: GridColDef[] = [
+    {
+      field: 'actions',
+      headerName: 'Actions',
+      width: 80,
+      sortable: false,
+      renderCell: (params) => (
+        <IconButton
+          size="small"
+          sx={{ color: 'primary.main' }}
+          title="Edit row"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleOpenEditDialog(params.row);
+            
+          }}
+        >
+          <EditIcon fontSize="small" />
+        </IconButton>
+      ),
+    },
+    { field: 'saticiUrunKodu', headerName: 'Product Code', width: 150, sortable: true },
+    { field: 'urunAdi', headerName: 'Product Description', width: 200, sortable: true },
+    { field: 'miktar', headerName: 'Quantity', width: 100, sortable: true, type: 'number', align: 'right', headerAlign: 'right' },
+    { field: 'Recived_Invoice_Portal', headerName: 'Source', width: 150, sortable: true },
+    { field: 'Note1', headerName: 'Note1', width: 100, sortable: false },
+    { field: 'Note2', headerName: 'Note2', width: 100, sortable: false },
+    { field: 'Note3', headerName: 'Note3', width: 100, sortable: false },
+    { field: 'Note4', headerName: 'Note4', width: 100, sortable: false },
+    { field: 'Note5', headerName: 'Note5', width: 100, sortable: false },
+    
+  ]
   const handleOpenEditDialog = (row: LineItem) => {
     setSelectedRow(row)
     setEditFormData(row)
@@ -145,7 +151,6 @@ export default function LineItemsTable({ data, loading, error, onRetry }: Props)
                 },
               },
             }}
-            onRowClick={(params) => handleOpenEditDialog(params.row)}
             sx={{
               backgroundColor: theme.palette.background.paper,
               color: theme.palette.text.primary,
