@@ -77,50 +77,65 @@ func (ch *CommandHandler) handleInteractiveMode(env *EnvManager) error {
 	}
 
 	fmt.Println()
-	fmt.Print("Enter KEY=VALUE (or press Ctrl+C to exit): ")
+	fmt.Println("Interactive mode. Type 'exit', 'q', or 'quit' (case-insensitive) to exit.")
 
-	// Read from stdin
+	// Read from stdin in a loop
 	scanner := bufio.NewScanner(os.Stdin)
-	if !scanner.Scan() {
-		return nil
+	for {
+		fmt.Print("Enter KEY=VALUE (or type 'exit'/'q'/'quit' to exit): ")
+
+		if !scanner.Scan() {
+			// Ctrl+C was pressed
+			fmt.Println()
+			return nil
+		}
+
+		input := strings.TrimSpace(scanner.Text())
+		if input == "" {
+			continue
+		}
+
+		// Check for exit commands (case-insensitive)
+		lowerInput := strings.ToLower(input)
+		if lowerInput == "exit" || lowerInput == "q" || lowerInput == "quit" {
+			fmt.Println("Exiting interactive mode.")
+			return nil
+		}
+
+		// Split by "=" separator
+		parts := strings.SplitN(input, "=", 2)
+		if len(parts) != 2 {
+			fmt.Printf("Error: invalid format: expected KEY=VALUE, got '%s'\n", input)
+			continue
+		}
+
+		key := strings.TrimSpace(parts[0])
+		value := strings.TrimSpace(parts[1])
+
+		if key == "" {
+			fmt.Println("Error: key cannot be empty")
+			continue
+		}
+
+		// UPSERT the key-value pair
+		_, exists := env.List()[key]
+
+		if err := env.Add(key, value); err != nil {
+			fmt.Printf("Error: %v\n", err)
+			continue
+		}
+
+		if err := env.Save(); err != nil {
+			fmt.Printf("Error: %v\n", err)
+			continue
+		}
+
+		if exists {
+			fmt.Printf("✓ Updated: %s=%s\n", key, value)
+		} else {
+			fmt.Printf("✓ Added: %s=%s\n", key, value)
+		}
 	}
-
-	input := strings.TrimSpace(scanner.Text())
-	if input == "" {
-		return nil
-	}
-
-	// Split by "=" separator
-	parts := strings.SplitN(input, "=", 2)
-	if len(parts) != 2 {
-		return fmt.Errorf("invalid format: expected KEY=VALUE, got '%s'", input)
-	}
-
-	key := strings.TrimSpace(parts[0])
-	value := strings.TrimSpace(parts[1])
-
-	if key == "" {
-		return fmt.Errorf("key cannot be empty")
-	}
-
-	// UPSERT the key-value pair
-	_, exists := env.List()[key]
-
-	if err := env.Add(key, value); err != nil {
-		return err
-	}
-
-	if err := env.Save(); err != nil {
-		return err
-	}
-
-	if exists {
-		fmt.Printf("✓ Updated: %s=%s\n", key, value)
-	} else {
-		fmt.Printf("✓ Added: %s=%s\n", key, value)
-	}
-
-	return nil
 }
 
 func (ch *CommandHandler) handleAdd(env *EnvManager, args []string, flagSet *flag.FlagSet) error {
