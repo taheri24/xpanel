@@ -30,7 +30,7 @@ func NewCommandHandler(envPath string) *CommandHandler {
 	}
 }
 
-// Execute processes CLI commands with the format: env [action] [arg1] [arg2]
+// Execute processes CLI commands with the format: env [action] [arg1] [arg2] or unzip [zipfile] [target]
 func (ch *CommandHandler) Execute(args []string) error {
 	if len(args) < 2 {
 		return ch.printUsage()
@@ -42,10 +42,18 @@ func (ch *CommandHandler) Execute(args []string) error {
 	flagSet := flag.NewFlagSet(command, flag.ContinueOnError)
 	flagSet.Usage = func() {} // Suppress default help
 
-	if command != "env" {
+	switch command {
+	case "env":
+		return ch.handleEnvCommand(args, flagSet)
+	case "unzip":
+		return ch.handleUnzipCommand(args, flagSet)
+	default:
 		return fmt.Errorf("unknown command: %s", command)
 	}
+}
 
+// handleEnvCommand processes env-specific commands
+func (ch *CommandHandler) handleEnvCommand(args []string, flagSet *flag.FlagSet) error {
 	env := NewEnvManager(ch.envPath)
 
 	// Load existing .env file
@@ -78,6 +86,40 @@ func (ch *CommandHandler) Execute(args []string) error {
 	default:
 		return fmt.Errorf("unknown action: %s", args[2])
 	}
+}
+
+// handleUnzipCommand processes unzip-specific commands
+func (ch *CommandHandler) handleUnzipCommand(args []string, flagSet *flag.FlagSet) error {
+	// Define flags with defaults
+	zipFile := flagSet.String("zipfile", "update.zip", "path to the zip file")
+	target := flagSet.String("target", "./tmp-update", "target directory for extraction")
+
+	// Parse remaining arguments
+	flagSet.Parse(args[2:])
+	remaining := flagSet.Args()
+
+	// Override with positional arguments if provided
+	if len(remaining) > 0 {
+		*zipFile = remaining[0]
+	}
+	if len(remaining) > 1 {
+		*target = remaining[1]
+	}
+
+	return ch.handleUnzip(*zipFile, *target)
+}
+
+// handleUnzip performs the unzip operation
+func (ch *CommandHandler) handleUnzip(zipFile, target string) error {
+	zm := NewZipManager(zipFile, target)
+
+	if err := zm.Extract(); err != nil {
+		return fmt.Errorf("unzip failed: %w", err)
+	}
+
+	absPath, _ := filepath.Abs(target)
+	fmt.Printf("✓ Extracted: %s -> %s\n", zipFile, absPath)
+	return nil
 }
 
 func (ch *CommandHandler) handleInteractiveMode(env *EnvManager) error {
@@ -332,29 +374,48 @@ func (ch *CommandHandler) handleShow(env *EnvManager, args []string, flagSet *fl
 }
 
 func (ch *CommandHandler) printUsage() error {
-	fmt.Fprintf(os.Stderr, `Usage: exepath env [action] [arg1] [arg2]
+	fmt.Fprintf(os.Stderr, `Usage: exepath [command] [options]
 
-Actions (case-insensitive):
-  ADD <key> <value>      Add or overwrite an environment variable
-  DELETE <key>           Delete an environment variable
-  UPDATE <key> <value>   Update an existing environment variable
-  UPSERT <key> <value>   Add or update an environment variable
-  LIST                   List all environment variables (with colored output)
-  SLIST                  Simple list without colors
-  SHOW <key>             Show a specific environment variable
+Commands:
 
-Interactive Mode:
-  exepath env            Enter interactive mode (shows LIST, then prompts for KEY=VALUE input)
+ENV MANAGEMENT:
+  exepath env [action] [arg1] [arg2]
 
-Examples:
-  exepath env ADD DB_HOST localhost
-  exepath env DELETE OLD_VAR
-  exepath env UPDATE SERVER_PORT 8081
-  exepath env UPSERT API_KEY secret123
-  exepath env LIST
-  exepath env SLIST
-  exepath env SHOW SERVER_PORT
-  exepath env             (Interactive mode)
+    Actions (case-insensitive):
+      ADD <key> <value>      Add or overwrite an environment variable
+      DELETE <key>           Delete an environment variable
+      UPDATE <key> <value>   Update an existing environment variable
+      UPSERT <key> <value>   Add or update an environment variable
+      LIST                   List all environment variables (with colored output)
+      SLIST                  Simple list without colors
+      SHOW <key>             Show a specific environment variable
+
+    Interactive Mode:
+      exepath env            Enter interactive mode (shows LIST, then prompts for KEY=VALUE input)
+
+    Examples:
+      exepath env ADD DB_HOST localhost
+      exepath env DELETE OLD_VAR
+      exepath env UPDATE SERVER_PORT 8081
+      exepath env UPSERT API_KEY secret123
+      exepath env LIST
+      exepath env SLIST
+      exepath env SHOW SERVER_PORT
+      exepath env             (Interactive mode)
+
+ZIP FILE EXTRACTION:
+  exepath unzip [zipfile] [target]
+
+    Options:
+      -zipfile <path>   Path to the zip file (default: update.zip)
+      -target <path>    Target directory for extraction (default: ./tmp-update)
+
+    Positional arguments override flags.
+
+    Examples:
+      exepath unzip                                     (uses defaults: update.zip -> ./tmp-update)
+      exepath unzip -zipfile=app.zip -target=./build   (using flags)
+      exepath unzip app.zip ./extracted                 (using positional arguments)
 
 `)
 	return flag.ErrHelp
