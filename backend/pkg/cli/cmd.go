@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 )
 
 // CommandHandler handles CLI commands
@@ -40,7 +41,7 @@ func (ch *CommandHandler) Execute(args []string) error {
 		return ch.printUsage()
 	}
 
-	action := args[2]
+	action := strings.ToUpper(args[2])
 	env := NewEnvManager(ch.envPath)
 
 	// Load existing .env file
@@ -55,12 +56,14 @@ func (ch *CommandHandler) Execute(args []string) error {
 		return ch.handleDelete(env, args[3:], flagSet)
 	case "UPDATE":
 		return ch.handleUpdate(env, args[3:], flagSet)
+	case "UPSERT":
+		return ch.handleUpsert(env, args[3:], flagSet)
 	case "LIST":
 		return ch.handleList(env)
 	case "SHOW":
 		return ch.handleShow(env, args[3:], flagSet)
 	default:
-		return fmt.Errorf("unknown action: %s", action)
+		return fmt.Errorf("unknown action: %s", args[2])
 	}
 }
 
@@ -132,6 +135,36 @@ func (ch *CommandHandler) handleUpdate(env *EnvManager, args []string, flagSet *
 	return nil
 }
 
+func (ch *CommandHandler) handleUpsert(env *EnvManager, args []string, flagSet *flag.FlagSet) error {
+	flagSet.Parse(args)
+	remaining := flagSet.Args()
+
+	if len(remaining) < 2 {
+		return fmt.Errorf("UPSERT requires: key value\nUsage: exepath env UPSERT <key> <value>")
+	}
+
+	key := remaining[0]
+	value := remaining[1]
+
+	// Check if key exists
+	_, exists := env.List()[key]
+
+	if err := env.Add(key, value); err != nil {
+		return err
+	}
+
+	if err := env.Save(); err != nil {
+		return err
+	}
+
+	if exists {
+		fmt.Printf("✓ Updated: %s=%s\n", key, value)
+	} else {
+		fmt.Printf("✓ Added: %s=%s\n", key, value)
+	}
+	return nil
+}
+
 func (ch *CommandHandler) handleList(env *EnvManager) error {
 	entries := env.List()
 
@@ -187,10 +220,11 @@ func (ch *CommandHandler) handleShow(env *EnvManager, args []string, flagSet *fl
 func (ch *CommandHandler) printUsage() error {
 	fmt.Fprintf(os.Stderr, `Usage: exepath env [action] [arg1] [arg2]
 
-Actions:
+Actions (case-insensitive):
   ADD <key> <value>      Add or overwrite an environment variable
   DELETE <key>           Delete an environment variable
   UPDATE <key> <value>   Update an existing environment variable
+  UPSERT <key> <value>   Add or update an environment variable
   LIST                   List all environment variables
   SHOW <key>             Show a specific environment variable
 
@@ -198,6 +232,7 @@ Examples:
   exepath env ADD DB_HOST localhost
   exepath env DELETE OLD_VAR
   exepath env UPDATE SERVER_PORT 8081
+  exepath env UPSERT API_KEY secret123
   exepath env LIST
   exepath env SHOW SERVER_PORT
 
