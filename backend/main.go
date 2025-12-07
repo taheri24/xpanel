@@ -27,7 +27,7 @@ import (
 
 func main() {
 	// Check if CLI command is provided
-	if len(os.Args) > 1 && (os.Args[1] == "env" || os.Args[1] == "unzip" || os.Args[1] == "download") {
+	if len(os.Args) > 1 && (os.Args[1] == "env" || os.Args[1] == "unzip" || os.Args[1] == "download" || os.Args[1] == "hash") {
 		// Handle CLI commands
 		envPath := ".env"
 		handler := cli.NewCommandHandler(envPath)
