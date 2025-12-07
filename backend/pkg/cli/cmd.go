@@ -49,6 +49,8 @@ func (ch *CommandHandler) Execute(args []string) error {
 		return ch.handleUnzipCommand(args, flagSet)
 	case "download":
 		return ch.handleDownloadCommand(args, flagSet)
+	case "hash":
+		return ch.handleHashCommand(args, flagSet)
 	default:
 		return fmt.Errorf("unknown command: %s", command)
 	}
@@ -159,6 +161,34 @@ func (ch *CommandHandler) handleDownload(downloadURL, target string) error {
 
 	absPath, _ := filepath.Abs(dm.GetTarget())
 	fmt.Printf("✓ Downloaded: %s -> %s\n", downloadURL, absPath)
+	return nil
+}
+
+// handleHashCommand processes hash-specific commands
+func (ch *CommandHandler) handleHashCommand(args []string, flagSet *flag.FlagSet) error {
+	// Parse remaining arguments
+	flagSet.Parse(args[2:])
+	remaining := flagSet.Args()
+
+	if len(remaining) < 1 {
+		return fmt.Errorf("file path is required\nUsage: exepath hash <file>")
+	}
+
+	filePath := remaining[0]
+	return ch.handleHash(filePath)
+}
+
+// handleHash performs the hash computation
+func (ch *CommandHandler) handleHash(filePath string) error {
+	hm := NewHashManager(filePath)
+
+	hash, err := hm.ComputeSHA256()
+	if err != nil {
+		return fmt.Errorf("hash computation failed: %w", err)
+	}
+
+	absPath, _ := filepath.Abs(filePath)
+	fmt.Printf("SHA256(%s): %s\n", absPath, hash)
 	return nil
 }
 
@@ -474,6 +504,19 @@ URL DOWNLOAD:
       exepath download https://example.com/file.zip                    (downloads to ./file.zip)
       exepath download https://example.com/archive.tar.gz ./myfile     (downloads to ./myfile)
       exepath download -url=https://example.com/file.bin -target=out   (using flags)
+
+FILE HASH COMPUTATION:
+  exepath hash <file>
+
+    Arguments:
+      <file>            Path to the file to hash (required)
+
+    Hash Algorithm:
+      SHA256 (hex output)
+
+    Examples:
+      exepath hash ./config.yaml
+      exepath hash /path/to/executable
 
 `)
 	return flag.ErrHelp
