@@ -7,6 +7,8 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/taheri24/xpanel/backend/internal/database"
@@ -168,6 +170,32 @@ func (h *XFeatureHandler) ExecuteQuery(c *gin.Context) {
 		return
 	}
 
+	// Build gridColDefs from DataTable definition
+	// Find the DataTable that references this query
+	var gridColDefs []interface{} = []interface{}{}
+	for _, dt := range xf.Frontend.DataTables {
+		if dt.QueryRef == queryID {
+			// Convert Column to GridColDef format
+			for _, col := range dt.Columns {
+				colDef := gin.H{
+					"field":      col.Name,
+					"headerName": col.Label,
+					"width":      parseWidth(col.Width),
+					"sortable":   col.Sortable != nil && *col.Sortable,
+				}
+				if col.Align != "" {
+					colDef["align"] = col.Align
+					colDef["headerAlign"] = col.Align
+				}
+				if col.Type != "" {
+					colDef["type"] = mapColumnType(col.Type)
+				}
+				gridColDefs = append(gridColDefs, colDef)
+			}
+			break
+		}
+	}
+
 	// Return results
 	c.JSON(http.StatusOK, gin.H{
 		"feature":     featureName,
@@ -175,6 +203,7 @@ func (h *XFeatureHandler) ExecuteQuery(c *gin.Context) {
 		"resultCount": len(results),
 		"results":     results,
 		"mockDataSet": queryExecutor.LastMockDataSet,
+		"gridColDefs": gridColDefs,
 	})
 }
 
@@ -383,6 +412,40 @@ func (h *XFeatureHandler) ResolveMappings(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+// parseWidth converts width string to integer, defaults to 150 if not valid
+func parseWidth(width string) int {
+	if width == "" {
+		return 150
+	}
+	// Remove non-numeric characters (px, %, etc.)
+	numStr := strings.TrimSpace(width)
+	numStr = strings.TrimSuffix(numStr, "px")
+	numStr = strings.TrimSuffix(numStr, "%")
+
+	if val, err := strconv.Atoi(numStr); err == nil {
+		return val
+	}
+	return 150
+}
+
+// mapColumnType converts XFeature column types to MUI GridColDef types
+func mapColumnType(colType string) string {
+	switch strings.ToLower(colType) {
+	case "number", "currency", "percentage":
+		return "number"
+	case "date":
+		return "date"
+	case "datetime":
+		return "dateTime"
+	case "boolean":
+		return "boolean"
+	case "text", "string", "email", "phone", "url", "link", "badge", "image":
+		return "string"
+	default:
+		return "string"
+	}
 }
 
 // XFeatureModule exports the xfeature handler module for fx
