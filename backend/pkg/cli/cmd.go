@@ -173,11 +173,20 @@ func (ch *CommandHandler) handleHashCommand(args []string, flagSet *flag.FlagSet
 	flagSet.Parse(args[2:])
 	remaining := flagSet.Args()
 
-	if len(remaining) < 1 {
-		return fmt.Errorf("file path is required\nUsage: exepath hash <file> [--outfile <path>]")
+	filePath := ""
+	if len(remaining) > 0 && remaining[0] != "" {
+		filePath = remaining[0]
 	}
 
-	filePath := remaining[0]
+	// If no filepath provided, use current process executable
+	if filePath == "" {
+		exePath, err := os.Executable()
+		if err != nil {
+			return fmt.Errorf("failed to get executable path: %w", err)
+		}
+		filePath = exePath
+	}
+
 	return ch.handleHash(filePath, *outFile)
 }
 
@@ -519,10 +528,10 @@ URL DOWNLOAD:
       exepath download -url=https://example.com/file.bin -target=out   (using flags)
 
 FILE HASH COMPUTATION:
-  exepath hash <file> [--outfile <path>]
+  exepath hash [file] [--outfile <path>]
 
     Arguments:
-      <file>            Path to the file to hash (required)
+      [file]            Path to the file to hash (optional, defaults to current executable)
 
     Options:
       --outfile <path>  Write hash value only to a file (optional, no SHA256 prefix)
@@ -531,6 +540,7 @@ FILE HASH COMPUTATION:
       SHA256 (hex output)
 
     Examples:
+      exepath hash
       exepath hash ./config.yaml
       exepath hash /path/to/executable
       exepath hash ./config.yaml --outfile hash.txt
