@@ -3,10 +3,13 @@ package handlers
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/taheri24/xpanel/backend/internal/database"
@@ -168,6 +171,113 @@ func (h *XFeatureHandler) ExecuteQuery(c *gin.Context) {
 		return
 	}
 
+	// Build gridColDefs from Mappings + DataTable + actual results
+	// Step 1: Get actual column names from query results
+	var resultColumns map[string]bool = make(map[string]bool)
+	var resultColumnOrder []string
+	if len(results) > 0 {
+		// Get keys from first result (results are []map[string]interface{})
+		// Note: We iterate over the map to maintain a column order list
+		for key := range results[0] {
+			if !resultColumns[key] {
+				resultColumns[key] = true
+				resultColumnOrder = append(resultColumnOrder, key)
+			}
+		}
+	}
+
+	// Step 2: Build lookup maps from Mappings and DataTable
+	mappingsByName := make(map[string]*xfeature.Mapping)
+	for _, mapping := range xf.Mappings {
+		mappingsByName[mapping.Name] = mapping
+	}
+
+	var dataTableColumns []*xfeature.Column
+	dataTableColsByName := make(map[string]*xfeature.Column)
+	for _, dt := range xf.Frontend.DataTables {
+		if dt.QueryRef == queryID {
+			dataTableColumns = dt.Columns
+			break
+		}
+	}
+	for _, col := range dataTableColumns {
+		dataTableColsByName[col.Name] = col
+	}
+
+	// Step 3: Build final column list - DataTable order first, then unmatched results
+	var gridColDefs []interface{} = []interface{}{}
+	processedCols := make(map[string]bool)
+
+	// First, process columns in DataTable order (if defined)
+	for _, dtCol := range dataTableColumns {
+		if resultColumns[dtCol.Name] {
+			colDef := gin.H{
+				"field":      dtCol.Name,
+				"headerName": dtCol.Label,
+				"width":      parseWidth(dtCol.Width),
+			}
+			if dtCol.Sortable != nil {
+				colDef["sortable"] = *dtCol.Sortable
+			} else {
+				colDef["sortable"] = true
+			}
+			if dtCol.Align != "" {
+				colDef["align"] = dtCol.Align
+				colDef["headerAlign"] = dtCol.Align
+			}
+			if dtCol.Type != "" {
+				colDef["type"] = mapColumnType(dtCol.Type)
+			}
+			gridColDefs = append(gridColDefs, colDef)
+			processedCols[dtCol.Name] = true
+		}
+	}
+
+	// If no DataTable defined, use Mappings order for defined columns
+	if len(dataTableColumns) == 0 {
+		for _, mapping := range xf.Mappings {
+			if resultColumns[mapping.Name] {
+				colDef := gin.H{
+					"field":      mapping.Name,
+					"headerName": mapping.Label,
+					"width":      150,
+					"sortable":   true,
+				}
+				gridColDefs = append(gridColDefs, colDef)
+				processedCols[mapping.Name] = true
+			}
+		}
+	}
+
+	// Step 4: Add any remaining columns from results as plain string columns
+	for _, colName := range resultColumnOrder {
+		if !processedCols[colName] {
+			colDef := gin.H{
+				"field":      colName,
+				"headerName": colName,
+				"width":      150,
+				"sortable":   true,
+				"type":       "string",
+			}
+			// Check if there's a Mapping for this column (for label)
+			if mapping, exists := mappingsByName[colName]; exists {
+				colDef["headerName"] = mapping.Label
+			}
+			gridColDefs = append(gridColDefs, colDef)
+			processedCols[colName] = true
+		}
+	}
+
+	// Log gridColDefs in table format to CLI
+	if len(gridColDefs) > 0 {
+		slog.Info("Generated GridColDefs for query",
+			"feature", featureName,
+			"query", queryID,
+			"columnCount", len(gridColDefs),
+		)
+		printGridColDefsTable(gridColDefs)
+	}
+
 	// Return results
 	c.JSON(http.StatusOK, gin.H{
 		"feature":     featureName,
@@ -175,6 +285,7 @@ func (h *XFeatureHandler) ExecuteQuery(c *gin.Context) {
 		"resultCount": len(results),
 		"results":     results,
 		"mockDataSet": queryExecutor.LastMockDataSet,
+		"gridColDefs": gridColDefs,
 	})
 }
 
@@ -383,6 +494,95 @@ func (h *XFeatureHandler) ResolveMappings(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+// parseWidth converts width string to integer, defaults to 150 if not valid
+func parseWidth(width string) int {
+	if width == "" {
+		return 150
+	}
+	// Remove non-numeric characters (px, %, etc.)
+	numStr := strings.TrimSpace(width)
+	numStr = strings.TrimSuffix(numStr, "px")
+	numStr = strings.TrimSuffix(numStr, "%")
+
+	if val, err := strconv.Atoi(numStr); err == nil {
+		return val
+	}
+	return 150
+}
+
+// mapColumnType converts XFeature column types to MUI GridColDef types
+func mapColumnType(colType string) string {
+	switch strings.ToLower(colType) {
+	case "number", "currency", "percentage":
+		return "number"
+	case "date":
+		return "date"
+	case "datetime":
+		return "dateTime"
+	case "boolean":
+		return "boolean"
+	case "text", "string", "email", "phone", "url", "link", "badge", "image":
+		return "string"
+	default:
+		return "string"
+	}
+}
+
+// printGridColDefsTable logs GridColDefs in a formatted table
+func printGridColDefsTable(gridColDefs []interface{}) {
+	if len(gridColDefs) == 0 {
+		return
+	}
+
+	// Table header
+	header := "┌─────┬───────────────┬──────────────────────┬────────┬──────────┬───────┐\n" +
+		"│ #   │ Field         │ Header Name          │ Type   │ Width    │ Sort  │\n" +
+		"├─────┼───────────────┼──────────────────────┼────────┼──────────┼───────┤\n"
+
+	var rows strings.Builder
+	for idx, col := range gridColDefs {
+		colMap, ok := col.(gin.H)
+		if !ok {
+			continue
+		}
+
+		field := getStringValue(colMap, "field")
+		headerName := getStringValue(colMap, "headerName")
+		colType := getStringValue(colMap, "type", "string")
+		width := fmt.Sprintf("%v", colMap["width"])
+		sortable := fmt.Sprintf("%v", colMap["sortable"])
+
+		// Truncate long values for table display
+		if len(field) > 13 {
+			field = field[:10] + "..."
+		}
+		if len(headerName) > 20 {
+			headerName = headerName[:17] + "..."
+		}
+
+		rows.WriteString(fmt.Sprintf("│ %-3d │ %-13s │ %-20s │ %-6s │ %-8s │ %-5s │\n",
+			idx+1, field, headerName, colType, width, sortable))
+	}
+
+	footer := "└─────┴───────────────┴──────────────────────┴────────┴──────────┴───────┘"
+
+	// Print the table
+	fmt.Print("\n" + header + rows.String() + footer + "\n\n")
+}
+
+// getStringValue extracts a string value from a gin.H map with fallback values
+func getStringValue(m gin.H, key string, fallback ...string) string {
+	if val, exists := m[key]; exists {
+		if str, ok := val.(string); ok {
+			return str
+		}
+	}
+	if len(fallback) > 0 {
+		return fallback[0]
+	}
+	return ""
 }
 
 // XFeatureModule exports the xfeature handler module for fx
