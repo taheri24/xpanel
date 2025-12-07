@@ -71,9 +71,9 @@ func isColorSupported() bool {
 		return false
 	}
 
-	// Windows detection and support
+	// Disable colors by default on Windows OS
 	if runtime.GOOS == "windows" {
-		return supportsWindowsANSI()
+		return false
 	}
 
 	// For Unix-like systems, check if stdout is a TTY
