@@ -5,5 +5,5 @@ package main
 
 import "embed"
 
-//go:embed frontend/dist
+//go:embed www
 var FS embed.FS

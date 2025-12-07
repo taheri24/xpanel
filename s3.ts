@@ -1,6 +1,6 @@
 //`
 
-import { S3Client } from "bun";
+import { S3Client, S3Options } from "bun";
 
 
 async function generateSHA256(filePath) {
@@ -11,14 +11,17 @@ async function generateSHA256(filePath) {
   const hash = hasher.digest().toString('hex');
   return hash;
 }
+
 const { S3_ACCESS_KEY, S3_SECRET_KEY, S3_ENDPOINT, S3_BUCKET_NAME } = process.env;
-const client = new S3Client({
+
+const s3opt:S3Options={
   accessKeyId: S3_ACCESS_KEY,
   secretAccessKey: S3_SECRET_KEY,
   bucket: S3_BUCKET_NAME,
   endpoint: S3_ENDPOINT,
+};
 
-});
+const client = new S3Client(s3opt);
 async function uploadFiles() {
   const fns = ["backend/bin/xpanel-build.zip"]
   const beforeAll = new Date();
@@ -34,4 +37,4 @@ async function uploadFiles() {
   }
   console.log(`DONE ALL`, (+(new Date()) - (+beforeAll)), 'ms');
 }
-uploadFiles().then(console.log,console.error);
+uploadFiles().then(()=>0,console.error);
