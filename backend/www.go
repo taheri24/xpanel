@@ -8,6 +8,8 @@ import (
 	"os"
 )
 
+// FS provides filesystem access to static assets during non-production builds.
+// It attempts to load from frontend/dist first, then www, then current directory.
 var FS fs.FS
 
 func isDirectory(pathName string) bool {
@@ -21,7 +23,7 @@ func init() {
 	} else if isDirectory("www") {
 		FS = os.DirFS("www")
 	} else {
-		// Fallback to current directory if frontend/dist doesn't exist
+		// Fallback to current directory if frontend/dist and www don't exist
 		FS = os.DirFS(".")
 	}
 }
