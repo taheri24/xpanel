@@ -61,7 +61,13 @@ func (hm *HashManager) ComputeSHA256AndWrite() (string, error) {
 
 	// Write to file if outFile is specified
 	if hm.outFile != "" {
-		if err := os.WriteFile(hm.outFile, []byte(hash), 0644); err != nil {
+		file, err := os.Create(hm.outFile)
+		if err != nil {
+			return "", fmt.Errorf("error creating output file: %w", err)
+		}
+		defer file.Close()
+
+		if _, err := fmt.Fprintf(file, "%s", hash); err != nil {
 			return "", fmt.Errorf("error writing to output file: %w", err)
 		}
 	}
