@@ -9,7 +9,8 @@ import (
 
 // HashManager handles file hashing operations
 type HashManager struct {
-	filePath string
+	filePath  string
+	outFile   string
 }
 
 // NewHashManager creates a new HashManager instance
@@ -17,6 +18,11 @@ func NewHashManager(filePath string) *HashManager {
 	return &HashManager{
 		filePath: filePath,
 	}
+}
+
+// SetOutFile sets the output file path for writing the hash
+func (hm *HashManager) SetOutFile(outFile string) {
+	hm.outFile = outFile
 }
 
 // ComputeSHA256 calculates the SHA256 hash of a file and returns it as hex string
@@ -44,4 +50,21 @@ func (hm *HashManager) ComputeSHA256() (string, error) {
 
 	// Return hash as hex string
 	return fmt.Sprintf("%x", hash.Sum(nil)), nil
+}
+
+// ComputeSHA256AndWrite calculates the hash and writes it to the output file if specified
+func (hm *HashManager) ComputeSHA256AndWrite() (string, error) {
+	hash, err := hm.ComputeSHA256()
+	if err != nil {
+		return "", err
+	}
+
+	// Write to file if outFile is specified
+	if hm.outFile != "" {
+		if err := os.WriteFile(hm.outFile, []byte(hash), 0644); err != nil {
+			return "", fmt.Errorf("error writing to output file: %w", err)
+		}
+	}
+
+	return hash, nil
 }

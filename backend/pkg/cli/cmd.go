@@ -166,29 +166,42 @@ func (ch *CommandHandler) handleDownload(downloadURL, target string) error {
 
 // handleHashCommand processes hash-specific commands
 func (ch *CommandHandler) handleHashCommand(args []string, flagSet *flag.FlagSet) error {
+	// Define flags
+	outFile := flagSet.String("outfile", "", "output file to write hash value only (optional)")
+
 	// Parse remaining arguments
 	flagSet.Parse(args[2:])
 	remaining := flagSet.Args()
 
 	if len(remaining) < 1 {
-		return fmt.Errorf("file path is required\nUsage: exepath hash <file>")
+		return fmt.Errorf("file path is required\nUsage: exepath hash <file> [--outfile <path>]")
 	}
 
 	filePath := remaining[0]
-	return ch.handleHash(filePath)
+	return ch.handleHash(filePath, *outFile)
 }
 
 // handleHash performs the hash computation
-func (ch *CommandHandler) handleHash(filePath string) error {
+func (ch *CommandHandler) handleHash(filePath, outFile string) error {
 	hm := NewHashManager(filePath)
 
-	hash, err := hm.ComputeSHA256()
+	if outFile != "" {
+		hm.SetOutFile(outFile)
+	}
+
+	hash, err := hm.ComputeSHA256AndWrite()
 	if err != nil {
 		return fmt.Errorf("hash computation failed: %w", err)
 	}
 
 	absPath, _ := filepath.Abs(filePath)
-	fmt.Printf("SHA256(%s): %s\n", absPath, hash)
+	if outFile != "" {
+		outAbsPath, _ := filepath.Abs(outFile)
+		fmt.Printf("SHA256(%s): %s\n", absPath, hash)
+		fmt.Printf("✓ Hash written to: %s\n", outAbsPath)
+	} else {
+		fmt.Printf("SHA256(%s): %s\n", absPath, hash)
+	}
 	return nil
 }
 
@@ -506,10 +519,13 @@ URL DOWNLOAD:
       exepath download -url=https://example.com/file.bin -target=out   (using flags)
 
 FILE HASH COMPUTATION:
-  exepath hash <file>
+  exepath hash <file> [--outfile <path>]
 
     Arguments:
       <file>            Path to the file to hash (required)
+
+    Options:
+      --outfile <path>  Write hash value only to a file (optional, no SHA256 prefix)
 
     Hash Algorithm:
       SHA256 (hex output)
@@ -517,6 +533,8 @@ FILE HASH COMPUTATION:
     Examples:
       exepath hash ./config.yaml
       exepath hash /path/to/executable
+      exepath hash ./config.yaml --outfile hash.txt
+      exepath hash /path/to/app.exe --outfile ./checksums/app.sha256
 
 `)
 	return flag.ErrHelp
