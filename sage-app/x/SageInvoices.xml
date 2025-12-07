@@ -11,20 +11,23 @@
     <!-- SELECT QUERIES: Data retrieval operations -->
     <Query Id="ListInvoices" Type="Select" Description="Retrieve all purchase invoices with tax and payment details" MockDataSet2="mock-invoices.json">
       <![CDATA[
-        SELECT
-          faturaNo ref,
-          satici_vergiNo,
-          faturaNo,
-          faturaTarihi,
-          faturaTuru,
-          faturaTipi,
-          paraBirimi,
-          toplamMalHizmetMiktari Toplam,
-          odenecekTutar - toplamMalHizmetMiktari vergi,
-          odenecekTutar
-        FROM [TR-EDOCS].[dbo].[_PORTALH]
-        ORDER BY faturaTarihi DESC
-      ]]>
+       SELECT   [faturaNo]
+      ,[faturaTarihi]
+      ,[irsaliyeBilgisi_irsaliyeNo]
+      ,[irsaliyeBilgisi_irsaliyeTarihi]
+      ,[sonOdemeTarihi]
+      ,[paraBirimi]
+      ,[vergiler_toplamVergiTutari]
+      ,[vergiHaricToplam]
+      ,[faturaNot]
+      ,[satici_vergiNo]
+      ,[satici_unvan]
+      ,[BP]
+      ,[BP2]
+  FROM [TR-EDOCS].[dbo].[TAB1]
+ 
+       ORDER BY [faturaTarihi] DESC
+             ]]>
     </Query>
    </Backend>
 

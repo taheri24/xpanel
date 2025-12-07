@@ -1,4 +1,4 @@
-.PHONY: help run build build-frontend build-full test clean dev
+.PHONY: help run build build-frontend build-full test clean dev build-win-prod
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -14,6 +14,9 @@ build: ## Build the backend only
 
 build-win: ## Build the backend only
 	GOOS=windows GOARCH=amd64 go build -ldflags  "-s -w" -gcflags="all=-N -l" -o bin/xserver.exe .
+
+build-win-prod: ## Build Windows backend with embedded www directory
+	GOOS=windows GOARCH=amd64 go build -tags=prod -ldflags "-s -w" -gcflags="all=-N -l" -o bin/xserver.exe .
 
 build-frontend: ## Build the frontend
 	@echo "Building frontend..."
