@@ -14,7 +14,7 @@ async function generateSHA256(filePath) {
 
 const { S3_ACCESS_KEY, S3_SECRET_KEY, S3_ENDPOINT, S3_BUCKET_NAME } = process.env;
 
-const s3opt:S3Options={
+const s3opt: S3Options = {
   accessKeyId: S3_ACCESS_KEY,
   secretAccessKey: S3_SECRET_KEY,
   bucket: S3_BUCKET_NAME,
@@ -31,10 +31,11 @@ async function uploadFiles() {
     const meta = { fileSize, deployTime: new Date(), "hash": await generateSHA256(fn) }
     console.log(meta);
     await client.write(`${fn}.meta.json`, JSON.stringify(meta));
+    await client.write(`${fn}.sha256.txt`, meta.hash);
     await client.write(fn, Bun.file(fn));
     console.log(`DONE for ${fn}`, (+(new Date()) - (+before)), 'ms');
 
   }
   console.log(`DONE ALL`, (+(new Date()) - (+beforeAll)), 'ms');
 }
-uploadFiles().then(()=>0,console.error);
+uploadFiles().then(() => 0, console.error);
