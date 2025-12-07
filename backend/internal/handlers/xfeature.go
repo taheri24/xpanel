@@ -173,61 +173,48 @@ func (h *XFeatureHandler) ExecuteQuery(c *gin.Context) {
 	// Build gridColDefs from Mappings + DataTable + actual results
 	// Step 1: Get actual column names from query results
 	var resultColumns map[string]bool = make(map[string]bool)
+	var resultColumnOrder []string
 	if len(results) > 0 {
 		// Get keys from first result (results are []map[string]interface{})
+		// Note: We iterate over the map to maintain a column order list
 		for key := range results[0] {
-			resultColumns[key] = true
+			if !resultColumns[key] {
+				resultColumns[key] = true
+				resultColumnOrder = append(resultColumnOrder, key)
+			}
 		}
 	}
 
-	// Step 2: Build initial column defs from Mappings
+	// Step 2: Build lookup maps from Mappings and DataTable
 	mappingsByName := make(map[string]*xfeature.Mapping)
 	for _, mapping := range xf.Mappings {
 		mappingsByName[mapping.Name] = mapping
 	}
 
-	// Step 3: Find DataTable that references this query and merge with Mappings
-	var gridColDefs []interface{} = []interface{}{}
 	var dataTableColumns []*xfeature.Column
+	dataTableColsByName := make(map[string]*xfeature.Column)
 	for _, dt := range xf.Frontend.DataTables {
 		if dt.QueryRef == queryID {
 			dataTableColumns = dt.Columns
 			break
 		}
 	}
-
-	// Step 4: Build column order - use DataTable columns if available, otherwise use Mappings
-	var columnOrder []string
-	if len(dataTableColumns) > 0 {
-		for _, col := range dataTableColumns {
-			columnOrder = append(columnOrder, col.Name)
-		}
-	} else {
-		for _, mapping := range xf.Mappings {
-			columnOrder = append(columnOrder, mapping.Name)
-		}
-	}
-
-	// Step 5: Convert to GridColDef format, filtering by actual result columns
-	dataTableColsByName := make(map[string]*xfeature.Column)
 	for _, col := range dataTableColumns {
 		dataTableColsByName[col.Name] = col
 	}
 
-	for _, colName := range columnOrder {
-		// Only include columns that exist in the results (if results exist)
-		if len(resultColumns) > 0 && !resultColumns[colName] {
-			continue
-		}
+	// Step 3: Build final column list - DataTable order first, then unmatched results
+	var gridColDefs []interface{} = []interface{}{}
+	processedCols := make(map[string]bool)
 
-		colDef := gin.H{
-			"field": colName,
-		}
-
-		// Get label from DataTable or Mapping
-		if dtCol, exists := dataTableColsByName[colName]; exists {
-			colDef["headerName"] = dtCol.Label
-			colDef["width"] = parseWidth(dtCol.Width)
+	// First, process columns in DataTable order (if defined)
+	for _, dtCol := range dataTableColumns {
+		if resultColumns[dtCol.Name] {
+			colDef := gin.H{
+				"field":      dtCol.Name,
+				"headerName": dtCol.Label,
+				"width":      parseWidth(dtCol.Width),
+			}
 			if dtCol.Sortable != nil {
 				colDef["sortable"] = *dtCol.Sortable
 			} else {
@@ -240,30 +227,43 @@ func (h *XFeatureHandler) ExecuteQuery(c *gin.Context) {
 			if dtCol.Type != "" {
 				colDef["type"] = mapColumnType(dtCol.Type)
 			}
-		} else if mapping, exists := mappingsByName[colName]; exists {
-			// Fallback to Mapping for label
-			colDef["headerName"] = mapping.Label
-			colDef["width"] = 150
-			colDef["sortable"] = true
-		} else {
-			// Default column definition
-			colDef["headerName"] = colName
-			colDef["width"] = 150
-			colDef["sortable"] = true
+			gridColDefs = append(gridColDefs, colDef)
+			processedCols[dtCol.Name] = true
 		}
-
-		gridColDefs = append(gridColDefs, colDef)
 	}
 
-	// If no columns from DataTable/Mappings, generate from actual results
-	if len(gridColDefs) == 0 && len(resultColumns) > 0 {
-		for key := range resultColumns {
-			gridColDefs = append(gridColDefs, gin.H{
-				"field":      key,
-				"headerName": key,
+	// If no DataTable defined, use Mappings order for defined columns
+	if len(dataTableColumns) == 0 {
+		for _, mapping := range xf.Mappings {
+			if resultColumns[mapping.Name] {
+				colDef := gin.H{
+					"field":      mapping.Name,
+					"headerName": mapping.Label,
+					"width":      150,
+					"sortable":   true,
+				}
+				gridColDefs = append(gridColDefs, colDef)
+				processedCols[mapping.Name] = true
+			}
+		}
+	}
+
+	// Step 4: Add any remaining columns from results as plain string columns
+	for _, colName := range resultColumnOrder {
+		if !processedCols[colName] {
+			colDef := gin.H{
+				"field":      colName,
+				"headerName": colName,
 				"width":      150,
 				"sortable":   true,
-			})
+				"type":       "string",
+			}
+			// Check if there's a Mapping for this column (for label)
+			if mapping, exists := mappingsByName[colName]; exists {
+				colDef["headerName"] = mapping.Label
+			}
+			gridColDefs = append(gridColDefs, colDef)
+			processedCols[colName] = true
 		}
 	}
 
