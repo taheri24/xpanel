@@ -173,10 +173,12 @@ func (ch *CommandHandler) handleHashCommand(args []string, flagSet *flag.FlagSet
 	flagSet.Parse(args[2:])
 	remaining := flagSet.Args()
 
-	filePath := ""
-	if len(remaining) > 0 && remaining[0] != "" {
-		filePath = remaining[0]
+	// Ensure remaining has at least one element with empty string default
+	if len(remaining) == 0 {
+		remaining = append(remaining, "")
 	}
+
+	filePath := remaining[0]
 
 	// If no filepath provided, use current process executable
 	if filePath == "" {
