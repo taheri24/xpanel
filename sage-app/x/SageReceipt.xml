@@ -10,16 +10,20 @@
 
     <!-- SELECT QUERIES: Data retrieval operations -->
     <Query Id="ListReceipts" Type="Select" Description="Retrieve all Sage receipt records" MockDataSet2="mock-receipts.json">
-      <![CDATA[
-        SELECT
-          PTHNUM_0,
-          BPSNDE_0,
-          @ref AS RCPDAT_0
-        FROM [TR-EDOCS].[dbo].[sagedbLIVEPRECEIPTD]
-        
-       WHERE BPSNDE_0 = @ref 
-        ORDER BY RCPDAT_0 DESC
+           <![CDATA[
+        SELECT  [POHNUM_0] AS REF
+      ,[ORDDAT_0]
+      ,[ORDREF_0]
+      ,[BPSNUM_0]
+      ,[CUR_0]
+      ,[TOTLINATI_0]
+      ,[TOTTAXAMT_0]
+  FROM [TR-EDOCS].[dbo].[TAB2]
+
+        WHERE REF = @ref
+    
       ]]>
+
     </Query>
    </Backend>
 
