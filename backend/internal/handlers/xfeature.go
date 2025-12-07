@@ -3,6 +3,7 @@ package handlers
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -267,6 +268,16 @@ func (h *XFeatureHandler) ExecuteQuery(c *gin.Context) {
 		}
 	}
 
+	// Log gridColDefs in table format to CLI
+	if len(gridColDefs) > 0 {
+		slog.Info("Generated GridColDefs for query",
+			"feature", featureName,
+			"query", queryID,
+			"columnCount", len(gridColDefs),
+		)
+		printGridColDefsTable(gridColDefs)
+	}
+
 	// Return results
 	c.JSON(http.StatusOK, gin.H{
 		"feature":     featureName,
@@ -517,6 +528,61 @@ func mapColumnType(colType string) string {
 	default:
 		return "string"
 	}
+}
+
+// printGridColDefsTable logs GridColDefs in a formatted table
+func printGridColDefsTable(gridColDefs []interface{}) {
+	if len(gridColDefs) == 0 {
+		return
+	}
+
+	// Table header
+	header := "┌─────┬───────────────┬──────────────────────┬────────┬──────────┬───────┐\n" +
+		"│ #   │ Field         │ Header Name          │ Type   │ Width    │ Sort  │\n" +
+		"├─────┼───────────────┼──────────────────────┼────────┼──────────┼───────┤\n"
+
+	var rows strings.Builder
+	for idx, col := range gridColDefs {
+		colMap, ok := col.(gin.H)
+		if !ok {
+			continue
+		}
+
+		field := getStringValue(colMap, "field")
+		headerName := getStringValue(colMap, "headerName")
+		colType := getStringValue(colMap, "type", "string")
+		width := fmt.Sprintf("%v", colMap["width"])
+		sortable := fmt.Sprintf("%v", colMap["sortable"])
+
+		// Truncate long values for table display
+		if len(field) > 13 {
+			field = field[:10] + "..."
+		}
+		if len(headerName) > 20 {
+			headerName = headerName[:17] + "..."
+		}
+
+		rows.WriteString(fmt.Sprintf("│ %-3d │ %-13s │ %-20s │ %-6s │ %-8s │ %-5s │\n",
+			idx+1, field, headerName, colType, width, sortable))
+	}
+
+	footer := "└─────┴───────────────┴──────────────────────┴────────┴──────────┴───────┘"
+
+	// Print the table
+	fmt.Print("\n" + header + rows.String() + footer + "\n\n")
+}
+
+// getStringValue extracts a string value from a gin.H map with fallback values
+func getStringValue(m gin.H, key string, fallback ...string) string {
+	if val, exists := m[key]; exists {
+		if str, ok := val.(string); ok {
+			return str
+		}
+	}
+	if len(fallback) > 0 {
+		return fallback[0]
+	}
+	return ""
 }
 
 // XFeatureModule exports the xfeature handler module for fx
