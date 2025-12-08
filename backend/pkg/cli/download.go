@@ -7,7 +7,61 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
+	"sync"
 )
+
+// ProgressReader wraps an io.Reader and tracks progress
+type ProgressReader struct {
+	total      int64
+	read       int64
+	r          io.Reader
+	w          io.Writer
+	mu         sync.Mutex
+	barLength  int
+	lastUpdate int64
+}
+
+// NewProgressReader creates a new progress tracking reader
+func NewProgressReader(total int64, r io.Reader, w io.Writer) *ProgressReader {
+	return &ProgressReader{
+		total:     total,
+		r:         r,
+		w:         w,
+		barLength: 40,
+	}
+}
+
+// Read implements io.Reader and updates progress
+func (pr *ProgressReader) Read(p []byte) (n int, err error) {
+	n, err = pr.r.Read(p)
+	if n > 0 {
+		pr.mu.Lock()
+		pr.read += int64(n)
+
+		// Only update progress every 50KB to reduce overhead
+		if pr.read-pr.lastUpdate > 50*1024 || pr.read == pr.total {
+			pr.displayProgress()
+			pr.lastUpdate = pr.read
+		}
+		pr.mu.Unlock()
+	}
+	return
+}
+
+// displayProgress shows the current progress bar
+func (pr *ProgressReader) displayProgress() {
+	if pr.total <= 0 {
+		return
+	}
+
+	percent := float64(pr.read) / float64(pr.total) * 100
+	filledLength := int(float64(pr.barLength) * float64(pr.read) / float64(pr.total))
+
+	bar := strings.Repeat("=", filledLength) + strings.Repeat("-", pr.barLength-filledLength)
+
+	fmt.Printf("\r[%s] %.1f%% (%d/%d bytes)", bar, percent, pr.read, pr.total)
+}
 
 // DownloadManager handles file download operations
 type DownloadManager struct {
@@ -78,11 +132,22 @@ func (dm *DownloadManager) Download() error {
 	}
 	defer file.Close()
 
-	// Copy the downloaded content to the file
-	if _, err := io.Copy(file, resp.Body); err != nil {
+	// Copy the downloaded content to the file with progress tracking
+	var reader io.Reader = resp.Body
+	if resp.ContentLength > 0 {
+		fmt.Printf("Downloading %s (%d bytes)...\n", filepath.Base(target), resp.ContentLength)
+		reader = NewProgressReader(resp.ContentLength, resp.Body, nil)
+	}
+
+	if _, err := io.Copy(file, reader); err != nil {
 		// Clean up the file if download fails
 		os.Remove(target)
+		fmt.Println()
 		return fmt.Errorf("error writing to file: %w", err)
+	}
+
+	if resp.ContentLength > 0 {
+		fmt.Println()
 	}
 
 	// Store the final target for external use
