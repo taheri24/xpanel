@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
@@ -67,6 +68,7 @@ func (pr *ProgressReader) displayProgress() {
 type DownloadManager struct {
 	downloadURL string
 	target      string
+	insecure    bool
 }
 
 // NewDownloadManager creates a new DownloadManager
@@ -74,7 +76,14 @@ func NewDownloadManager(downloadURL, target string) *DownloadManager {
 	return &DownloadManager{
 		downloadURL: downloadURL,
 		target:      target,
+		insecure:    true,
 	}
+}
+
+// SetInsecure sets insecure HTTPS mode (skips certificate verification). Insecure mode is enabled by default.
+func (dm *DownloadManager) SetInsecure(insecure bool) *DownloadManager {
+	dm.insecure = insecure
+	return dm
 }
 
 // Download downloads a file from the URL to the target location
@@ -105,8 +114,18 @@ func (dm *DownloadManager) Download() error {
 		}
 	}
 
+	// Create HTTP client with optional insecure TLS configuration
+	client := &http.Client{}
+	if dm.insecure {
+		client.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		}
+	}
+
 	// Download the file
-	resp, err := http.Get(dm.downloadURL)
+	resp, err := client.Get(dm.downloadURL)
 	if err != nil {
 		return fmt.Errorf("error downloading file: %w", err)
 	}
