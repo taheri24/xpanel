@@ -10,9 +10,10 @@ import (
 )
 
 type Config struct {
-	Server   ServerConfig
+	Server ServerConfig
 	Database DatabaseConfig
-	Feature  FeatureConfig
+	Feature FeatureConfig
+	Ngrok   NgrokConfig
 }
 
 type ServerConfig struct {
@@ -34,6 +35,12 @@ type FeatureConfig struct {
 	XFeatureFileLocation  string
 	MockDataSetLocation   string
 	CaptureMockDataSet    bool
+}
+
+type NgrokConfig struct {
+	Enabled bool
+	AuthToken string
+	Tunnel  string
 }
 
 func Load() (*Config, error) {
@@ -60,6 +67,11 @@ func Load() (*Config, error) {
 			XFeatureFileLocation: getEnv("XFEATURE_FILE_LOCATION", "specs/xfeature/"),
 			MockDataSetLocation:  getEnv("MOCK_DATA_SET_LOCATION", "specs/mock/"),
 			CaptureMockDataSet:   getBoolEnv("CAPTURE_MOCK_DATASET", false),
+		},
+		Ngrok: NgrokConfig{
+			Enabled:   getBoolEnv("NGROK_ENABLED", false),
+			AuthToken: getEnv("NGROK_AUTH_TOKEN", ""),
+			Tunnel:    getEnv("NGROK_TUNNEL", "http://localhost"),
 		},
 	}
 
