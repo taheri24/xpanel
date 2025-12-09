@@ -17,6 +17,7 @@ import (
 	"github.com/taheri24/xpanel/backend/internal/database"
 	"github.com/taheri24/xpanel/backend/internal/handlers"
 	"github.com/taheri24/xpanel/backend/internal/models"
+	"github.com/taheri24/xpanel/backend/internal/ngrok"
 	"github.com/taheri24/xpanel/backend/internal/router"
 	"github.com/taheri24/xpanel/backend/internal/server"
 	"github.com/taheri24/xpanel/backend/pkg/cli"
@@ -53,6 +54,9 @@ func main() {
 
 		// Provide repositories
 		models.Module,
+
+		// Provide ngrok tunnel (optional)
+		ngrok.Module,
 
 		// Provide handlers
 		handlers.HealthModule,
