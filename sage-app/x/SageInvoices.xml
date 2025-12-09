@@ -29,6 +29,15 @@
        ORDER BY [faturaTarihi] DESC
              ]]>
     </Query>
+    <ActionQuery Id="UpdateUser" Type="Update" Description="Update existing user information">
+      <![CDATA[
+        UPDATE [TR-EDOCS].[dbo].[PUR_INVH] 
+        SET 
+          [BP2] = :BP2
+        WHERE faturaNo = :faturaNo
+      ]]>
+    </ActionQuery>
+    
    </Backend>
 
   <!-- ============================= -->

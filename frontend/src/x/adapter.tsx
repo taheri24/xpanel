@@ -1,6 +1,5 @@
 import React, { useContext } from "react";
 import type { XFeature } from "../types/xfeature";
-import {GridColDef} from '@mui/x-data-grid'
 class XAdapter{
     model:XFeature;
     constructor( model:XFeature){

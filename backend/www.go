@@ -4,6 +4,7 @@
 package main
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 )
@@ -25,5 +26,6 @@ func init() {
 	} else {
 		// Fallback to current directory if frontend/dist and www don't exist
 		FS = os.DirFS(".")
+		fmt.Println("www folder not found")
 	}
 }

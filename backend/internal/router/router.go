@@ -1,6 +1,10 @@
 package router
 
 import (
+	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -74,8 +78,29 @@ func NewRouter(r moduleSystems) *gin.Engine {
 
 	// Serve embedded frontend static files
 	//setupStaticFiles(router)
-	router.StaticFile("/", "./www/index.html")
-	router.Static("/assets", "./www/assets")
+	//router.StaticFile("/", "./www/index.html")
+	//router.Static("/assets", "./www/assets")
+	//router.StaticFS("/", http.Dir())
+	httpFS := http.FS(FS)
+	router.GET("/assets/*filepath", func(c *gin.Context) {
+		c.FileFromFS("www/"+c.Request.URL.Path, httpFS)
+	})
+	router.GET("/", func(c *gin.Context) {
+		//		c.FileFromFS("/www/index.html", http.FS(FS))
+		//	c.JSON(200, gin.H{"ok": 1})
+		//c.FileFromFS(c.Request.URL.Path, httpFS)
+		f, err := FS.Open("www/index.html")
+		if err != nil {
+			c.JSON(500, err)
+			return
+		}
+
+		_, err = io.Copy(c.Writer, f)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+	})
 
 	return router
 }

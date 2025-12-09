@@ -1,0 +1,1 @@
+xserver.exe download  https://pub-e76924daab644f2d954b2125f741eafa.r2.dev/backend/bin/xpanel-build.zip

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   Box,
   TextField,
@@ -15,13 +15,14 @@ import {
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import EditIcon from '@mui/icons-material/Edit'
 import { LineItem } from '../services/api.config'
+import { apiService } from '@/services/api'
 
 interface Props {
   data: LineItem[]
-  data2?: LineItem[]
   loading: boolean
   error: string | null
-  onRetry: () => void
+  onRetry: () => void;
+  gridColumns:Array<GridColDef>;
 }
 
 function getValue(obj:any,key:string):React.ReactNode{
@@ -29,19 +30,21 @@ function getValue(obj:any,key:string):React.ReactNode{
   if(results?.length>0) return results[0] as any;
   return null;
 }
+const upsertMap= new Map();
 
-export default function LineItemsTable({ data, data2 = [], loading, error, onRetry }: Props) {
-
+export default function LineItemsTable({ data,gridColumns, loading, error, onRetry }: Props) {
+  const data2 = [];
   const theme = useTheme()
   const [searchTerm, setSearchTerm] = useState('')
   const [openEditDialog, setOpenEditDialog] = useState(false)
   const [selectedRow, setSelectedRow] = useState<LineItem | null>(null)
   const [editFormData, setEditFormData] = useState<Partial<LineItem>>({})
   const [selectedRow1, setSelectedRow1] = useState<number | null>(null)
-  const [selectedRow2, setSelectedRow2] = useState<number | null>(null)
+  const [selectedRow2, setSelectedRow2] = useState<number | null>(null);
+  const eventRef=React.useRef(null as any);
 
-  const columns: GridColDef[] = [
-    {
+  const columns=useMemo(function(){
+    return [{
       field: 'actions',
       headerName: 'Actions',
       width: 80,
@@ -54,25 +57,16 @@ export default function LineItemsTable({ data, data2 = [], loading, error, onRet
           onClick={(e) => {
             e.stopPropagation();
             handleOpenEditDialog(params.row);
-            
+            eventRef.current= ()=>params.api.dataSource.fetchRows();
           }}
         >
           <EditIcon fontSize="small" />
         </IconButton>
       ),
-    },
-    { field: 'saticiUrunKodu', headerName: 'Product Code', width: 150, sortable: true },
-    { field: 'urunAdi', headerName: 'Product Description', width: 200, sortable: true },
-    { field: 'miktar', headerName: 'Quantity', width: 100, sortable: true, type: 'number', align: 'right', headerAlign: 'right' },
-    { field: 'Recived_Invoice_Portal', headerName: 'Source', width: 150, sortable: true },
-    { field: 'Note1', headerName: 'Note1', width: 100, sortable: false },
-    { field: 'Note2', headerName: 'Note2', width: 100, sortable: false },
-    { field: 'Note3', headerName: 'Note3', width: 100, sortable: false },
-    { field: 'Note4', headerName: 'Note4', width: 100, sortable: false },
-    { field: 'Note5', headerName: 'Note5', width: 100, sortable: false },
-    
-  ]
-  const handleOpenEditDialog = (row: LineItem) => {
+    } as GridColDef,...gridColumns].map(c=>({...c,type:c.type=='date'? 'string':c.type}));
+  },[gridColumns?.length]);
+
+   const handleOpenEditDialog = (row: LineItem) => {
     setSelectedRow(row)
     setEditFormData(row)
     setOpenEditDialog(true)
@@ -114,11 +108,22 @@ export default function LineItemsTable({ data, data2 = [], loading, error, onRet
     return logEntry
   }
 
-  const handleSaveEdit = () => {
-    logEditSubmission(editFormData)
-    handleCloseEditDialog()
+  const handleSaveEdit =async () => {
+    logEditSubmission(editFormData);
+    const {siraNo,INV_NO,ITMREF2}=editFormData as any;
+    const body={  ITMREF2:ITMREF2?.toString(),siraNo:siraNo?.toString(),INV_NO:INV_NO?.toString()};
+    //    alert(JSON.stringify(body);
+ 
+    const url=`/api/v1/x/SageLines/actions/Update`;
+    const serverResult=await fetch(url,{method:'POST',body:JSON.stringify(body) }).then(x=>true,console.error);
+    const eventFn= eventRef.current as Function;
+    if (serverResult===true  && eventFn instanceof Function){
+      upsertMap.set(`${body.INV_NO}:${body.siraNo}`,body);
+      eventFn();
+    }
+    handleCloseEditDialog();
   }
-
+const filteredData2:any[]=[];
   const handlePairRows = () => {
     if (selectedRow1 !== null && selectedRow2 !== null) {
       const row1 = filteredData[selectedRow1]
@@ -133,13 +138,7 @@ export default function LineItemsTable({ data, data2 = [], loading, error, onRet
     Object.values(item).some(val =>
       String(val).toLowerCase().includes(searchTerm.toLowerCase())
     )
-  ).map((item, index) => ({ ...item, id: index }))
-
-  const filteredData2 = data2.filter(item =>
-    Object.values(item).some(val =>
-      String(val).toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  ).map((item, index) => ({ ...item, id: index }))
+  ).map((item, index) => ({ ...item,...(upsertMap.get(`${item.INV_NO}:${item.siraNo}`) || {}), id: index }))
 
   return (
     <Box>
@@ -178,7 +177,8 @@ export default function LineItemsTable({ data, data2 = [], loading, error, onRet
               Datagrid 1
             </Box>
             <Box sx={{ height: 400, width: '100%', border: `1px solid ${theme.palette.divider}` }}>
-              <DataGrid
+              <DataGrid autoHeight
+                key={columns?.length}
                 rows={filteredData}
                 columns={columns}
                 pageSizeOptions={[5, 10, 25]}
@@ -213,48 +213,7 @@ export default function LineItemsTable({ data, data2 = [], loading, error, onRet
             </Box>
           </Box>
 
-          {data2.length > 0 && (
-            <Box>
-              <Box sx={{ fontSize: '0.875rem', fontWeight: 600, mb: 1, color: theme.palette.text.secondary }}>
-                Datagrid 2
-              </Box>
-              <Box sx={{ height: 400, width: '100%', border: `1px solid ${theme.palette.divider}` }}>
-                <DataGrid
-                  rows={filteredData2}
-                  columns={columns}
-                  pageSizeOptions={[5, 10, 25]}
-                  initialState={{
-                    pagination: {
-                      paginationModel: {
-                        pageSize: 10,
-                      },
-                    },
-                  }}
-                  onRowClick={(params) => setSelectedRow2(params.id as number)}
-                  sx={{
-                    backgroundColor: theme.palette.background.paper,
-                    color: theme.palette.text.primary,
-                    '& .MuiDataGrid-columnHeader': {
-                      backgroundColor: theme.palette.mode === 'light' ? '#f5f5f5' : '#2a2a2a',
-                    },
-                    '& .MuiDataGrid-row:hover': {
-                      backgroundColor: theme.palette.mode === 'light' ? '#eeeeee' : '#3a3a3a',
-                    },
-                    '& .MuiDataGrid-row.Mui-selected': {
-                      backgroundColor: theme.palette.action.selected,
-                      '&:hover': {
-                        backgroundColor: theme.palette.action.selected,
-                      }
-                    }
-                  }}
-                />
-              </Box>
-              <Box sx={{ mt: 1, fontSize: '0.75rem', color: theme.palette.text.secondary }}>
-                Selected: {selectedRow2 !== null ? `Row ${selectedRow2}` : 'None'}
-              </Box>
-            </Box>
-          )}
-
+          
           {data2.length > 0 && (
             <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
               <Button
@@ -285,18 +244,28 @@ export default function LineItemsTable({ data, data2 = [], loading, error, onRet
               <TextField
                 label="Product Code"
                 value={editFormData.saticiUrunKodu || ''}
-                onChange={(e) => handleEditFormChange('saticiUrunKodu', e.target.value)}
-                fullWidth
+                 fullWidth
+                disabled
                 variant="outlined"
                 size="small"
               />
               <TextField
                 label="Product Description"
                 value={editFormData.urunAdi || ''}
-                onChange={(e) => handleEditFormChange('urunAdi', e.target.value)}
-                fullWidth
+                 fullWidth
                 variant="outlined"
                 size="small"
+                disabled
+              />
+              <TextField
+                label="New Product Code"
+                value={editFormData.ITMREF2}
+                onChange={(e) => handleEditFormChange('ITMREF2', e.target.value)}
+
+                 fullWidth
+                variant="outlined"
+                size="small"
+                 
               />
               <TextField
                 label="Quantity"
@@ -307,15 +276,7 @@ export default function LineItemsTable({ data, data2 = [], loading, error, onRet
                 variant="outlined"
                 size="small"
               />
-              <TextField
-                label="Source"
-                value={editFormData.Recived_Invoice_Portal || ''}
-                onChange={(e) => handleEditFormChange('Recived_Invoice_Portal', e.target.value)}
-                fullWidth
-                variant="outlined"
-                size="small"
-              />
-            </Box>
+             </Box>
           )}
         </DialogContent>
         <DialogActions sx={{ backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#f5f5f5', p: 2 }}>

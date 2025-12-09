@@ -8,6 +8,7 @@ import {
 } from '@mui/material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { Invoice } from '../services/api.config'
+import { apiService } from '@/services/api'
 
 const formatValue=(s:number | string)=>{
   if (typeof s=='string'){
@@ -30,8 +31,9 @@ interface Props {
   error: string | null
   onRetry: () => void
   setRef: Function
+  gridColumns?:Array<GridColDef>;
 }
-
+/*
 const columns: GridColDef[] = [
   { field: 'satici_vergiNo', headerName: 'Vendor Tax ID', width: 150, sortable: true },
   { field: 'faturaNo', headerName: 'Invoice No', width: 150, sortable: true },
@@ -47,16 +49,16 @@ const columns: GridColDef[] = [
   { field: 'Note4', headerName: 'Note4', width: 100, sortable: false },
   { field: 'Note5', headerName: 'Note5', width: 100, sortable: false },
 ]
-export default function InvoicesTable({ data, loading, error, onRetry, setRef }: Props) {
+  */
+export default function InvoicesTable({ gridColumns,data, loading, error, onRetry, setRef }: Props) {
   const theme = useTheme()
   const [searchTerm, setSearchTerm] = useState('')
-
+  const cols=gridColumns?.map(c=>({...c,type:c.type=='date'? 'string':c.type}));
   const filteredData = data.filter(invoice =>
     Object.values(invoice).some(val =>
       String(val).toLowerCase().includes(searchTerm.toLowerCase())
     )
   ).map((item, index) => ({ ...item, id: index }))
-
   return (
     <Box>
       {error && (
@@ -91,7 +93,9 @@ export default function InvoicesTable({ data, loading, error, onRetry, setRef }:
         <Box sx={{ height: 400, width: '100%' }}>
           <DataGrid
             rows={filteredData}
-            columns={columns}
+            autoHeight
+            key={cols?.length}
+            columns={cols || []}
             pageSizeOptions={[5, 10, 25]}
             initialState={{
               pagination: {

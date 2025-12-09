@@ -10,19 +10,37 @@
 
     <!-- SELECT QUERIES: Data retrieval operations -->
     <Query Id="ListLineItems" Type="Select" Description="Retrieve all line items from Sage and Portal invoices" MockDataSet2="mock-line-items.json">
-      <![CDATA[
-         
-        SELECT
-          saticiUrunKodu,
-          urunAdi,
-          miktar,
-          '' AS  Recived_Invoice_Portal
-        FROM [TR-EDOCS].[dbo].[_PORTALD]
-      WHERE @ref>''
+            <![CDATA[
+     SELECT   [Tur]
+      ,[INV_NO]
+      ,[IRS_NO]
+      ,[siraNo]
+      ,[BPSNUM]
+      ,[saticiUrunKodu]
+      ,[urunAdi]
+      ,[MARKAMODELTANIM]
+      ,[birimKodu]
+      ,[birimFiyat]
+      ,[miktar]
+      ,[malHizmetMiktari]
+      ,[toplamVergiTutari]
+	        ,[ITMREF2]
+  FROM [TR-EDOCS].[dbo].[TAB3]
+
+        WHERE REF = @ref
       ]]>
     </Query>
  
-
+<ActionQuery Id="Update" Type="Update" Description="Update existing user information">
+      <![CDATA[
+        UPDATE [TR-EDOCS].[dbo].[TAB3]
+        SET  ITMREF2 = @ITMREF2,
+     
+        WHERE INV_NO = @INV_NO AND siraNo=@siraNo      
+        
+        ]]>
+    </ActionQuery>
+    
   </Backend>
 
   <!-- ============================= -->
