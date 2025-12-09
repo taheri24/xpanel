@@ -34,11 +34,11 @@
 <ActionQuery Id="Update" Type="Update" Description="Update existing user information">
       <![CDATA[
         UPDATE [TR-EDOCS].[dbo].[TAB3]
-        SET 
-          ITMREF2 = :ITMREF2,
+        SET  ITMREF2 = @ITMREF2,
      
-        WHERE INV_NO = :INV_NO AND siraNo=SIRA
-      ]]>
+        WHERE INV_NO = @INV_NO AND siraNo=@siraNo      
+        
+        ]]>
     </ActionQuery>
     
   </Backend>

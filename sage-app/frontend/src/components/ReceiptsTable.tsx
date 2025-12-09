@@ -8,13 +8,15 @@ import {
 } from '@mui/material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { Receipt } from '../services/api.config'
+import { apiService } from '@/services/api'
 
 interface Props {
   data: Receipt[]
   loading: boolean
   error: string | null
   onRetry: () => void
-  setReceiptRef: Function
+  setReceiptRef: Function;
+  gridColumns:Array<GridColDef>;
 }
 
 function getValue(obj:any,key:string){
@@ -22,7 +24,7 @@ function getValue(obj:any,key:string){
   if(results.length>0) return results[0];
   return null;
 }
-
+/*
 const columns: GridColDef[] = [
   { field: 'PTHNUM_0', headerName: 'Receipt Number', width: 150, sortable: true },
   { field: 'BPSNDE_0', headerName: 'Invoice Number', width: 150, sortable: true },
@@ -32,13 +34,14 @@ const columns: GridColDef[] = [
   { field: 'Note3', headerName: 'Note3', width: 100, sortable: false },
   { field: 'Note4', headerName: 'Note4', width: 100, sortable: false },
   { field: 'Note5', headerName: 'Note5', width: 100, sortable: false },
-]
+]*/
 
-export default function ReceiptsTable({ data, loading, error, onRetry, setReceiptRef }: Props) {
+export default function ReceiptsTable({ gridColumns,data, loading, error, onRetry, setReceiptRef }: Props) {
   const theme = useTheme()
   const [searchTerm, setSearchTerm] = useState('')
-
-  const filteredData = data.filter(receipt =>
+  const columns=gridColumns?.map(c=>({...c,type:c.type=='date'? 'string':c.type}));
+  
+  const filteredData = (data || []) .filter(receipt =>
     Object.values(receipt).some(val =>
       String(val).toLowerCase().includes(searchTerm.toLowerCase())
     )
@@ -76,9 +79,11 @@ export default function ReceiptsTable({ data, loading, error, onRetry, setReceip
       )}
       {!loading && (
         <Box sx={{ height: 400, width: '100%' }}>
-          <DataGrid
+          <DataGrid autoHeight
             rows={filteredData}
             columns={columns}
+            key={columns?.length}
+            
             pageSizeOptions={[5, 10, 25]}
             initialState={{
               pagination: {

@@ -46,7 +46,7 @@ func (ae *ActionExecutor) Execute(
 	ctx context.Context,
 	db *sqlx.DB,
 	action *ActionQuery,
-	params map[string]interface{},
+	params map[string]any,
 ) (sql.Result, error) {
 	startTime := time.Now()
 
@@ -85,7 +85,7 @@ func (ae *ActionExecutor) Execute(
 	sql = ConvertParametersForDriver(sql, driverName)
 
 	// Build args slice in the order of parameters used in SQL
-	args := ae.buildArgs(sql, params, driverName)
+	sql, args := ae.buildArgs(sql, params, driverName)
 
 	// Log colored SQL for debugging
 	ae.logColoredSQL(fmt.Sprintf("%s/%s", action.Parent, action.Id), sql, action.Type)
@@ -134,23 +134,21 @@ func (ae *ActionExecutor) validateParameters(required []string, provided map[str
 }
 
 // buildArgs constructs the arguments slice for the action based on parameter order
-func (ae *ActionExecutor) buildArgs(sql string, params map[string]interface{}, driverName string) []interface{} {
-	var args []interface{}
-
+func (ae *ActionExecutor) buildArgs(sql string, params map[string]interface{}, driverName string) (string, []interface{}) {
+	var args []any
 	switch driverName {
 	case "sqlserver":
 		// For SQL Server, extract @param names in order
 		paramRegex := regexp.MustCompile(`@(\w+)`)
 		matches := paramRegex.FindAllStringSubmatch(sql, -1)
 
-		seen := make(map[string]bool)
+		//seen := make(map[string]bool)
 		for _, match := range matches {
 			paramName := match[1]
-			if !seen[paramName] {
-				if val, ok := params[paramName]; ok {
-					args = append(args, val)
-					seen[paramName] = true
-				}
+			sql = strings.Replace(sql, match[0], fmt.Sprintf("'%s'", params[match[1]]), 1)
+			if val, ok := params[paramName]; ok {
+				args = append(args, val)
+				//					seen[paramName] = true
 			}
 		}
 
@@ -187,7 +185,7 @@ func (ae *ActionExecutor) buildArgs(sql string, params map[string]interface{}, d
 		}
 	}
 
-	return args
+	return sql, args
 }
 
 // sanitizeParams removes sensitive information from logs (e.g., passwords)
@@ -240,7 +238,7 @@ func (ae *ActionExecutor) ExecuteWithReturning(
 	sql = ConvertParametersForDriver(sql, driverName)
 
 	// Build args slice in the order of parameters used in SQL
-	args := ae.buildArgs(sql, params, driverName)
+	sql, args := ae.buildArgs(sql, params, driverName)
 
 	// Log colored SQL for debugging
 	ae.logColoredSQL(fmt.Sprintf("RETURNING %s/%s", action.Parent, action.Id), sql, action.Type)
@@ -295,7 +293,7 @@ func (ae *ActionExecutor) ExecuteAndFetchRows(
 	sql = ConvertParametersForDriver(sql, driverName)
 
 	// Build args slice in the order of parameters used in SQL
-	args := ae.buildArgs(sql, params, driverName)
+	sql, args := ae.buildArgs(sql, params, driverName)
 
 	// Log colored SQL for debugging
 	ae.logColoredSQL(fmt.Sprintf("ACTION %s/%s", action.Parent, action.Id), sql, action.Type)

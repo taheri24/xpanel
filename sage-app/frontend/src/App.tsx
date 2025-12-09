@@ -13,7 +13,7 @@ import {
 } from '@mui/material'
 import { Brightness4, Brightness7 } from '@mui/icons-material'
 import { useTheme } from './context/ThemeProvider'
-import { apiService, Invoice, Receipt, LineItem } from './services/api.config'
+import { apiService, Invoice, Receipt, LineItem, ApiResponse } from './services/api'
 import InvoicesTable from './components/InvoicesTable'
 import ReceiptsTable from './components/ReceiptsTable'
 import LineItemsTable from './components/LineItemsTable'
@@ -54,17 +54,17 @@ function AppContent() {
   const [receiptRef, setReceiptRef] = useState('');
 
   // Invoices data state
-  const [invoices, setInvoices] = useState<Invoice[]>([])
+  const [invoices, setInvoices] = useState<ApiResponse<Invoice>>({} as any)
   const [invoicesLoading, setInvoicesLoading] = useState(true)
   const [invoicesError, setInvoicesError] = useState<string | null>(null)
 
   // Receipts data state
-  const [receipts, setReceipts] = useState<Receipt[]>([])
+  const [receipts, setReceipts] = useState<ApiResponse<Receipt>>({} as any)
   const [receiptsLoading, setReceiptsLoading] = useState(true)
   const [receiptsError, setReceiptsError] = useState<string | null>(null)
 
   // Line items data state
-  const [lineItems, setLineItems] = useState<LineItem[]>([])
+  const [lineItems, setLineItems] = useState<ApiResponse<LineItem>>({} as any)
   const [lineItemsLoading, setLineItemsLoading] = useState(true)
   const [lineItemsError, setLineItemsError] = useState<string | null>(null)
 
@@ -156,11 +156,11 @@ function AppContent() {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
+      <Container   sx={{ py: 4, flex: 1,maxWidth:'98%' }}>
         <Paper
           sx={{
             backgroundColor: muiTheme.palette.background.paper,
-            borderRadius: 2,
+            borderRadius: 2,minHeight: '90vh',
             boxShadow: muiTheme.palette.mode === 'light' ? '0 2px 8px rgba(0,0,0,0.1)' : '0 2px 8px rgba(0,0,0,0.3)',
           }}
         >
@@ -181,9 +181,11 @@ function AppContent() {
 
           <TabPanel value={tabValue} index={0}>
             <InvoicesTable
-              data={invoices}
+              data={invoices?.results || []}
               loading={invoicesLoading}
               error={invoicesError}
+              key={invoices?.gridColDefs?.length}
+              gridColumns={invoices?.gridColDefs}
               onRetry={fetchInvoices}
               setRef={setInvoiceRef}
             />
@@ -191,8 +193,10 @@ function AppContent() {
 
           <TabPanel value={tabValue} index={1}>
             <ReceiptsTable
-              data={receipts}
+              data={receipts?.results || []}
               loading={receiptsLoading}
+              key={receipts?.gridColDefs?.length}
+              gridColumns={receipts?.gridColDefs || []}
               error={receiptsError}
               onRetry={fetchReceipts}
               setReceiptRef={setReceiptRef}
@@ -201,8 +205,8 @@ function AppContent() {
 
           <TabPanel value={tabValue} index={2}>
             <LineItemsTable
-              data={lineItems}
-              data2={lineItems}
+              data={lineItems?.results || []}
+                gridColumns={lineItems?.gridColDefs || []} 
               loading={lineItemsLoading}
               error={lineItemsError}
               onRetry={fetchLineItems}
