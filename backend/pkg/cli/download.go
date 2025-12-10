@@ -58,10 +58,10 @@ func (pr *ProgressReader) displayProgress() {
 
 	percent := float64(pr.read) / float64(pr.total) * 100
 	filledLength := int(float64(pr.barLength) * float64(pr.read) / float64(pr.total))
-
+	const oneMeg = float64(1024 * 1024)
 	bar := strings.Repeat("=", filledLength) + strings.Repeat("-", pr.barLength-filledLength)
-
-	fmt.Printf("\r[%s] %.1f%% (%d/%d bytes)", bar, percent, pr.read, pr.total)
+	mr, mt := float64(pr.read)/oneMeg, float64(pr.total)/oneMeg
+	fmt.Printf("\r[%s] %.1f%% (%.3f/%.3f MB)", bar, percent, mr, mt)
 }
 
 // DownloadManager handles file download operations
