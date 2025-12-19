@@ -18,7 +18,7 @@ import {
     Box,
     Typography,
 } from "@mui/material";
-class XAdapter{
+export class XAdapter{
     model:XFeature;
     constructor( model:XFeature){
         this.model=model;
@@ -366,7 +366,7 @@ function XForm({ definition, onSubmit, onCancel }: XFormProps) {
     );
 }
 
-function getInputType(dataType: string): string {
+export function getInputType(dataType: string): string {
     switch (dataType.toLowerCase()) {
         case 'email': return 'email';
         case 'password': return 'password';
